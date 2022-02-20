@@ -1,0 +1,6 @@
+[run]
+include = td_toolkits_v3/*
+omit = *migrations*, *tests*
+disable_warnings = already-imported
+plugins =
+    django_coverage_plugin
