@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+
+{% block title %}LC: {{ liquidcrystal.name }}{% endblock title %}
+
+
+{% block content %}
+<h2>{{ liquidcrystal.name }}</h2>
+
+{% if liquidcrystal.vender %}
+    Vender: {{ liquidcrystal.vender.name }}
+{% endif %}
+
+{% endblock content %}

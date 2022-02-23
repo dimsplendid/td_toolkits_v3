@@ -7,7 +7,7 @@
     <h2>Liquid Crystal List</h2>
 <ul>
     {% for lc in liquidcrystal_list %}
-        <li><a href="#TODO">{{ lc.name }}</a></li>
+        <li><a href="{% url 'materials:lc_detail' lc.slug %}">{{ lc.name }}</a></li>
     {% endfor %}
 </ul>
 {% endblock content %}

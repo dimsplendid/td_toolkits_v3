@@ -12,3 +12,6 @@ class VenderListView(ListView):
 
 class LiquidCrystalListView(ListView):
     model = LiquidCrystal
+
+class LiquidCrystalDetailView(DetailView):
+    model = LiquidCrystal
