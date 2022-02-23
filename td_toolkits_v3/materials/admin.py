@@ -1,3 +1,9 @@
 from django.contrib import admin
+from .models import (
+    Vender,
+    LiquidCrystal,
+)
 
-# Register your models here.
+
+admin.site.register(Vender)
+admin.site.register(LiquidCrystal)
