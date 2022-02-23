@@ -87,6 +87,8 @@ python manage.py migrate
 
 ```bash
 coverage run -m pytest
+coverage report
+coverage html
 ```
 
 
