@@ -79,7 +79,7 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     "td_toolkits_v3.users.apps.UsersConfig",
-    # Your stuff: custom apps go here
+    "td_toolkits_v3.materials.apps.MaterialsConfig", # record all materials
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
