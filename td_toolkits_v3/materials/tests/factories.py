@@ -8,6 +8,8 @@ import factory.fuzzy
 from ..models import (
     Vender,
     LiquidCrystal,
+    Polyimide,
+    Seal
 )
 
 class VenderFactory(factory.django.DjangoModelFactory):
@@ -29,3 +31,25 @@ class LiquidCrystalFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = LiquidCrystal
+
+class PolyimideFactory(factory.django.DjangoModelFactory):
+
+    name = factory.fuzzy.FuzzyText()
+    slug = factory.LazyAttribute(
+        lambda obj: slugify(obj.name)
+    )
+    vender = factory.SubFactory(VenderFactory, name='INX')
+
+    class Meta:
+        model = Polyimide
+
+class SealFactory(factory.django.DjangoModelFactory):
+
+    name = factory.fuzzy.FuzzyText()
+    slug = factory.LazyAttribute(
+        lambda obj: slugify(obj.name)
+    )
+    vender = factory.SubFactory(VenderFactory, name='INX')
+
+    class Meta:
+        model = Seal

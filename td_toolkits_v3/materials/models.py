@@ -112,3 +112,43 @@ class LiquidCrystal(TimeStampedModel):
             'materials:lc_detail', kwargs={"slug": self.slug}
         )
 
+class Polyimide(TimeStampedModel):
+    name = models.CharField(
+        "Name of Polyimide", 
+        max_length=255, unique=True)
+    slug = AutoSlugField(
+        "LC Address",
+        unique=True, always_update=False, populate_from="name")
+    vender = models.ForeignKey(
+        Vender,
+        default=get_default_vender, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
+    # def get_absolute_url(self):
+    #     """Return absolute URL to the LC Detail page."""
+    #     return reverse(
+    #         'materials:pi_detail', kwargs={"slug": self.slug}
+    #     )
+
+
+class Seal(TimeStampedModel):
+    name = models.CharField(
+        "Name of Seal", 
+        max_length=255, unique=True)
+    slug = AutoSlugField(
+        "LC Address",
+        unique=True, always_update=False, populate_from="name")
+    vender = models.ForeignKey(
+        Vender,
+        default=get_default_vender, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
+    # def get_absolute_url(self):
+    #     """Return absolute URL to the LC Detail page."""
+    #     return reverse(
+    #         'materials:pi_detail', kwargs={"slug": self.slug}
+    #     )

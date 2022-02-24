@@ -1,6 +1,8 @@
 from .factories import (
     VenderFactory,
-    LiquidCrystalFactory
+    LiquidCrystalFactory,
+    PolyimideFactory,
+    SealFactory,
 )
 from ..models import (
     Vender,
@@ -17,7 +19,6 @@ pytestmark = pytest.mark.django_db
 def lc():
     return LiquidCrystalFactory()
 
-
 @pytest.fixture
 def lc_real():
     return LiquidCrystal.objects.create(
@@ -32,6 +33,13 @@ def lc_real():
         k_33=15.1,
     )
 
+@pytest.fixture
+def pi():
+    return PolyimideFactory()
+
+@pytest.fixture
+def seal():
+    return SealFactory()
 
 def test_vender__str__():
     vender = VenderFactory()
@@ -87,3 +95,11 @@ def test_lc_response_index(lc, lc_real):
 def test_lc_vt_index(lc, lc_real):
     assert lc.vt_index is None
     assert lc_real.vt_index == pytest.approx(0.23129251700680276)
+
+def test_pi__str__(pi):
+    assert pi.__str__() == pi.name
+    assert str(pi) == pi.name
+
+def test_seal__str__(seal):
+    assert seal.__str__() == seal.name
+    assert str(seal) == seal.name
