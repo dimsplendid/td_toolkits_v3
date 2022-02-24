@@ -10,6 +10,11 @@ urlpatterns = [
         name='lc_list'
     ),
     path(
+        route='lcs/add/',
+        view=views.LiquidCrystalCreateView.as_view(),
+        name='lc_add'
+    ),
+    path(
         route='lcs/<slug:slug>/',
         view=views.LiquidCrystalDetailView.as_view(),
         name='lc_detail'

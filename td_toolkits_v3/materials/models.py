@@ -1,4 +1,5 @@
 from django.db import models
+from django.urls import reverse
 
 from autoslug import AutoSlugField
 from model_utils.models import TimeStampedModel
@@ -33,7 +34,7 @@ class LiquidCrystal(TimeStampedModel):
     t_ni = models.FloatField('Tni(°C)', null=True, blank=True)
     t_cn = models.FloatField('Tcn(°C)', null=True, blank=True)
     flow_viscosity = models.FloatField(
-        'ν(mm^2/s', 
+        'ν(mm^2/s)', 
         null=True, blank=True)
     rotational_viscosity = models.FloatField(
         'γ1(mPa*s)', 
@@ -105,5 +106,9 @@ class LiquidCrystal(TimeStampedModel):
     def __str__(self):
         return self.name
 
-
+    def get_absolute_url(self):
+        """Return absolute URL to the LC Detail page."""
+        return reverse(
+            'materials:lc_detail', kwargs={"slug": self.slug}
+        )
 
