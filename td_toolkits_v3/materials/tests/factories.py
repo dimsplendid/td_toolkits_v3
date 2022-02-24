@@ -25,7 +25,7 @@ class LiquidCrystalFactory(factory.django.DjangoModelFactory):
     slug = factory.LazyAttribute(
         lambda obj: slugify(obj.name)
     )
-    vender = Vender.objects.get_or_create(name='INX')[0]
+    vender = factory.SubFactory(VenderFactory, name='INX')
 
     class Meta:
         model = LiquidCrystal
