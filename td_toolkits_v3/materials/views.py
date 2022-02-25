@@ -1,7 +1,8 @@
 from django.views.generic import (
     ListView, 
     DetailView,
-    CreateView
+    CreateView,
+    TemplateView,
 )
 
 
