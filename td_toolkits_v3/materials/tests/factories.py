@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from django.template.defaultfilters import slugify
 
 
@@ -53,3 +55,8 @@ class SealFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = Seal
+
+TEST_DIR = Path(__file__).resolve(strict=True).parent
+
+MATERIAL_TEST_FILE_DIR = TEST_DIR / r'test_files/batch_upload_test.xlsx'
+MATERIAL_TEST_NULL_FILE_DIR = TEST_DIR / r'test_files/batch_upload_test_null.xlsx'
