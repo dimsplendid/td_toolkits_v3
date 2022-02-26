@@ -1,15 +1,18 @@
+from django.urls import reverse, reverse_lazy
 from django.views.generic import (
     ListView, 
     DetailView,
     CreateView,
     TemplateView,
 )
+from django.views.generic.edit import FormView
 
 
 from .models import (
     Vender,
     LiquidCrystal
 )
+from .forms import MaterialsUploadForm
 
 class VenderListView(ListView):
     model = Vender
@@ -40,3 +43,12 @@ class LiquidCrystalCreateView(CreateView):
         'k_33',
         'density'
     ]
+
+class MaterialsBatchCreateView(FormView):
+    template_name = 'materials/materials_upload.html'
+    form_class = MaterialsUploadForm
+    success_url = reverse_lazy('materials:lc_list')
+
+    def form_valid(self, form):
+        form.save()
+        return super().form_valid(form)

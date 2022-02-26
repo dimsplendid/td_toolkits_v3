@@ -24,4 +24,9 @@ urlpatterns = [
         view=views.VenderListView.as_view(),
         name='vender_list'
     ),
+    path(
+        route='upload/',
+        view=views.MaterialsBatchCreateView.as_view(),
+        name='upload'
+    )
 ]

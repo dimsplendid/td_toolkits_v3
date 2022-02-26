@@ -82,6 +82,7 @@ LOCAL_APPS = [
     "td_toolkits_v3.materials.apps.MaterialsConfig", # record all materials
     "td_toolkits_v3.opticals.apps.OpticalsConfig", # record all opticals
     "td_toolkits_v3.reliabilities.apps.ReliabilitiesConfig", # record all reliabilities
+    "td_toolkits_v3.products.apps.ProductsConfig", # record all products
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
