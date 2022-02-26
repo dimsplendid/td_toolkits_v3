@@ -29,6 +29,10 @@ urlpatterns = [
         'materials/',
         include('td_toolkits_v3.materials.urls', namespace='materials')
     ),
+    path(
+        'opticals/',
+        include('td_toolkits_v3.opticals.urls', namespace='opticals')
+    )
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:

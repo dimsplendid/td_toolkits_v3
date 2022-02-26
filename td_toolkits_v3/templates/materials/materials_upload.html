@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
 
-{% block title %}Add Cheese{% endblock title %}
+{% block title %}Materials Upload{% endblock title %}
 
 {% block content %}
-<h1>Materials Uploads</h1>
+<h1>Materials Upload</h1>
 <form method="post" action="." enctype="multipart/form-data">
     {% csrf_token %}
     {{ form|crispy }}

@@ -9,7 +9,7 @@ class Vender(TimeStampedModel):
     name = models.CharField(
         "Name of Vender", max_length=255, unique=True)
     slug = AutoSlugField(
-        "Vender Adress",
+        "Vender Address",
         unique=True, always_update=False, populate_from="name")
 
     def __str__(self):
