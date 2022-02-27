@@ -85,7 +85,7 @@ class Chip(TimeStampedModel):
         unique=True, always_update=False, populate_from='name')
     short_name = models.CharField(
         'short id',
-        max_length=255)
+        max_length=255, blank=True)
     sub = models.ForeignKey(
         'Sub', 
         on_delete=models.CASCADE, null=True, blank=True)

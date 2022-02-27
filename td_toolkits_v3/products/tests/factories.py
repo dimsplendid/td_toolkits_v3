@@ -49,7 +49,6 @@ class ChipFactory(factory.django.DjangoModelFactory):
         lambda obj: slugify(obj.name)
     )
     sub = factory.SubFactory(SubFactory)
-    product_type = factory.SubFactory(ProductModelTypeFactory)
 
     class Meta:
         model = Chip

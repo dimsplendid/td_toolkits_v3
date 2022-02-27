@@ -27,23 +27,24 @@ class MaterialsUploadForm(forms.Form):
             if LiquidCrystal.objects.filter(name=row['Name']):
                 continue
             else:
-                vender = Vender.objects.get_or_create(name=row['Vender'])[0]
+                vender = Vender.objects.get_or_create(
+                    name=str(row['Vender']))[0]
                 LiquidCrystal.objects.create(
-                    name=row['Name'],
+                    name=str(row['Name']),
                     vender=vender,
-                    designed_cell_gap=row['designed cell gap(um)'],
-                    t_ni=row['Tni(°C)'],
-                    t_cn=row['Tcn(°C)'],
-                    flow_viscosity=row['Flow Viscosity(ν)(mm^2/s)'],
-                    rotational_viscosity=row['Rotational Viscosity(γ1)(mPa*s)'],
-                    n_e=row['n_e'],
-                    n_o=row['n_o'],
-                    e_para=row['ε_∥'],
-                    e_perp=row['ε_⟂'],
-                    k_11=row['K11(pN)'],
-                    k_22=row['K22(pN)'],
-                    k_33=row['K33(pN)'],
-                    density=row['d(g/cm^3)'],
+                    designed_cell_gap=float(row['designed cell gap(um)']),
+                    t_ni=float(row['Tni(°C)']),
+                    t_cn=float(row['Tcn(°C)']),
+                    flow_viscosity=float(row['Flow Viscosity(ν)(mm^2/s)']),
+                    rotational_viscosity=float(row['Rotational Viscosity(γ1)(mPa*s)']),
+                    n_e=float(row['n_e']),
+                    n_o=float(row['n_o']),
+                    e_para=float(row['ε_∥']),
+                    e_perp=float(row['ε_⟂']),
+                    k_11=float(row['K11(pN)']),
+                    k_22=float(row['K22(pN)']),
+                    k_33=float(row['K33(pN)']),
+                    density=float(row['d(g/cm^3)']),
                 )
 
         # PI part
@@ -51,9 +52,10 @@ class MaterialsUploadForm(forms.Form):
             if Polyimide.objects.filter(name=row['Name']):
                 continue
             else:
-                vender = Vender.objects.get_or_create(name=row['Vender'])[0]
+                vender = Vender.objects.get_or_create(
+                    name=str(row['Vender']))[0]
                 Polyimide.objects.create(
-                    name=row['Name'],
+                    name=str(row['Name']),
                     vender=vender,
                 )
         # Seal part
@@ -61,8 +63,9 @@ class MaterialsUploadForm(forms.Form):
             if Seal.objects.filter(name=row['Name']):
                 continue
             else:
-                vender = Vender.objects.get_or_create(name=row['Vender'])[0]
+                vender = Vender.objects.get_or_create(
+                    name=str(row['Vender']))[0]
                 Seal.objects.create(
-                    name=row['Name'],
+                    name=str(row['Name']),
                     vender=vender,
                 )
