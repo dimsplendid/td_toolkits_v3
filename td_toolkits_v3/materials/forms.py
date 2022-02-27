@@ -10,7 +10,10 @@ from .models import (
 )
 
 class MaterialsUploadForm(forms.Form):
-    file = forms.FileField(help_text='Excel files(.xlsx)')
+    file = forms.FileField(
+        help_text='Excel files(.xlsx)',
+        widget=forms.FileInput(attrs={'accept': '.xlsx'})
+    )
 
     def save(self):
         lc_df = pd.read_excel(
