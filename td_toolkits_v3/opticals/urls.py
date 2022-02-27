@@ -7,5 +7,10 @@ urlpatterns = [
         '',
         views.IndexView.as_view(),
         name='index'
+    ),
+    path(
+        'upload/',
+        views.OpticalsUploadView.as_view(),
+        name='upload'
     )
 ]

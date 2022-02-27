@@ -64,10 +64,10 @@ class Sub(TimeStampedModel):
         'Sub Address',
         unique=True, always_update=False, populate_from='name')
     product_type = models.ForeignKey(
-        ProductModelType,
+        'ProductModelType',
         on_delete=models.CASCADE, null=True, blank=True)
     condition = models.ForeignKey(
-        Condition, 
+        'Condition', 
         on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
@@ -87,7 +87,7 @@ class Chip(TimeStampedModel):
         'short id',
         max_length=255)
     sub = models.ForeignKey(
-        Sub, 
+        'Sub', 
         on_delete=models.CASCADE, null=True, blank=True)
     
     lc = models.ForeignKey(
