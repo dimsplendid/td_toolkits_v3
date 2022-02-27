@@ -7,12 +7,10 @@ from model_utils.models import TimeStampedModel
 class ProductModelType(TimeStampedModel):
     name = models.CharField(
         'short name',
-        max_length=255,
-    )
+        max_length=255)
     slug = AutoSlugField(
         'Product Address',
-        unique=True, always_update=False, populate_from='name'
-    )
+        unique=True, always_update=False, populate_from='name')
  
     @classmethod
     def default(cls):
@@ -28,12 +26,10 @@ class Sub(TimeStampedModel):
     )
     slug = AutoSlugField(
         'Sub Address',
-        unique=True, always_update=False, populate_from='name'
-    )
+        unique=True, always_update=False, populate_from='name')
     product_type = models.ForeignKey(
         ProductModelType,
-        on_delete=models.CASCADE, null=True, blank=True
-    )
+        on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -47,20 +43,25 @@ class Chip(TimeStampedModel):
     )
     slug = AutoSlugField(
         'Sub Address',
-        unique=True, always_update=False, populate_from='name'
-    )
+        unique=True, always_update=False, populate_from='name')
     short_name = models.CharField(
         'short id',
-        max_length=255
-    )
+        max_length=255)
     sub = models.ForeignKey(
         Sub, 
         on_delete=models.CASCADE, null=True, blank=True)
-
     product_type = models.ForeignKey(
         ProductModelType,
-        on_delete=models.CASCADE, null=True, blank=True
-    )
+        on_delete=models.CASCADE, null=True, blank=True)
+    lc = models.ForeignKey(
+        'materials.LiquidCrystal',
+        on_delete=models.CASCADE, null=True, blank=True)
+    pi = models.ForeignKey(
+        'materials.Polyimide',
+        on_delete=models.CASCADE, null=True, blank=True)
+    seal = models.ForeignKey(
+        'materials.Seal',
+        on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return self.name
