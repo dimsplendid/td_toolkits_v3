@@ -23,4 +23,7 @@ class OpticalsUploadForm(forms.Form):
 
     def save(self, request):
         print(self.cleaned_data['chips'])
-        print(request.FILES.getlist('axos'))
+        chip_df = pd.read_excel(self.cleaned_data['chips'], sheet_name='Sheet1')
+        print(chip_df)
+
+        # print(request.FILES.getlist('axos'))
