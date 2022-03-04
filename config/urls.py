@@ -30,6 +30,10 @@ urlpatterns = [
         include('td_toolkits_v3.materials.urls', namespace='materials')
     ),
     path(
+        'products/',
+        include('td_toolkits_v3.products.urls', namespace='products')
+    ),
+    path(
         'opticals/',
         include('td_toolkits_v3.opticals.urls', namespace='opticals')
     )

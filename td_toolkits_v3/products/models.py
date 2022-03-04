@@ -19,6 +19,19 @@ class ProductModelType(TimeStampedModel):
     def __str__(self):
         return self.name
 
+class Project(TimeStampedModel):
+    name = models.CharField(
+        'Project name',
+        max_length=255,
+    )
+    code = models.CharField(
+        'project code',
+        max_length=255, blank=True
+    )
+
+    def __str__(self):
+        return self.name
+
 class Experiment(TimeStampedModel):
     name = models.CharField(
         'Experiment ID',
@@ -27,9 +40,16 @@ class Experiment(TimeStampedModel):
     slug = AutoSlugField(
         'Experiment Address',
         unique=True, always_update=False, populate_from='name')
-    
     desc = models.TextField(
         'description', blank=True)
+    product_type = models.ForeignKey(
+        'ProductModelType',
+        on_delete=models.CASCADE, null=True, blank=True)
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE, null=True)
+    
+    def __str__(self):
+        return self.name
 
 class Condition(TimeStampedModel):
     name = models.CharField(
@@ -52,6 +72,9 @@ class Condition(TimeStampedModel):
                 fields=['name', 'experiment'], name='unique_condition')
         ]
 
+    def __str__(self):
+        return self.name
+
 
 class Sub(TimeStampedModel):
     name = models.CharField(
@@ -63,9 +86,7 @@ class Sub(TimeStampedModel):
     slug = AutoSlugField(
         'Sub Address',
         unique=True, always_update=False, populate_from='name')
-    product_type = models.ForeignKey(
-        'ProductModelType',
-        on_delete=models.CASCADE, null=True, blank=True)
+    
     condition = models.ForeignKey(
         'Condition', 
         on_delete=models.CASCADE, null=True, blank=True)

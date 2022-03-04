@@ -20,9 +20,10 @@ def test_material_batch_create_view(client):
     """POST request to MaterialBatchCreateView
     for batch create materials data.
     """
+    
     with open(MATERIAL_TEST_FILE_DIR, 'rb') as fp:
         form_data = {
-            'file': fp,
+            'materials': fp,
         }
         url = reverse('materials:upload')
         client.post(url, form_data)
@@ -40,7 +41,7 @@ def test_material_batch_create_null_view(client):
     """
     with open(MATERIAL_TEST_NULL_FILE_DIR, 'rb') as fp:
         form_data = {
-            'file': fp,
+            'materials': fp,
         }
         url = reverse('materials:upload')
         client.post(url, form_data)
@@ -57,7 +58,7 @@ def test_material_batch_create_unique(client):
 
     with open(MATERIAL_TEST_FILE_DIR, 'rb') as fp:
         form_data = {
-            'file': fp,
+            'materials': fp,
         }
         url = reverse('materials:upload')
         client.post(url, form_data)

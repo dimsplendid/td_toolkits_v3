@@ -65,7 +65,7 @@ def test_lc_default_vender():
 
 def test_lc_get_absolute_url(lc):
     url = lc.get_absolute_url()
-    assert url == f'/materials/lcs/{lc.slug}/'
+    assert url == f'/materials/lc/{lc.slug}/'
 
 
 def test_lc_delta_n(lc, lc_real):

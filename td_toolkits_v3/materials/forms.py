@@ -10,18 +10,18 @@ from .models import (
 )
 
 class MaterialsUploadForm(forms.Form):
-    file = forms.FileField(
+    materials = forms.FileField(
         help_text='Excel files(.xlsx)',
         widget=forms.FileInput(attrs={'accept': '.xlsx'})
     )
 
     def save(self):
         lc_df = pd.read_excel(
-            self.cleaned_data['file'], sheet_name='LiquidCrystal')
+            self.cleaned_data['materials'], sheet_name='LiquidCrystal')
         pi_df = pd.read_excel(
-            self.cleaned_data['file'], sheet_name='Polyimide')
+            self.cleaned_data['materials'], sheet_name='Polyimide')
         seal_df = pd.read_excel(
-            self.cleaned_data['file'], sheet_name='Seal')
+            self.cleaned_data['materials'], sheet_name='Seal')
         # LC part
         for row in lc_df.to_dict(orient='records'):
             if LiquidCrystal.objects.filter(name=row['Name']):

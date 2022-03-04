@@ -4,18 +4,20 @@ from django.views.generic import (
 )
 from django.views.generic.edit import FormView
 
-from .forms import OpticalsUploadForm
+from td_toolkits_v3.materials.forms import MaterialsUploadForm
 
 
 class IndexView(TemplateView):
     template_name = 'opticals/index.html'
 
 
-class OpticalsUploadView(FormView):
+class OpticalsUploadView(TemplateView):
     template_name = 'opticals/upload.html'
-    form_class = OpticalsUploadForm
     success_url = reverse_lazy('opticals:upload')
 
-    def form_valid(self, form):
-        form.save(self.request)
-        return super().form_valid(form)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['materials_form'] = MaterialsUploadForm(**kwargs)
+        # context['chips_form'] = ChipsUploadForm()
+        
+        return context

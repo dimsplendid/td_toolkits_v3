@@ -5,9 +5,9 @@
 
 {% block content %}
 <h1>Opticals Upload</h1>
-<form method="post" action="." enctype="multipart/form-data">
+<form method="post" action="{% url 'materials:upload' %}" enctype="multipart/form-data">
     {% csrf_token %}
-    {{ form|crispy }}
+    {{ materials_form|crispy }}
     <button type="submit" class="btn btn-primary">Save</button>
 </form>
 {% endblock content %}

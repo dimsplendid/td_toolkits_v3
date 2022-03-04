@@ -2,28 +2,32 @@ from django import forms
 
 import pandas as pd
 
-from td_toolkits_v3.products.models import Chip
+from td_toolkits_v3.products.models import (
+    ProductModelType,
+    Project,
+    Experiment,
+    Condition,
+    Sub,
+    Chip
+)
+from td_toolkits_v3.materials.models import (
+    LiquidCrystal,
+    Polyimide,
+    Seal,
+)
 from .models import (
     AxometricsLog,
 )
 
-class OpticalsUploadForm(forms.Form):
-    chips = forms.FileField(widget=forms.FileInput(
-        attrs={
-            'accept': '.xlsx'
-        }
-    ))
-    axos = forms.FileField(widget=forms.FileInput(
-        attrs={
-            'multiple': True,
-            'webkitdirectory': True,
-            'directory': True,
-        }
-    ))
 
-    def save(self, request):
-        print(self.cleaned_data['chips'])
-        chip_df = pd.read_excel(self.cleaned_data['chips'], sheet_name='Sheet1')
-        print(chip_df)
 
-        # print(request.FILES.getlist('axos'))
+
+# axos = forms.FileField(widget=forms.FileInput(
+    #     attrs={
+    #         'multiple': True,
+    #         'webkitdirectory': True,
+    #         'directory': True,
+    #     }
+    # ))
+
+    # print(request.FILES.getlist('axos'))

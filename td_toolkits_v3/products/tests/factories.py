@@ -38,7 +38,6 @@ class SubFactory(factory.django.DjangoModelFactory):
     slug = factory.LazyAttribute(
         lambda obj: slugify(obj.name)
     )
-    product_type = factory.SubFactory(ProductModelTypeFactory)
 
     class Meta:
         model = Sub
