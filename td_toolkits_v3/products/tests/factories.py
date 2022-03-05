@@ -5,9 +5,17 @@ import factory
 import factory.fuzzy
 import pytest
 
+from td_toolkits_v3.materials.tests.factories import (
+    LiquidCrystalFactory,
+    SealFactory,
+    PolyimideFactory,
+)
 
 from ..models import (
     ProductModelType,
+    Project,
+    Experiment,
+    Condition,
     Sub,
     Chip
 )
@@ -17,12 +25,25 @@ def product_model_type():
     return ProductModelTypeFactory()
 
 @pytest.fixture
+def project():
+    return ProjectFactory()
+
+@pytest.fixture
+def experiment():
+    return ExperimentFactory()
+
+@pytest.fixture
+def condition():
+    return ConditionFactory()
+
+@pytest.fixture
 def sub():
     return SubFactory()
 
 @pytest.fixture
 def chip():
     return ChipFactory()
+
 
 class ProductModelTypeFactory(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText()
@@ -33,11 +54,48 @@ class ProductModelTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = ProductModelType
 
+class ProjectFactory(factory.django.DjangoModelFactory):
+    name = factory.fuzzy.FuzzyText()
+    code = factory.fuzzy.FuzzyText()
+
+    class Meta:
+        model = Project
+
+class ExperimentFactory(factory.django.DjangoModelFactory):
+    name = factory.fuzzy.FuzzyText()
+    slug = factory.LazyAttribute(
+        lambda obj: slugify(obj.name)
+    )
+    desc = factory.Faker(
+        'paragraph', nb_sentences=3,
+        variable_nb_sentences=True
+    )
+    product_type = factory.SubFactory(ProductModelTypeFactory)
+    project = factory.SubFactory(ProjectFactory)
+
+    class Meta:
+        model = Experiment
+
+class ConditionFactory(factory.django.DjangoModelFactory):
+    name = factory.fuzzy.FuzzyText()
+    slug = factory.LazyAttribute(
+        lambda obj: slugify(obj.name)
+    )
+    desc = factory.Faker(
+        'paragraph', nb_sentences=3,
+        variable_nb_sentences=True
+    )
+    experiment = factory.SubFactory(ExperimentFactory)
+
+    class Meta:
+        model = Condition
+
 class SubFactory(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText()
     slug = factory.LazyAttribute(
         lambda obj: slugify(obj.name)
     )
+    condition = factory.SubFactory(ConditionFactory)
 
     class Meta:
         model = Sub
@@ -48,6 +106,9 @@ class ChipFactory(factory.django.DjangoModelFactory):
         lambda obj: slugify(obj.name)
     )
     sub = factory.SubFactory(SubFactory)
+    lc = factory.SubFactory(LiquidCrystalFactory)
+    pi = factory.SubFactory(PolyimideFactory)
+    seal = factory.SubFactory(SealFactory)
 
     class Meta:
         model = Chip

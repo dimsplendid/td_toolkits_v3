@@ -29,7 +29,7 @@ class LiquidCrystalFactory(factory.django.DjangoModelFactory):
     slug = factory.LazyAttribute(
         lambda obj: slugify(obj.name)
     )
-    vender = factory.SubFactory(VenderFactory, name='INX')
+    vender = factory.SubFactory(VenderFactory)
 
     class Meta:
         model = LiquidCrystal
@@ -40,7 +40,7 @@ class PolyimideFactory(factory.django.DjangoModelFactory):
     slug = factory.LazyAttribute(
         lambda obj: slugify(obj.name)
     )
-    vender = factory.SubFactory(VenderFactory, name='INX')
+    vender = factory.SubFactory(VenderFactory)
 
     class Meta:
         model = Polyimide
@@ -51,7 +51,7 @@ class SealFactory(factory.django.DjangoModelFactory):
     slug = factory.LazyAttribute(
         lambda obj: slugify(obj.name)
     )
-    vender = factory.SubFactory(VenderFactory, name='INX')
+    vender = factory.SubFactory(VenderFactory)
 
     class Meta:
         model = Seal
