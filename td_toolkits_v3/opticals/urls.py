@@ -12,5 +12,10 @@ urlpatterns = [
         'upload/',
         views.OpticalsUploadView.as_view(),
         name='upload'
+    ),
+    path(
+        'axo/upload/',
+        views.AxoUploadView.as_view(),
+        name='axo_upload'
     )
 ]

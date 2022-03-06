@@ -24,4 +24,5 @@ def test_chip_batch_create_view(client):
         form_data = {'chips': fp}
         client.post(reverse('products:chip_upload'), form_data)
 
+    # check all chip is add
     assert Chip.objects.all().count() == 49

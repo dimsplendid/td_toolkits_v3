@@ -20,14 +20,18 @@ from .models import (
 )
 
 
+class AxoUploadForm(forms.Form):
+    exp_id = forms.CharField(
+        max_length=255,
+        initial=Experiment.objects.last().name
+    )
+    axos = forms.FileField(widget=forms.FileInput(
+            attrs={
+                'multiple': True,
+                'webkitdirectory': True,
+                'directory': True,
+            }
+        ))
 
-
-# axos = forms.FileField(widget=forms.FileInput(
-    #     attrs={
-    #         'multiple': True,
-    #         'webkitdirectory': True,
-    #         'directory': True,
-    #     }
-    # ))
-
-    # print(request.FILES.getlist('axos'))
+    def save(self, request):
+        print(request.FILES.getlist('axos'))
