@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from django.template.defaultfilters import slugify
 
 
@@ -112,3 +114,8 @@ class ChipFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = Chip
+
+TEST_DIR = Path(__file__).resolve(strict=True).parent
+
+PRODUCT_TEST_FILE_DIR = TEST_DIR / r'test_files/chip_model_test.xlsx'
+MATERIAL_TEST_FILE_DIR = TEST_DIR / r'test_files/material_for_chip_test.xlsx'

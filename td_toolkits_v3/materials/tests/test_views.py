@@ -9,7 +9,6 @@ from .factories import (
     MATERIAL_TEST_FILE_DIR,
     MATERIAL_TEST_NULL_FILE_DIR,
 )
-from ..views import MaterialsBatchCreateView
 from ..models import (
     LiquidCrystal,
     Polyimide,
