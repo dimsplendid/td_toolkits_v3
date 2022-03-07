@@ -21,9 +21,15 @@ from .models import (
 
 
 class AxoUploadForm(forms.Form):
+    
+    last_exp_id = None
+    last_exp = Experiment.objects.last()
+    if last_exp is not None:
+        last_exp_id = last_exp.name
+    
     exp_id = forms.CharField(
         max_length=255,
-        initial=Experiment.objects.last().name
+        initial=last_exp_id
     )
     axos = forms.FileField(widget=forms.FileInput(
             attrs={
