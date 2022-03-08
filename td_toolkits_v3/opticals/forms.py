@@ -1,6 +1,10 @@
-from django import forms
-
+import io
+import os
+import csv
+from re import M
 import pandas as pd
+
+from django import forms
 
 from td_toolkits_v3.products.models import (
     ProductModelType,
@@ -15,6 +19,7 @@ from td_toolkits_v3.materials.models import (
     Polyimide,
     Seal,
 )
+from td_toolkits_v3.products.tests.factories import experiment
 from .models import (
     AxometricsLog,
 )
@@ -36,10 +41,58 @@ class AxoUploadForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Set the last experiment name for the upload axo data
         last_exp = Experiment.objects.last()
         if last_exp is not None:
             last_exp_id = last_exp.name
             self.fields['exp_id'].initial = last_exp_id
 
     def save(self, request):
-        print(request.FILES.getlist('axos'))
+        files = request.FILES.getlist('axos')
+        experiment = Experiment.objects.get(
+            name=str(self.cleaned_data['exp_id']))
+        # print(files)
+
+        # the axo location order map to opt measurement point
+        points = [5, 3, 1, 6, 4, 2]
+
+        for file in files:
+            file_name = str(file).split('.')[0]
+            short_names = [s.strip() for s in file_name.split('+')]
+
+            reader = csv.reader(io.StringIO(file.read().decode('utf-8', errors='ignore')))
+            data_range = range(28, 28 + len(points)*len(short_names))
+            data = [row for idx, row in enumerate(reader) \
+                if  idx in data_range]
+            row_count = 0
+            for short_name in short_names:
+                print(short_name)
+                # Check if there is chip data, otherwise skip.
+                try:
+                    chip = Chip.objects.get(
+                        short_name=short_name,
+                        sub__condition__experiment=experiment
+                    )
+                except:
+                    continue
+                print(chip)
+                for point in points:
+                    AxometricsLog.objects.create(
+                        chip=chip,
+                        measure_point=point,
+                        x_coord=data[row_count][1],
+                        y_coord=data[row_count][2],
+                        cell_gap=data[row_count][3],
+                        top_rubbing_direct=data[row_count][4],
+                        twist=data[row_count][5],
+                        top_pretilt=data[row_count][6],
+                        bottom_pretilt=data[row_count][7],
+                        rms=data[row_count][8],
+                        iteration=data[row_count][9],
+                    )
+
+
+
+
+
+
