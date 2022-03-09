@@ -40,4 +40,4 @@ def test_axo_batch_create_view(client):
     }
     client.post(reverse('opticals:axo_upload'), form_data)
 
-    assert AxometricsLog.objects.all().count() == 276
+    assert AxometricsLog.objects.all().count() == 288
