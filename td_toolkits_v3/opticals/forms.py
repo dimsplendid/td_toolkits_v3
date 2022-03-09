@@ -90,6 +90,7 @@ class AxoUploadForm(forms.Form):
                         rms=data[row_count][8],
                         iteration=data[row_count][9],
                     )
+                    row_count += 1
 
 
 
