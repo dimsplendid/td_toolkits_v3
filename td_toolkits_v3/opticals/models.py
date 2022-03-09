@@ -24,3 +24,4 @@ class RDLCellGap(TimeStampedModel):
     )
     cell_gap = models.FloatField()
 
+class 

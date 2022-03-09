@@ -328,3 +328,5 @@ td_toolkits_v3/media/
 *.sqlite
 *.sqlite3
 
+# ignore excel tmp file
+.~*

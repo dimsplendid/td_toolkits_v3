@@ -12,12 +12,14 @@ from .factories import (
     MATERIAL_TEST_FILE_DIR,
     PRODUCT_TEST_FILE_DIR,
     AXO_TEST_FILES_DIR,
+    RDL_CELL_GAP_TEST_FILE_DIR,
 )
 from ..models import (
-    AxometricsLog
+    AxometricsLog,
+    RDLCellGap
 )
 
-def test_axo_batch_create_view(client):
+def test_axo_upload_view(client):
     # create material data first
     with open(MATERIAL_TEST_FILE_DIR, 'rb') as fp:
         form_data = {'materials': fp}
@@ -52,3 +54,32 @@ def test_axo_batch_create_view(client):
     # test if the import data is correct
     assert axo_1.cell_gap == pytest.approx(2.939389)
     assert axo_2.cell_gap == pytest.approx(3.005118)
+
+def test_rdl_cell_gap_upload_view(client):
+    # create material data first
+    with open(MATERIAL_TEST_FILE_DIR, 'rb') as fp:
+        form_data = {'materials': fp}
+        client.post(reverse('materials:upload'),form_data)
+
+    # Product import
+    with open(PRODUCT_TEST_FILE_DIR, 'rb') as fp:
+        form_data = {'chips': fp}
+        client.post(reverse('products:chip_upload'), form_data)
+
+    # Open RDL cell gap
+    with open(RDL_CELL_GAP_TEST_FILE_DIR, 'rb') as fp:
+        form_data = {
+            'exp_id': Experiment.objects.last().name,
+            'rdl_cell_gap': fp
+        }
+        client.post(reverse('opticals:rdl_cell_gap_upload'), form_data)
+
+    rdl_1 = RDLCellGap.objects.get(
+        chip__short_name='1-25'
+    )
+    rdl_2 = RDLCellGap.objects.get(
+        chip__name='T19BU001NA03'
+    )
+    assert rdl_1.cell_gap == pytest.approx(2.914)
+    assert rdl_2.cell_gap == pytest.approx(2.719)
+
