@@ -14,7 +14,8 @@ from td_toolkits_v3.products.tests.factories import (
 )
 
 from ..models import (
-    AxometricsLog
+    AxometricsLog,
+    RDLCellGap,
 )
 
 TEST_DIR = Path(__file__).resolve(strict=True).parent
@@ -22,10 +23,15 @@ TEST_DIR = Path(__file__).resolve(strict=True).parent
 MATERIAL_TEST_FILE_DIR = TEST_DIR / r'test_files/properties/batch_upload_test.xlsx'
 PRODUCT_TEST_FILE_DIR = TEST_DIR / r'test_files/condition/conditions_5905_test.xlsx'
 AXO_TEST_FILES_DIR = TEST_DIR / r'test_files/axo/'
+RDL_CELL_GAP_TEST_FILE_DIR = TEST_DIR / r'test_files/rdl_cellgap/cell_gap_RDL.xlsx'
 
 @pytest.fixture
 def axometrics_log():
     return AxometricsLogFactory()
+
+@pytest.fixture
+def rdl_cell_gap():
+    return RDLCellGapFactory()
 
 class AxometricsLogFactory(factory.django.DjangoModelFactory):
     chip = factory.SubFactory(ChipFactory)
@@ -42,3 +48,6 @@ class AxometricsLogFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = AxometricsLog
 
+class RDLCellGapFactory(factory.django.DjangoModelFactory):
+    chip = factory.SubFactory(ChipFactory)
+    cell_gap = factory.fuzzy.FuzzyFloat(2.5, 3.5)

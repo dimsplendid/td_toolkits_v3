@@ -16,4 +16,11 @@ class AxometricsLog(TimeStampedModel):
     rms = models.FloatField()
     iteration = models.FloatField()
 
+class RDLCellGap(TimeStampedModel):
+    chip = models.OneToOneField(
+        'products.Chip', 
+        on_delete=models.CASCADE,
+        related_name='rdl_cell_gap'
+    )
+    cell_gap = models.FloatField()
 

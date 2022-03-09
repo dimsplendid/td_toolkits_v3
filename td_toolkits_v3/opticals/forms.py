@@ -22,6 +22,7 @@ from td_toolkits_v3.materials.models import (
 from td_toolkits_v3.products.tests.factories import experiment
 from .models import (
     AxometricsLog,
+    RDLCellGap
 )
 
 
@@ -92,8 +93,46 @@ class AxoUploadForm(forms.Form):
                     )
                     row_count += 1
 
+class RDLCellGapUploadForm(forms.Form):
+    exp_id = forms.CharField(
+        max_length=255,
+        initial=None,
+    )
+    rdl_cell_gap = forms.FileField(
+        widget=forms.FileInput(attrs={
+            'accept': '.xlsx'
+        })
+    )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Set the last experiment name for the upload axo data
+        last_exp = Experiment.objects.last()
+        if last_exp is not None:
+            last_exp_id = last_exp.name
+            self.fields['exp_id'].initial = last_exp_id
 
+    def save(self):
+        rdl_cell_gap = pd.read_excel(
+            self.cleaned_data['rdl_cell_gap']
+        )
+        experiment = Experiment.objects.get(
+            name=str(self.cleaned_data['exp_id']))
+
+        for row in rdl_cell_gap.to_dict(orient='records'):
+            # Check if there is chip data, otherwise skip.
+            try:
+                chip = Chip.objects.get(
+                    short_name=row['short id'],
+                    sub__condition__experiment=experiment
+                )
+            except:
+                continue
+            
+            RDLCellGap.objects.create(
+                chip=chip,
+                cell_gap=row['cell gap(um)']
+            )
 
 
 
