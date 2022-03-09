@@ -9,6 +9,7 @@ from django import forms
 from td_toolkits_v3.products.models import (
     ProductModelType,
     Project,
+    Factory,
     Experiment,
     Condition,
     Sub,
@@ -21,6 +22,7 @@ from td_toolkits_v3.materials.models import (
 )
 from td_toolkits_v3.products.tests.factories import experiment
 from .models import (
+    Instrument,
     AxometricsLog,
     RDLCellGap
 )
@@ -118,6 +120,12 @@ class RDLCellGapUploadForm(forms.Form):
         )
         experiment = Experiment.objects.get(
             name=str(self.cleaned_data['exp_id']))
+        
+        factory = Factory.default('T2')
+        instrument = Instrument.default(
+            'RETS',
+            factory
+        )
 
         for row in rdl_cell_gap.to_dict(orient='records'):
             # Check if there is chip data, otherwise skip.
@@ -131,7 +139,8 @@ class RDLCellGapUploadForm(forms.Form):
             
             RDLCellGap.objects.create(
                 chip=chip,
-                cell_gap=row['cell gap(um)']
+                cell_gap=row['cell gap(um)'],
+                instrument=instrument
             )
 
 

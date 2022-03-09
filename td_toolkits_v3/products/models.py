@@ -32,6 +32,27 @@ class Project(TimeStampedModel):
     def __str__(self):
         return self.name
 
+class Factory(TimeStampedModel):
+    name = models.CharField(
+        'Factory Name',
+        max_length=255,
+    )
+    slug = AutoSlugField(
+        'Factory Address',
+        unique=True, always_update=False, populate_from='name')
+    addr = models.CharField(
+        'Factory Address(Physics)',
+        max_length=255,
+    )
+    desc = models.TextField(
+        'description', blank=True)
+
+    @classmethod
+    def default(cls, name):
+        return cls.objects.get_or_create(
+            name=name
+        )[0]
+
 class Experiment(TimeStampedModel):
     name = models.CharField(
         'Experiment ID',
