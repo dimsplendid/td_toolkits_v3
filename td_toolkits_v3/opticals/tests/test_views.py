@@ -39,5 +39,16 @@ def test_axo_batch_create_view(client):
         'axos': axo_files
     }
     client.post(reverse('opticals:axo_upload'), form_data)
-
+    axo_1 = AxometricsLog.objects.get(
+        chip__short_name='1-23',
+        measure_point=5,
+    )
+    axo_2 = AxometricsLog.objects.get(
+        chip__short_name='4-11',
+        measure_point=1,
+    )
+    # test all allowed data are imported
     assert AxometricsLog.objects.all().count() == 288
+    # test if the import data is correct
+    assert axo_1.cell_gap == pytest.approx(2.939389)
+    assert axo_2.cell_gap == pytest.approx(3.005118)
