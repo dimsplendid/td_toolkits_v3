@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import (
     ProductModelType,
     Project,
+    Factory,
     Experiment,
     Condition,
     Sub,
@@ -11,6 +12,7 @@ from .models import (
 
 admin.site.register(ProductModelType)
 admin.site.register(Project)
+admin.site.register(Factory)
 admin.site.register(Experiment)
 admin.site.register(Condition)
 admin.site.register(Sub)

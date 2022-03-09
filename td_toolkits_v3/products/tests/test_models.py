@@ -3,6 +3,7 @@ import pytest
 from ..models import ProductModelType
 from .factories import (
     product_model_type,
+    factory_,
     project,
     experiment,
     condition,
@@ -12,8 +13,8 @@ from .factories import (
 
 pytestmark = pytest.mark.django_db
 
-def test_product_model_type_name_default():
-    product = ProductModelType.default()
+def test_product_model_type_name_default(factory_):
+    product = ProductModelType.default('5905', factory_)
     assert product.name == '5905'
 
 def test_product_model_type__str__(product_model_type):

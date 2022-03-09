@@ -42,9 +42,10 @@ def test_axo_upload_view(client):
     for file in files:
         fp = open(AXO_TEST_FILES_DIR / file, 'rb')
         axo_files.append(fp)
-
+    exp_id = Experiment.objects.last().name
     form_data = {
-        'exp_id': Experiment.objects.last().name,
+        'exp_id': (exp_id, exp_id),
+        'factory': ('T2', 'T2'),
         'axos': axo_files
     }
     client.post(reverse('opticals:axo_upload'), form_data)
@@ -57,7 +58,7 @@ def test_axo_upload_view(client):
         measure_point=1,
     )
     # test all allowed data are imported
-    assert AxometricsLog.objects.all().count() == 288
+    assert AxometricsLog.objects.all().count() == 282
     # test if the import data is correct
     assert axo_1.cell_gap == pytest.approx(2.939389)
     assert axo_2.cell_gap == pytest.approx(3.005118)

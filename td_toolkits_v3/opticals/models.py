@@ -1,5 +1,4 @@
 from django.db import models
-from django.apps import apps
 
 from autoslug import AutoSlugField
 from model_utils.models import TimeStampedModel
@@ -27,6 +26,9 @@ class Instrument(TimeStampedModel):
             name=name,
             factory=factory,
         )[0]
+    
+    def __str__(self):
+        return f'{self.name} (@{self.factory.name})'
 
 
 class AxometricsLog(TimeStampedModel):
@@ -46,10 +48,17 @@ class AxometricsLog(TimeStampedModel):
         on_delete=models.CASCADE,
         null=True, blank=True
     )
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['chip', 'measure_point'], name='chip_measure_point'
+            )
+        ]
 
 
 
 class RDLCellGap(TimeStampedModel):
+    # One to One relation can not duplicate.
     chip = models.OneToOneField(
         'products.Chip', 
         on_delete=models.CASCADE,
