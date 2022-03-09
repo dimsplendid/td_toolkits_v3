@@ -2,11 +2,14 @@ import os
 import pytest
 
 from django.urls import reverse
-
+from pytest_django.asserts import assertContains
 
 pytestmark = pytest.mark.django_db
 
 from td_toolkits_v3.products.models import Experiment
+from td_toolkits_v3.products.tests.factories import (
+    experiment
+)
 
 from .factories import (
     MATERIAL_TEST_FILE_DIR,
@@ -17,6 +20,10 @@ from .factories import (
 from ..models import (
     AxometricsLog,
     RDLCellGap
+)
+from ..views import (
+    AxoUploadView,
+    RDLCellGapUploadView,
 )
 
 def test_axo_upload_view(client):
@@ -83,3 +90,15 @@ def test_rdl_cell_gap_upload_view(client):
     assert rdl_1.cell_gap == pytest.approx(2.914)
     assert rdl_2.cell_gap == pytest.approx(2.719)
 
+def test_rdl_cell_gap_upload_view_content(rf, experiment):
+    # Determine the url
+    url = reverse('opticals:rdl_cell_gap_upload')
+    # Generate a request using the pytest short cut: rf
+    # rf: short cut to django.test.RequestFactory
+    request = rf.get(url)
+    # Pass in the request into the view to get an
+    # HTTP response served up by Django
+    response = RDLCellGapUploadView.as_view()(request)
+
+    assertContains(response, experiment.name)
+    assertContains(response, 'RDL Cell Gap Upload')
