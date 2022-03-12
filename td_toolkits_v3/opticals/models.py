@@ -48,10 +48,14 @@ class AxometricsLog(TimeStampedModel):
         on_delete=models.CASCADE,
         null=True, blank=True
     )
+
+    def __str__(self):
+        return f'{self.chip.name}, p {self.measure_point}'
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['chip', 'measure_point'], name='chip_measure_point'
+                fields=['chip', 'measure_point'], name='axo_chip_measure_point'
             )
         ]
 
@@ -70,8 +74,42 @@ class RDLCellGap(TimeStampedModel):
         on_delete=models.CASCADE,
         null=True, blank=True
     )
+    
+    def __str__(self):
+        return self.chip.name
 
-# class OpticalLog(TimeStampedModel):
-#     chip = models.ForeignKey('products.Chip', on_delete=models.CASCADE)
-#     measure_point = models.SmallIntegerField()
-#     measure_time = models.DateTimeField()
+
+class OpticalLog(TimeStampedModel):
+    chip = models.ForeignKey('products.Chip', on_delete=models.CASCADE)
+    measure_point = models.SmallIntegerField()
+    measure_time = models.DateTimeField()
+    instrument = models.ForeignKey(
+        Instrument,
+        on_delete=models.CASCADE,
+        null=True, blank=True
+    )
+    operator = models.CharField(max_length=255)
+    voltage = models.FloatField()
+    lc_percent = models.FloatField()
+    w_x = models.FloatField()
+    w_y = models.FloatField()
+
+    @property
+    def t_percent(self):
+        max_lc_percent = max(self.objects.filter(
+            chip=self.chip,
+            measure_point=self.measure_point
+        ).values_list('lc_percent'))[0]
+        return self.lc_percent / max_lc_percent * 100
+
+    def __str__(self):
+        return f'{self.chip.name}, p {self.measure_point}'
+
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['chip', 'measure_point', 'voltage'], 
+                name='opt_unique'
+            )
+        ]

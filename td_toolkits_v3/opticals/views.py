@@ -7,23 +7,24 @@ from django.views.generic.edit import FormView
 from td_toolkits_v3.materials.forms import MaterialsUploadForm
 from .forms import (
     AxoUploadForm,
-    RDLCellGapUploadForm
+    RDLCellGapUploadForm,
+    OptUploadForm
 )
 
 class IndexView(TemplateView):
     template_name = 'opticals/index.html'
 
 
-class OpticalsUploadView(TemplateView):
-    template_name = 'opticals/upload.html'
-    success_url = reverse_lazy('opticals:upload')
+# class OpticalsUploadView(TemplateView):
+#     template_name = 'opticals/upload.html'
+#     success_url = reverse_lazy('opticals:upload')
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['materials_form'] = MaterialsUploadForm(**kwargs)
-        # context['chips_form'] = ChipsUploadForm()
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context['materials_form'] = MaterialsUploadForm(**kwargs)
+#         # context['chips_form'] = ChipsUploadForm()
         
-        return context
+#         return context
 
 
 class AxoUploadView(FormView):
@@ -47,4 +48,18 @@ class RDLCellGapUploadView(FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = "RDL Cell Gap Upload"
+        return context
+
+class OptUploadView(FormView):
+    template_name = 'upload_generic.html'
+    form_class = OptUploadForm
+    success_url = reverse_lazy('opticals:toc_opt_log_upload')
+
+    def form_valid(self, form):
+        form.save(self.request)
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = "TOC OPT Upload"
         return context
