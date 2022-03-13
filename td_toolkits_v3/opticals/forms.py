@@ -201,23 +201,22 @@ class OptUploadForm(forms.Form):
                 chip = None
                 try:
                     chip = Chip.objects.get(
-                        name=row[2],
+                        name=str(row[2]),
                         sub__condition__experiment=experiment
                     )
                 except:
-                    print(f'no chip: {row[2]}')
+                    print(f'no chip: {row[2]} with experiment {experiment.name}')
                     continue
                 
 
                 try:
-                    OpticalLog.objects.get(
+                    opt = OpticalLog.objects.get(
                         chip=chip,
                         measure_point=int(row[3]),
                         voltage=float(row[6]/2),
                     )
-                    print(
-                        f'log({chip.name}, {row[3]}, {row[6]}) is duplicate'
-                    )
+                    
+                    print(opt, 'is duplicate')
                     continue
                 except:
                     OpticalLog.objects.create(

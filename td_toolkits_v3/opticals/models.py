@@ -50,7 +50,8 @@ class AxometricsLog(TimeStampedModel):
     )
 
     def __str__(self):
-        return f'{self.chip.name}, p {self.measure_point}'
+        return f'{self.chip.name}, p {self.measure_point}' \
+            + f', cell gap: {self.cell_gap}'
 
     class Meta:
         constraints = [
@@ -103,7 +104,8 @@ class OpticalLog(TimeStampedModel):
         return self.lc_percent / max_lc_percent * 100
 
     def __str__(self):
-        return f'{self.chip.name}, p {self.measure_point}'
+        return f'{self.chip.name}, p {self.measure_point} ' \
+            + f'v: {self.voltage}, ({self.lc_percent}, {self.w_x}, {self.w_y})'
 
 
     class Meta:
