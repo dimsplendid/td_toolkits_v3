@@ -131,6 +131,8 @@ class Chip(TimeStampedModel):
     )
     short_name = models.CharField("short id", max_length=255, blank=True)
     sub = models.ForeignKey("Sub", on_delete=models.CASCADE, null=True, blank=True)
+    condition = models.ForeignKey(
+        'Condition', on_delete=models.CASCADE, null=True, blank=True)
 
     lc = models.ForeignKey(
         "materials.LiquidCrystal", on_delete=models.CASCADE, null=True, blank=True

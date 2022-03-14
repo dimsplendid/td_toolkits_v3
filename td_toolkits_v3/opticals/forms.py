@@ -189,47 +189,72 @@ class OptUploadForm(forms.Form):
         # print(files)
         factory = Factory.default(self.cleaned_data["factory"])
         
+        opt_df = pd.DataFrame()
         for file in  files:
             # Using pd read csv this time
-            opt_df = pd.read_csv(file, encoding='utf-8', encoding_errors='ignore')
-            for row in opt_df.to_numpy():
-                # Voltage 1 is tage for separate log
-                # Yeah, bad idea..., I don't know who decided this...
-                if row[6] == 1:
-                    continue
+            tmp_df = pd.read_csv(file, encoding='utf-8', encoding_errors='ignore')
+            opt_df = pd.concat([opt_df, tmp_df])
+            
+        if len(opt_df) == 0:
+            return
+        print(opt_df.head())
+        # 0. drop na for chip, date, time
+        opt_df = opt_df.dropna(
+            subset=[
+                opt_df.columns[0], # Date
+                opt_df.columns[1], # Time
+                opt_df.columns[2], # ID
+                opt_df.columns[3], # measure point
+                opt_df.columns[6], # voltage
+            ]
+        )
+        # 1. drop V == 1, the data separate note
+        opt_df = opt_df[opt_df.iloc[:,6] != 1]
+        # 2. transform datetime and order by datetime
+        opt_df['datetime'] = [datetime.strptime(
+            f'{opt_df.iloc[i, 0]} {opt_df.iloc[i, 1]} +0800', 
+            r'%Y/%m/%d %H:%M:%S %z'
+        ) for i in range(len(opt_df))]
 
-                chip = None
-                try:
-                    chip = Chip.objects.get(
-                        name=str(row[2]),
-                        sub__condition__experiment=experiment
-                    )
-                except:
-                    print(f'no chip: {row[2]} with experiment {experiment.name}')
-                    continue
-                
+        # 3. drop duplicate (keep newer)
+        opt_df = opt_df.sort_values('datetime') \
+            .drop_duplicates(
+                subset=[
+                    # cause sometime the header maybe different?
+                    # using the position otherwise.
+                    opt_df.columns[2], # ID
+                    opt_df.columns[3], # measure point
+                    opt_df.columns[6], # voltage
+                ], 
+                keep='last'
+            )
+        
+        # 4. drop chip that already logged
+        chip_logged = [ i.name for i in Chip.objects.filter(
+            sub__condition__experiment=experiment,
+            opticallog__isnull=False).distinct()]
+        
+        opt_df = opt_df[~opt_df.iloc[:,2].isin(chip_logged)]
+        # 5. batch create for each chip
+        chips = Chip.objects.filter(sub__condition__experiment=experiment)
+        logs = []
+        
+        for chip in chips:
+            tmp_df = opt_df[opt_df.iloc[:,2]==chip.name]
+            if len(tmp_df) == 0:
+                continue
+            for row in tmp_df.to_numpy():
+                logs.append(OpticalLog(
+                    chip=chip,
+                    measure_point=int(row[3]),
+                    measure_time=row[-1],
+                    instrument=Instrument.default(row[4], factory),
+                    operator=str(row[5]),
+                    voltage=float(row[6]),
+                    lc_percent=float(row[11]),
+                    w_x=float(row[32]),
+                    w_y=float(row[33]),
+                ))
 
-                try:
-                    opt = OpticalLog.objects.get(
-                        chip=chip,
-                        measure_point=int(row[3]),
-                        voltage=float(row[6]/2),
-                    )
-                    
-                    print(opt, 'is duplicate')
-                    continue
-                except:
-                    OpticalLog.objects.create(
-                        chip=chip,
-                        measure_point=int(row[3]),
-                        measure_time=datetime.strptime(
-                            f'{row[0]} {row[1]}', 
-                            '%Y/%m/%d %H:%M:%S'
-                        ).replace(tzinfo=pytz.timezone('Asia/Taipei')),
-                        instrument=Instrument.default(row[4], factory),
-                        operator=str(row[5]),
-                        voltage=float(row[6]),
-                        lc_percent=float(row[11]),
-                        w_x=float(row[32]),
-                        w_y=float(row[33]),
-                    )
+        OpticalLog.objects.bulk_create(logs)
+            
