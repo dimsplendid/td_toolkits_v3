@@ -8,11 +8,11 @@ urlpatterns = [
         views.IndexView.as_view(),
         name='index'
     ),
-    # path(
-    #     'upload/',
-    #     views.OpticalsUploadView.as_view(),
-    #     name='upload'
-    # ),
+    path(
+        'upload/',
+        views.OpticalsUploadView.as_view(),
+        name='upload'
+    ),
     path(
         'axo/upload/',
         views.AxoUploadView.as_view(),

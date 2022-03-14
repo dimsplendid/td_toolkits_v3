@@ -24,6 +24,7 @@ MATERIAL_TEST_FILE_DIR = TEST_DIR / r'test_files/properties/batch_upload_test.xl
 PRODUCT_TEST_FILE_DIR = TEST_DIR / r'test_files/condition/conditions_5905_test.xlsx'
 AXO_TEST_FILES_DIR = TEST_DIR / r'test_files/axo/'
 RDL_CELL_GAP_TEST_FILE_DIR = TEST_DIR / r'test_files/rdl_cellgap/cell_gap_RDL.xlsx'
+TOC_OPT_TEST_FILES_DIR = TEST_DIR / r'test_files/optical_measures/'
 
 @pytest.fixture
 def axometrics_log():

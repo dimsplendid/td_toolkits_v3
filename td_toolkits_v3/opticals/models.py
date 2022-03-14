@@ -115,3 +115,15 @@ class OpticalLog(TimeStampedModel):
                 name='opt_unique'
             )
         ]
+
+# class ResponseTimeLog(TimeStampedModel):
+#     chip = models.ForeignKey('products.Chip', on_delete=models.CASCADE)
+#     measure_point = models.SmallIntegerField()
+#     measure_time = models.DateTimeField()
+#     instrument = models.ForeignKey(
+#         Instrument,
+#         on_delete=models.CASCADE,
+#         null=True, blank=True
+#     )
+#     operator = models.CharField(max_length=255)
+#     voltage = models.FloatField()
