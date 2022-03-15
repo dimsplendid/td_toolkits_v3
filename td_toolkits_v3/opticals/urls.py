@@ -27,5 +27,10 @@ urlpatterns = [
         'toc/opt/upload/',
         views.OptUploadView.as_view(),
         name='toc_opt_log_upload'
+    ),
+    path(
+        'toc/rt/upload/',
+        views.ResponseTimeUploadView.as_view(),
+        name='toc_rt_log_upload'
     )
 ]

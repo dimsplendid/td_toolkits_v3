@@ -116,14 +116,24 @@ class OpticalLog(TimeStampedModel):
             )
         ]
 
-# class ResponseTimeLog(TimeStampedModel):
-#     chip = models.ForeignKey('products.Chip', on_delete=models.CASCADE)
-#     measure_point = models.SmallIntegerField()
-#     measure_time = models.DateTimeField()
-#     instrument = models.ForeignKey(
-#         Instrument,
-#         on_delete=models.CASCADE,
-#         null=True, blank=True
-#     )
-#     operator = models.CharField(max_length=255)
-#     voltage = models.FloatField('Vop')
+class ResponseTimeLog(TimeStampedModel):
+    chip = models.ForeignKey('products.Chip', on_delete=models.CASCADE)
+    measure_point = models.SmallIntegerField()
+    measure_time = models.DateTimeField()
+    instrument = models.ForeignKey(
+        Instrument,
+        on_delete=models.CASCADE,
+        null=True, blank=True
+    )
+    operator = models.CharField(max_length=255)
+    voltage = models.FloatField('Vop')
+    time_rise = models.FloatField()
+    time_fall = models.FloatField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['chip', 'measure_point', 'voltage'], 
+                name='rt_unique'
+            )
+        ]

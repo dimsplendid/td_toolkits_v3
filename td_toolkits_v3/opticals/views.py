@@ -8,7 +8,8 @@ from td_toolkits_v3.materials.forms import MaterialsUploadForm
 from .forms import (
     AxoUploadForm,
     RDLCellGapUploadForm,
-    OptUploadForm
+    OptUploadForm,
+    ResponseTimeUploadForm
 )
 
 class IndexView(TemplateView):
@@ -54,4 +55,18 @@ class OptUploadView(FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = "TOC OPT Upload"
+        return context
+
+class ResponseTimeUploadView(FormView):
+    template_name = 'upload_generic.html'
+    form_class = ResponseTimeUploadForm
+    success_url = reverse_lazy('opticals:toc_rt_log_upload')
+
+    def form_valid(self, form):
+        form.save(self.request)
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'TOC Response Time Upload'
         return context
