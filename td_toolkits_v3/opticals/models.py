@@ -90,7 +90,7 @@ class OpticalLog(TimeStampedModel):
         null=True, blank=True
     )
     operator = models.CharField(max_length=255)
-    voltage = models.FloatField()
+    voltage = models.FloatField('Vop')
     lc_percent = models.FloatField()
     w_x = models.FloatField()
     w_y = models.FloatField()
@@ -126,4 +126,4 @@ class OpticalLog(TimeStampedModel):
 #         null=True, blank=True
 #     )
 #     operator = models.CharField(max_length=255)
-#     voltage = models.FloatField()
+#     voltage = models.FloatField('Vop')

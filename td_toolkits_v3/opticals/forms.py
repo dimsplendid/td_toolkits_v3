@@ -210,13 +210,15 @@ class OptUploadForm(forms.Form):
         )
         # 1. drop V == 1, the data separate note
         opt_df = opt_df[opt_df.iloc[:,6] != 1]
-        # 2. transform datetime and order by datetime
+        # 2. change Vpp to Vop
+        opt_df.iloc[:,6] = opt_df.iloc[:,6] / 2
+        # 3. transform datetime and order by datetime
         opt_df['datetime'] = [datetime.strptime(
             f'{opt_df.iloc[i, 0]} {opt_df.iloc[i, 1]} +0800', 
             r'%Y/%m/%d %H:%M:%S %z'
         ) for i in range(len(opt_df))]
 
-        # 3. drop duplicate (keep newer)
+        # 4. drop duplicate (keep newer)
         opt_df = opt_df.sort_values('datetime') \
             .drop_duplicates(
                 subset=[
@@ -229,13 +231,13 @@ class OptUploadForm(forms.Form):
                 keep='last'
             )
         
-        # 4. drop chip that already logged
+        # 5. drop chip that already logged
         chip_logged = [ i.name for i in Chip.objects.filter(
             sub__condition__experiment=experiment,
             opticallog__isnull=False).distinct()]
         
         opt_df = opt_df[~opt_df.iloc[:,2].isin(chip_logged)]
-        # 5. batch create for each chip
+        # 6. batch create for each chip
         chips = Chip.objects.filter(sub__condition__experiment=experiment)
         logs = []
         
