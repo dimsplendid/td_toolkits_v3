@@ -233,30 +233,41 @@ class OptUploadForm(forms.Form):
             )
         
         # 5. drop chip that already logged
-        chip_logged = [ i.name for i in Chip.objects.filter(
+        chip_could_log = [ i.name for i in Chip.objects.filter(
             sub__condition__experiment=experiment,
-            opticallog__isnull=False).distinct()]
+            opticallog__isnull=True).distinct()]
         
-        opt_df = opt_df[~opt_df.iloc[:,2].isin(chip_logged)]
-        # 6. batch create for each chip
-        chips = Chip.objects.filter(sub__condition__experiment=experiment)
+        opt_df = opt_df[opt_df.iloc[:,2].isin(chip_could_log)]
+
+        # 6. modified data type
+        opt_df.iloc[:, 3] = opt_df.iloc[:, 3].astype('int')     # measure point
+        opt_df.iloc[:, 5] = opt_df.iloc[:, 5].astype('str')     # operator
+        opt_df.iloc[:, 6] = opt_df.iloc[:, 6].astype('float')   # voltage
+        opt_df.iloc[:, 11] = opt_df.iloc[:, 11].astype('float') # lc percent
+        opt_df.iloc[:, 32] = opt_df.iloc[:, 32].astype('float') # w_x
+        opt_df.iloc[:, 33] = opt_df.iloc[:, 33].astype('float') # w_y
+        # 7. batch create for each chip
         logs = []
+        instrument_id = Instrument.default(opt_df.iloc[0,4], factory).id
         
-        for chip in chips:
-            tmp_df = opt_df[opt_df.iloc[:,2]==chip.name]
+        for chip_name in opt_df.iloc[:,2].unique():
+            chip_id = Chip.objects.get(
+                name = chip_name,
+                sub__condition__experiment=experiment).id
+            tmp_df = opt_df[opt_df.iloc[:,2]==chip_name]
             if len(tmp_df) == 0:
                 continue
             for row in tmp_df.to_numpy():
                 logs.append(OpticalLog(
-                    chip=chip,
-                    measure_point=int(row[3]),
+                    chip_id=chip_id,
+                    measure_point=row[3],
                     measure_time=row[-1],
-                    instrument=Instrument.default(row[4], factory),
-                    operator=str(row[5]),
-                    voltage=float(row[6]),
-                    lc_percent=float(row[11]),
-                    w_x=float(row[32]),
-                    w_y=float(row[33]),
+                    instrument_id=instrument_id,
+                    operator=row[5],
+                    voltage=row[6],
+                    lc_percent=row[11],
+                    w_x=row[32],
+                    w_y=row[33],
                 ))
 
         OpticalLog.objects.bulk_create(logs)
