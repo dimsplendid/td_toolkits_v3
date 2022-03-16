@@ -9,4 +9,12 @@
 <li><a href="{% url 'opticals:ref_detail' obj.slug %}">{{ obj }}</a></li>
 {% endfor %}
 </ul>
+<hr/>
+<p>Don't see the Reference listed here?</p>
+<p>
+<a class="btn btn-primary"
+href="{% url 'opticals:ref_add' %}" role="button">
+Add REF
+</a>
+</p>
 {% endblock content %}

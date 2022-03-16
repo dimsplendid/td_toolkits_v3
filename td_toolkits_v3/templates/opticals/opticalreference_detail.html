@@ -2,19 +2,12 @@
 {% block title %}Opt Ref: {{ opticalreference }}{% endblock title %}
 {% block content %}
 <h2>{{ opticalreference }}</h2>
-
 <p>LC: {{ opticalreference.lc }}</p>
-
 <p>PI: {{ opticalreference.pi }}</p>
-
 <p>Seal: {{ opticalreference.seal }}</p>
-
 <p>Cell Gap: {{ opticalreference.cell_gap }}</p>
-
 <p>ITO Slit: {{ opticalreference.ito_slit }}</p>
-
 <p>TFT: {{ opticalreference.get_tft_tech_display }}</p>
-<p>Vop: {{ opticalreference.operate_voltage }}</p>
 <p>T%: {{ opticalreference.transmittance }}</p>
 <p>Tr: {{ opticalreference.time_rise }}</p>
 <p>Tf: {{ opticalreference.time_fall }}</p>

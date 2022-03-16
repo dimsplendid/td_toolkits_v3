@@ -1,5 +1,5 @@
-from enum import unique
 from django.db import models
+from django.urls import reverse
 
 from autoslug import AutoSlugField
 from model_utils.models import TimeStampedModel
@@ -188,7 +188,6 @@ class OpticalReference(TimeStampedModel):
 
     tft_tech = models.CharField(
         'TFT Tech', choices=TFTTech.choices, max_length=20)
-    operate_voltage = models.FloatField('Vop')
     transmittance = models.FloatField('T%')
     time_rise = models.FloatField('Tr')
     time_fall = models.FloatField('Tf')
@@ -206,4 +205,4 @@ class OpticalReference(TimeStampedModel):
                 + self.product_model_type.factory.name
     
     def get_absolute_url(self):
-        return 
+        return reverse('opticals:ref_detail', kwargs={"slug": self.slug})

@@ -5,6 +5,7 @@ from django.views.generic import (
     DetailView,
 )
 from django.views.generic.edit import FormView, CreateView, UpdateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .forms import (
     AxoUploadForm,
@@ -74,7 +75,7 @@ class ResponseTimeUploadView(FormView):
         return context
 
 
-class OpticalReferenceCreateView(CreateView):
+class OpticalReferenceCreateView(LoginRequiredMixin, CreateView):
     template_name = 'upload_generic.html'
     model = OpticalReference
     fields = [
@@ -85,19 +86,32 @@ class OpticalReferenceCreateView(CreateView):
         'cell_gap',
         'ito_slit',
         'tft_tech',
+        'transmittance',
+        'time_rise',
+        'time_fall',
+        'gray_to_gray',
+        'w_x',
+        'w_y',
+        'contrast_ratio',
     ]
 
-class OpticalReferenceUpdateView(UpdateView):
+class OpticalReferenceUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'upload_generic.html'
     model = OpticalReference
     fields = [
-        'product_model_type',
         'lc',
         'pi',
         'seal',
         'cell_gap',
         'ito_slit',
         'tft_tech',
+        'transmittance',
+        'time_rise',
+        'time_fall',
+        'gray_to_gray',
+        'w_x',
+        'w_y',
+        'contrast_ratio',
     ]
 
 class OpticalReferenceListView(ListView):
