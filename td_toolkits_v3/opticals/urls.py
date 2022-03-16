@@ -32,5 +32,20 @@ urlpatterns = [
         'toc/rt/upload/',
         views.ResponseTimeUploadView.as_view(),
         name='toc_rt_log_upload'
+    ),
+    path(
+        'ref/list/',
+        views.OpticalReferenceListView.as_view(),
+        name='ref_list'
+    ),
+    path(
+        'ref/add/',
+        views.OpticalReferenceCreateView.as_view(),
+        name='ref_add'
+    ),
+    path(
+        'ref/update/',
+        views.OpticalReferenceUpdateView.as_view(),
+        name='ref_update'
     )
 ]

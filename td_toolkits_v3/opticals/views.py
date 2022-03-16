@@ -1,16 +1,17 @@
 from django.urls import reverse_lazy
 from django.views.generic import (
     TemplateView,
+    ListView
 )
-from django.views.generic.edit import FormView
+from django.views.generic.edit import FormView, CreateView, UpdateView
 
-from td_toolkits_v3.materials.forms import MaterialsUploadForm
 from .forms import (
     AxoUploadForm,
     RDLCellGapUploadForm,
     OptUploadForm,
-    ResponseTimeUploadForm
+    ResponseTimeUploadForm,
 )
+from .models import OpticalReference
 
 class IndexView(TemplateView):
     template_name = 'opticals/index.html'
@@ -70,3 +71,33 @@ class ResponseTimeUploadView(FormView):
         context = super().get_context_data(**kwargs)
         context['title'] = 'TOC Response Time Upload'
         return context
+
+
+class OpticalReferenceCreateView(CreateView):
+    template_name = 'upload_generic.html'
+    model = OpticalReference
+    fields = [
+        'product_model_type',
+        'lc',
+        'pi',
+        'seal',
+        'cell_gap',
+        'ito_slit',
+        'tft_tech',
+    ]
+
+class OpticalReferenceUpdateView(UpdateView):
+    template_name = 'upload_generic.html'
+    model = OpticalReference
+    fields = [
+        'product_model_type',
+        'lc',
+        'pi',
+        'seal',
+        'cell_gap',
+        'ito_slit',
+        'tft_tech',
+    ]
+
+class OpticalReferenceListView(ListView):
+    model = OpticalReference

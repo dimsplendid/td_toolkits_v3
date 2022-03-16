@@ -9,6 +9,7 @@ class ProductModelType(TimeStampedModel):
     slug = AutoSlugField(
         "Product Address", unique=True, always_update=False, populate_from="name"
     )
+    model_name = models.CharField(max_length=255, null=True, blank=True)
     factory = models.ForeignKey(
         "Factory",
         on_delete=models.CASCADE,

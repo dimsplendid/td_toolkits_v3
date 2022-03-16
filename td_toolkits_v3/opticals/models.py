@@ -137,3 +137,49 @@ class ResponseTimeLog(TimeStampedModel):
                 name='rt_unique'
             )
         ]
+
+class OpticalReference(TimeStampedModel):
+    """
+    Cause **Reference** should be mass product.
+    There would be only one optical reference for each product model type.
+    """
+    product_model_type = models.OneToOneField(
+        'products.ProductModelType', on_delete=models.CASCADE,
+        verbose_name='Product Name',
+        )
+    
+    lc = models.ForeignKey(
+        "materials.LiquidCrystal", 
+        on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name='LC'
+    )
+    pi = models.ForeignKey(
+        "materials.Polyimide", 
+        on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name='PI'
+    )
+    seal = models.ForeignKey(
+        "materials.Seal", 
+        on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name='Seal'
+    )
+
+    cell_gap = models.FloatField('Cell Gap')
+    ito_slit = models.FloatField(
+        'ITO Slit', null=True, blank=True)
+
+    class TFTTech(models.TextChoices):
+        AMORPHOUS = 'a_Si', 'a-Si'
+        LTPS = 'LTPS', 'LTPS'
+
+        __empty__ = 'Unknown'
+
+    tft_tech = models.CharField(
+        'TFT Tech', choices=TFTTech.choices, max_length=20)
+
+    def __str__(self):
+        return self.product_model_type.name + '@'\
+                + self.product_model_type.factory.name
+    
+    def get_absolute_url(self):
+        return 

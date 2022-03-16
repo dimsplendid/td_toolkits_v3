@@ -5,7 +5,8 @@ from .models import (
     AxometricsLog,
     RDLCellGap,
     OpticalLog,
-    ResponseTimeLog
+    ResponseTimeLog,
+    OpticalReference,
 )
 
 admin.site.register(Instrument)
@@ -13,3 +14,4 @@ admin.site.register(AxometricsLog)
 admin.site.register(RDLCellGap)
 admin.site.register(OpticalLog)
 admin.site.register(ResponseTimeLog)
+admin.site.register(OpticalReference)

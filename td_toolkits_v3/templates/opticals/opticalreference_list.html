@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Optical Reference List{% endblock title %}
+
+{% block content %}
+<h2>Optical Reference List</h2>
+<ul>
+{% for obj in opticalreference_list %}
+<li><a href="#TODO">{{ obj }}</a></li>
+{% endfor %}
+</ul>
+{% endblock content %}
