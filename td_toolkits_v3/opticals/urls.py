@@ -47,5 +47,10 @@ urlpatterns = [
         'ref/update/',
         views.OpticalReferenceUpdateView.as_view(),
         name='ref_update'
+    ),
+    path(
+        'ref/<slug:slug>',
+        views.OpticalReferenceDetailView.as_view(),
+        name='ref_detail'
     )
 ]

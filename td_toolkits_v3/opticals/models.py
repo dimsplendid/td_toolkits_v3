@@ -1,3 +1,4 @@
+from enum import unique
 from django.db import models
 
 from autoslug import AutoSlugField
@@ -118,7 +119,7 @@ class OpticalLog(TimeStampedModel):
 
 class ResponseTimeLog(TimeStampedModel):
     chip = models.ForeignKey('products.Chip', on_delete=models.CASCADE)
-    measure_point = models.SmallIntegerField()
+    measure_point = models.SmallIntegerField('Point')
     measure_time = models.DateTimeField()
     instrument = models.ForeignKey(
         Instrument,
@@ -127,8 +128,8 @@ class ResponseTimeLog(TimeStampedModel):
     )
     operator = models.CharField(max_length=255)
     voltage = models.FloatField('Vop')
-    time_rise = models.FloatField()
-    time_fall = models.FloatField()
+    time_rise = models.FloatField('Tr')
+    time_fall = models.FloatField('Tf')
 
     class Meta:
         constraints = [
@@ -147,7 +148,18 @@ class OpticalReference(TimeStampedModel):
         'products.ProductModelType', on_delete=models.CASCADE,
         verbose_name='Product Name',
         )
+
+    def slug_gen(obj):
+        product = obj.product_model_type.name
+        factory = obj.product_model_type.factory.name
+        return f'{product}-{factory}'
     
+    slug = AutoSlugField(
+        'opt ref addr',
+        unique=True, always_update=False, 
+        populate_from=slug_gen
+    )
+
     lc = models.ForeignKey(
         "materials.LiquidCrystal", 
         on_delete=models.CASCADE, null=True, blank=True,
@@ -176,6 +188,18 @@ class OpticalReference(TimeStampedModel):
 
     tft_tech = models.CharField(
         'TFT Tech', choices=TFTTech.choices, max_length=20)
+    operate_voltage = models.FloatField('Vop')
+    transmittance = models.FloatField('T%')
+    time_rise = models.FloatField('Tr')
+    time_fall = models.FloatField('Tf')
+    gray_to_gray = models.FloatField('G2G')
+    w_x = models.FloatField('Wx')
+    w_y = models.FloatField('Wy')
+    contrast_ratio = models.FloatField('CR')
+
+    @property
+    def response_time(self):
+        return self.time_fall + self.time_rise
 
     def __str__(self):
         return self.product_model_type.name + '@'\

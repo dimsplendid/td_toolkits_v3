@@ -6,7 +6,7 @@
 <h2>Optical Reference List</h2>
 <ul>
 {% for obj in opticalreference_list %}
-<li><a href="#TODO">{{ obj }}</a></li>
+<li><a href="{% url 'opticals:ref_detail' obj.slug %}">{{ obj }}</a></li>
 {% endfor %}
 </ul>
 {% endblock content %}

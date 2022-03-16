@@ -1,7 +1,8 @@
 from django.urls import reverse_lazy
 from django.views.generic import (
     TemplateView,
-    ListView
+    ListView,
+    DetailView,
 )
 from django.views.generic.edit import FormView, CreateView, UpdateView
 
@@ -100,4 +101,7 @@ class OpticalReferenceUpdateView(UpdateView):
     ]
 
 class OpticalReferenceListView(ListView):
+    model = OpticalReference
+
+class OpticalReferenceDetailView(DetailView):
     model = OpticalReference
