@@ -12,15 +12,13 @@ from .forms import (
     RDLCellGapUploadForm,
     OptUploadForm,
     ResponseTimeUploadForm,
+    CalculateOpticalForm,
 )
 from .models import OpticalReference
 
+
 class IndexView(TemplateView):
     template_name = 'opticals/index.html'
-
-
-class OpticalsUploadView(TemplateView):
-    template_name = 'opticals/upload.html'
 
 
 class AxoUploadView(FormView):
@@ -119,3 +117,23 @@ class OpticalReferenceListView(ListView):
 
 class OpticalReferenceDetailView(DetailView):
     model = OpticalReference
+
+class CalculateOpticalView(FormView):
+    form_class = CalculateOpticalForm
+    template_name = 'upload_generic.html'
+
+    def form_valid(self, form):
+        form.calculate(self.request)
+        return super().form_valid(form)
+    success_url = reverse_lazy('opticals:calculate_check')
+
+
+class CalculateCheckView(TemplateView):
+    # Todo: check and update to data base
+    # form_class = None
+    template_name = 'opticals/calculate_check.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['message'] = self.request.session.get('message')
+        return context

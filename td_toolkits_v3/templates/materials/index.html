@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Materials{% endblock title %}
+
+{% block content %}
+<h1>Materials</h1>
+<ul>
+    <li> <a href="{% url 'materials:lc_list' %}">Liquid Crystal</a> </li>
+    <li> <a href="{% url 'materials:pi_list' %}">Polyimide</a> </li>
+    <li> <a href="{% url 'materials:seal_list' %}">Seal</a> </li>
+    <li> <a href="{% url 'materials:upload' %}">Upload</a> </li>
+    {% comment %} <li> <a href="{% url '' %}"></a> </li>
+    <li> <a href="{% url '' %}"></a> </li> {% endcomment %}
+{% endblock content %}

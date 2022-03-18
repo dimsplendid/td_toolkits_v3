@@ -9,11 +9,6 @@ urlpatterns = [
         name='index'
     ),
     path(
-        'upload/',
-        views.OpticalsUploadView.as_view(),
-        name='upload'
-    ),
-    path(
         'axo/upload/',
         views.AxoUploadView.as_view(),
         name='axo_upload'
@@ -52,5 +47,15 @@ urlpatterns = [
         'ref/<slug:slug>/',
         views.OpticalReferenceDetailView.as_view(),
         name='ref_detail'
+    ),
+    path(
+        'calculate/',
+        views.CalculateOpticalView.as_view(),
+        name='calculate'
+    ),
+    path(
+        'calculate/check/',
+        views.CalculateCheckView.as_view(),
+        name='calculate_check'
     )
 ]

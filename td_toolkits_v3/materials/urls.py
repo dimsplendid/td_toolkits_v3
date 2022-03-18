@@ -4,6 +4,10 @@ from . import views
 
 app_name = "materials"
 urlpatterns = [
+    path('',
+        view=views.IndexView.as_view(),
+        name='index'
+    ),
     path(
         route='lc/list/',
         view=views.LiquidCrystalListView.as_view(),
@@ -26,7 +30,17 @@ urlpatterns = [
     ),
     path(
         route='upload/',
-        view=views.MaterialsBatchCreateView.as_view(),
+        view=views.MaterialsUploadView.as_view(),
         name='upload'
-    )
+    ),
+    path(
+        route='pi/list',
+        view=views.PolyimideListView.as_view(),
+        name='pi_list'
+    ),
+    path(
+        route='seal/list',
+        view=views.SealListView.as_view(),
+        name='seal_list'
+    ),
 ]

@@ -27,6 +27,7 @@ from .models import (
     RDLCellGap,
     OpticalLog,
     ResponseTimeLog,
+    OpticalReference
 )
 
 
@@ -388,3 +389,36 @@ class ResponseTimeUploadForm(forms.Form):
                 ))
         
         ResponseTimeLog.objects.bulk_create(logs)
+
+class CalculateOpticalForm(forms.Form):
+    exp_id = forms.ChoiceField(choices=("", ""), initial=None)
+    ref_product = forms.ChoiceField(choices=("", ""), initial=None)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Set the last experiment name for the upload axo data
+        self.fields["exp_id"].choices = list(
+            Experiment.objects.all().values_list("name", "name")
+        )
+        last_exp = Experiment.objects.last()
+        if last_exp is not None:
+            last_exp_id = last_exp.name
+            self.fields["exp_id"].initial = (last_exp_id, last_exp_id)
+        self.fields['ref_product'].choices = list(
+            OpticalReference.objects.all().values_list('slug', 'slug')
+        )
+        last_ref = OpticalReference.objects.last()
+        if last_ref is not None:
+            self.fields['ref_product'].initial = (last_ref.slug, last_ref.slug)
+
+    def check_origin_data(self):
+        print('Check Origin Data')
+
+    def calculate(self, request):
+        request.session['message'] = f'Calculate {self.cleaned_data["exp_id"]}, '\
+            +  f'ref: {self.cleaned_data["ref_product"]}'
+
+        
+
+    def save(self):
+        print('Save the Right Result')

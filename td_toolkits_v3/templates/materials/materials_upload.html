@@ -5,6 +5,9 @@
 
 {% block content %}
 <h1>Materials Upload</h1>
+<a class="btn btn-primary" href="{% url 'materials:upload' %}?download=1">
+    Upload Template Download
+</a>
 <form method="post" action="." enctype="multipart/form-data">
     {% csrf_token %}
     {{ form|crispy }}
