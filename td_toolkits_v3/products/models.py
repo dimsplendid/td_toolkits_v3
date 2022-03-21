@@ -63,6 +63,7 @@ class Experiment(TimeStampedModel):
     name = models.CharField(
         "Experiment ID",
         max_length=255,
+        unique=True,
     )
     slug = AutoSlugField(
         "Experiment Address", unique=True, always_update=False, populate_from="name"

@@ -3,7 +3,7 @@ from django.urls import reverse
 
 from autoslug import AutoSlugField
 from model_utils.models import TimeStampedModel
-
+from picklefield.fields import PickledObjectField
 
 class Instrument(TimeStampedModel):
     name = models.CharField(
@@ -206,3 +206,47 @@ class OpticalReference(TimeStampedModel):
     
     def get_absolute_url(self):
         return reverse('opticals:ref_detail', kwargs={"slug": self.slug})
+
+class ValidManager(models.Manager):
+    def valided(self, **kwargs):
+        return self.filter(is_valid=True, **kwargs)
+
+class OpticalsFittingModel(TimeStampedModel):
+    experiment = models.ForeignKey(
+        'products.Experiment', on_delete=models.CASCADE)
+    lc = models.ForeignKey(
+        'materials.LiquidCrystal', on_delete=models.CASCADE)
+    # Origin data ranges
+    cell_gap_upper = models.FloatField()
+    cell_gap_lower = models.FloatField()
+    # Fitting models
+    response_time = PickledObjectField()
+    time_rise = PickledObjectField()
+    time_fall = PickledObjectField()
+    w_x = PickledObjectField()
+    w_y = PickledObjectField()
+    lc_percent = PickledObjectField()
+    transmittance = PickledObjectField()
+
+    
+    # Custom model manager
+    objects = ValidManager()
+    
+    # valid system
+    is_valid = models.BooleanField(default=False)
+
+    def valid(self):
+        self.is_valid = True
+        self.save()
+
+    def invalid(self):
+        self.is_valid = False
+        self.save()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['experiment', 'lc'],
+                name='opticals_scipy_model'
+            )
+        ]
