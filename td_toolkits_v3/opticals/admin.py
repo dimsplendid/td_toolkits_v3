@@ -7,6 +7,7 @@ from .models import (
     OpticalLog,
     ResponseTimeLog,
     OpticalReference,
+    OpticalsFittingModel,
 )
 
 admin.site.register(Instrument)
@@ -15,3 +16,4 @@ admin.site.register(RDLCellGap)
 admin.site.register(OpticalLog)
 admin.site.register(ResponseTimeLog)
 admin.site.register(OpticalReference)
+admin.site.register(OpticalsFittingModel)

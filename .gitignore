@@ -330,3 +330,4 @@ td_toolkits_v3/media/
 
 # ignore excel tmp file
 .~*
+.ipynb_checkpoints*

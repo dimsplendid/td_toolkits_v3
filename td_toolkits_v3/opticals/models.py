@@ -243,6 +243,9 @@ class OpticalsFittingModel(TimeStampedModel):
         self.is_valid = False
         self.save()
 
+    def __str__(self):
+        return f'{self.lc.name} @ {self.experiment.name}'
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
