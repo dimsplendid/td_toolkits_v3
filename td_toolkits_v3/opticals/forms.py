@@ -199,7 +199,7 @@ class OptUploadForm(forms.Form):
             
         if len(opt_df) == 0:
             return
-        print(opt_df.head())
+        # print(opt_df.head())
         # 0. drop na for chip, date, time
         opt_df = opt_df.dropna(
             subset=[
@@ -245,6 +245,7 @@ class OptUploadForm(forms.Form):
         opt_df.iloc[:, 5] = opt_df.iloc[:, 5].astype('str')     # operator
         opt_df.iloc[:, 6] = opt_df.iloc[:, 6].astype('float')   # voltage
         opt_df.iloc[:, 11] = opt_df.iloc[:, 11].astype('float') # lc percent
+        opt_df.iloc[:, 23] = opt_df.iloc[:, 23].astype('float') # w_capital_y
         opt_df.iloc[:, 32] = opt_df.iloc[:, 32].astype('float') # w_x
         opt_df.iloc[:, 33] = opt_df.iloc[:, 33].astype('float') # w_y
         # 7. batch create for each chip
@@ -267,6 +268,7 @@ class OptUploadForm(forms.Form):
                     operator=row[5],
                     voltage=row[6],
                     lc_percent=row[11],
+                    w_capital_y=row[23],
                     w_x=row[32],
                     w_y=row[33],
                 ))

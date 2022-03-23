@@ -95,6 +95,7 @@ class OpticalLog(TimeStampedModel):
     lc_percent = models.FloatField()
     w_x = models.FloatField()
     w_y = models.FloatField()
+    w_capital_y = models.FloatField('WY')
 
     @property
     def t_percent(self):
