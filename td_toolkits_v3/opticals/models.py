@@ -5,17 +5,15 @@ from autoslug import AutoSlugField
 from model_utils.models import TimeStampedModel
 from picklefield.fields import PickledObjectField
 
+
 class Instrument(TimeStampedModel):
-    name = models.CharField(
-        'Instrument Name',
-        max_length=255)
+    name = models.CharField("Instrument Name", max_length=255)
     slug = AutoSlugField(
-        'Instrument Address',
-        unique=True, always_update=False, populate_from='name')
-    desc = models.TextField(
-        'description', blank=True)
+        "Instrument Address", unique=True, always_update=False, populate_from="name"
+    )
+    desc = models.TextField("description", blank=True)
     factory = models.ForeignKey(
-        'products.Factory',
+        "products.Factory",
         on_delete=models.CASCADE,
         blank=True,
         null=True,
@@ -27,13 +25,13 @@ class Instrument(TimeStampedModel):
             name=name,
             factory=factory,
         )[0]
-    
+
     def __str__(self):
-        return f'{self.name} (@{self.factory.name})'
+        return f"{self.name} (@{self.factory.name})"
 
 
 class AxometricsLog(TimeStampedModel):
-    chip = models.ForeignKey('products.Chip', on_delete=models.CASCADE)
+    chip = models.ForeignKey("products.Chip", on_delete=models.CASCADE)
     measure_point = models.SmallIntegerField()
     x_coord = models.FloatField()
     y_coord = models.FloatField()
@@ -45,178 +43,174 @@ class AxometricsLog(TimeStampedModel):
     rms = models.FloatField()
     iteration = models.FloatField()
     instrument = models.ForeignKey(
-        Instrument, 
-        on_delete=models.CASCADE,
-        null=True, blank=True
+        Instrument, on_delete=models.CASCADE, null=True, blank=True
     )
 
     def __str__(self):
-        return f'{self.chip.name}, p {self.measure_point}' \
-            + f', cell gap: {self.cell_gap}'
+        return (
+            f"{self.chip.name}, p {self.measure_point}" + f", cell gap: {self.cell_gap}"
+        )
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['chip', 'measure_point'], name='axo_chip_measure_point'
+                fields=["chip", "measure_point"], name="axo_chip_measure_point"
             )
         ]
-
 
 
 class RDLCellGap(TimeStampedModel):
     # One to One relation can not duplicate.
     chip = models.OneToOneField(
-        'products.Chip', 
-        on_delete=models.CASCADE,
-        related_name='rdl_cell_gap'
+        "products.Chip", on_delete=models.CASCADE, related_name="rdl_cell_gap"
     )
     cell_gap = models.FloatField()
     instrument = models.ForeignKey(
-        Instrument, 
-        on_delete=models.CASCADE,
-        null=True, blank=True
+        Instrument, on_delete=models.CASCADE, null=True, blank=True
     )
-    
+
     def __str__(self):
         return self.chip.name
 
 
 class OpticalLog(TimeStampedModel):
-    chip = models.ForeignKey('products.Chip', on_delete=models.CASCADE)
+    chip = models.ForeignKey("products.Chip", on_delete=models.CASCADE)
     measure_point = models.SmallIntegerField()
     measure_time = models.DateTimeField()
     instrument = models.ForeignKey(
-        Instrument,
-        on_delete=models.CASCADE,
-        null=True, blank=True
+        Instrument, on_delete=models.CASCADE, null=True, blank=True
     )
     operator = models.CharField(max_length=255)
-    voltage = models.FloatField('Vop')
+    voltage = models.FloatField("Vop")
     lc_percent = models.FloatField()
     w_x = models.FloatField()
     w_y = models.FloatField()
-    w_capital_y = models.FloatField('WY')
+    w_capital_y = models.FloatField("WY")
 
     @property
     def t_percent(self):
-        max_lc_percent = max(self.objects.filter(
-            chip=self.chip,
-            measure_point=self.measure_point
-        ).values_list('lc_percent'))[0]
+        max_lc_percent = max(
+            self.objects.filter(
+                chip=self.chip, measure_point=self.measure_point
+            ).values_list("lc_percent")
+        )[0]
         return self.lc_percent / max_lc_percent * 100
 
     def __str__(self):
-        return f'{self.chip.name}, p {self.measure_point} ' \
-            + f'v: {self.voltage}, ({self.lc_percent}, {self.w_x}, {self.w_y})'
-
+        return (
+            f"{self.chip.name}, p {self.measure_point} "
+            + f"v: {self.voltage}, ({self.lc_percent},"
+            + f"{self.w_x}, {self.w_y}, {self.w_capital_y})"
+        )
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['chip', 'measure_point', 'voltage'], 
-                name='opt_unique'
+                fields=["chip", "measure_point", "voltage"], name="opt_unique"
             )
         ]
+
 
 class ResponseTimeLog(TimeStampedModel):
-    chip = models.ForeignKey('products.Chip', on_delete=models.CASCADE)
-    measure_point = models.SmallIntegerField('Point')
+    chip = models.ForeignKey("products.Chip", on_delete=models.CASCADE)
+    measure_point = models.SmallIntegerField("Point")
     measure_time = models.DateTimeField()
     instrument = models.ForeignKey(
-        Instrument,
-        on_delete=models.CASCADE,
-        null=True, blank=True
+        Instrument, on_delete=models.CASCADE, null=True, blank=True
     )
     operator = models.CharField(max_length=255)
-    voltage = models.FloatField('Vop')
-    time_rise = models.FloatField('Tr')
-    time_fall = models.FloatField('Tf')
+    voltage = models.FloatField("Vop")
+    time_rise = models.FloatField("Tr")
+    time_fall = models.FloatField("Tf")
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['chip', 'measure_point', 'voltage'], 
-                name='rt_unique'
+                fields=["chip", "measure_point", "voltage"], name="rt_unique"
             )
         ]
+
 
 class OpticalReference(TimeStampedModel):
     """
     Cause **Reference** should be mass product.
     There would be only one optical reference for each product model type.
     """
+
     product_model_type = models.OneToOneField(
-        'products.ProductModelType', on_delete=models.CASCADE,
-        verbose_name='Product Name',
-        )
+        "products.ProductModelType",
+        on_delete=models.CASCADE,
+        verbose_name="Product Name",
+    )
 
     def slug_gen(obj):
         product = obj.product_model_type.name
         factory = obj.product_model_type.factory.name
-        return f'{product}-{factory}'
-    
+        return f"{product}-{factory}"
+
     slug = AutoSlugField(
-        'opt ref addr',
-        unique=True, always_update=False, 
-        populate_from=slug_gen
+        "opt ref addr", unique=True, always_update=False, populate_from=slug_gen
     )
 
     lc = models.ForeignKey(
-        "materials.LiquidCrystal", 
-        on_delete=models.CASCADE, null=True, blank=True,
-        verbose_name='LC'
+        "materials.LiquidCrystal",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name="LC",
     )
     pi = models.ForeignKey(
-        "materials.Polyimide", 
-        on_delete=models.CASCADE, null=True, blank=True,
-        verbose_name='PI'
+        "materials.Polyimide",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name="PI",
     )
     seal = models.ForeignKey(
-        "materials.Seal", 
-        on_delete=models.CASCADE, null=True, blank=True,
-        verbose_name='Seal'
+        "materials.Seal",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name="Seal",
     )
 
-    cell_gap = models.FloatField('Cell Gap')
-    ito_slit = models.FloatField(
-        'ITO Slit', null=True, blank=True)
+    cell_gap = models.FloatField("Cell Gap")
+    ito_slit = models.FloatField("ITO Slit", null=True, blank=True)
 
     class TFTTech(models.TextChoices):
-        AMORPHOUS = 'a_Si', 'a-Si'
-        LTPS = 'LTPS', 'LTPS'
+        AMORPHOUS = "a_Si", "a-Si"
+        LTPS = "LTPS", "LTPS"
 
-        __empty__ = 'Unknown'
+        __empty__ = "Unknown"
 
-    tft_tech = models.CharField(
-        'TFT Tech', choices=TFTTech.choices, max_length=20)
-    transmittance = models.FloatField('T%')
-    time_rise = models.FloatField('Tr')
-    time_fall = models.FloatField('Tf')
-    gray_to_gray = models.FloatField('G2G')
-    w_x = models.FloatField('Wx')
-    w_y = models.FloatField('Wy')
-    contrast_ratio = models.FloatField('CR')
+    tft_tech = models.CharField("TFT Tech", choices=TFTTech.choices, max_length=20)
+    transmittance = models.FloatField("T%")
+    time_rise = models.FloatField("Tr")
+    time_fall = models.FloatField("Tf")
+    gray_to_gray = models.FloatField("G2G")
+    w_x = models.FloatField("Wx")
+    w_y = models.FloatField("Wy")
+    contrast_ratio = models.FloatField("CR")
 
     @property
     def response_time(self):
         return self.time_fall + self.time_rise
 
     def __str__(self):
-        return self.product_model_type.name + '@'\
-                + self.product_model_type.factory.name
-    
+        return self.product_model_type.name + "@" + self.product_model_type.factory.name
+
     def get_absolute_url(self):
-        return reverse('opticals:ref_detail', kwargs={"slug": self.slug})
+        return reverse("opticals:ref_detail", kwargs={"slug": self.slug})
+
 
 class ValidManager(models.Manager):
     def valided(self, **kwargs):
         return self.filter(is_valid=True, **kwargs)
 
+
 class OpticalsFittingModel(TimeStampedModel):
-    experiment = models.ForeignKey(
-        'products.Experiment', on_delete=models.CASCADE)
-    lc = models.ForeignKey(
-        'materials.LiquidCrystal', on_delete=models.CASCADE)
+    experiment = models.ForeignKey("products.Experiment", on_delete=models.CASCADE)
+    lc = models.ForeignKey("materials.LiquidCrystal", on_delete=models.CASCADE)
     # Origin data ranges
     cell_gap_upper = models.FloatField()
     cell_gap_lower = models.FloatField()
@@ -229,10 +223,9 @@ class OpticalsFittingModel(TimeStampedModel):
     lc_percent = PickledObjectField()
     transmittance = PickledObjectField()
 
-    
     # Custom model manager
     objects = ValidManager()
-    
+
     # valid system
     is_valid = models.BooleanField(default=False)
 
@@ -245,12 +238,11 @@ class OpticalsFittingModel(TimeStampedModel):
         self.save()
 
     def __str__(self):
-        return f'{self.lc.name} @ {self.experiment.name}'
+        return f"{self.lc.name} @ {self.experiment.name}"
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['experiment', 'lc'],
-                name='opticals_scipy_model'
+                fields=["experiment", "lc"], name="opticals_scipy_model"
             )
         ]

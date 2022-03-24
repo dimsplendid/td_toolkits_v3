@@ -93,6 +93,7 @@ class OptLoader():
             "lc_percent": "LC%",
             "w_x": "Wx",
             "w_y": "Wy",
+            "w_capital_y": "WY",
         }
         # Query from database, and transform to pd.dataframe
         df = self.load_by_experiment(header, OpticalLog)
@@ -250,6 +251,7 @@ class OptFitting():
         self.__opt_transformer = None
         self.__wx_model = None
         self.__wy_model = None
+        self.__w_capital_y_model = None
         self.__lc_percent_model = None
         self.__transmittance_model = None
         self.__v_percent_model = None
@@ -442,6 +444,18 @@ class OptFitting():
         self.r2['f(Vop, Cell Gap) |-> Wy'] = r2_score
         return self.__wy_model
     
+    @property
+    def w_capital_y_model(self):
+        """
+        f(Vop, Cell Gap) |-> WY
+        """
+        if self.__w_capital_y_model is not None:
+            return self.__w_capital_y_model
+        
+        self.__wy_model, r2_score = self.__opt_model('WY')
+        self.r2['f(Vop, Cell Gap) |-> WY'] = r2_score
+        return self.__wy_model
+
     @property
     def lc_percent_model(self):
         """

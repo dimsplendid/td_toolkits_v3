@@ -12,4 +12,7 @@
     ],
     "restructuredtext.languageServer.disabled": true,
     "python.formatting.provider": "black",
+    "python.formatting.autopep8Args": [
+        "--line-length 79"
+    ],
 }

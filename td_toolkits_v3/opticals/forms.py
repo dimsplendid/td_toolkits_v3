@@ -22,12 +22,13 @@ from td_toolkits_v3.materials.models import (
 )
 from td_toolkits_v3.products.tests.factories import experiment
 from .models import (
-    Instrument, 
-    AxometricsLog, 
+    Instrument,
+    AxometricsLog,
     RDLCellGap,
     OpticalLog,
     ResponseTimeLog,
-    OpticalReference
+    OpticalReference,
+    OpticalReference,
 )
 
 
@@ -64,7 +65,8 @@ class AxoUploadForm(forms.Form):
 
     def save(self, request):
         files = request.FILES.getlist("axos")
-        experiment = Experiment.objects.get(name=str(self.cleaned_data["exp_id"]))
+        experiment = Experiment.objects.get(
+            name=str(self.cleaned_data["exp_id"]))
         # print(files)
         factory = Factory.default(self.cleaned_data["factory"])
         instrument = Instrument.default("AXO", factory)
@@ -87,7 +89,8 @@ class AxoUploadForm(forms.Form):
                 # Check if there is chip data, otherwise skip.
                 try:
                     chip = Chip.objects.get(
-                        short_name=short_name, sub__condition__experiment=experiment
+                        short_name=short_name, 
+                        sub__condition__experiment=experiment
                     )
                 except:
                     continue
@@ -99,7 +102,8 @@ class AxoUploadForm(forms.Form):
                             measure_point=point,
                         )
                         print(
-                            f"{chip.name}({chip.short_name}) at point [{point}] is duplicate"
+                            f"{chip.name}({chip.short_name})"
+                            + f" at point [{point}] is duplicate"
                         )
                         continue
                     except:
@@ -125,7 +129,9 @@ class RDLCellGapUploadForm(forms.Form):
         max_length=255,
         initial=None,
     )
-    rdl_cell_gap = forms.FileField(widget=forms.FileInput(attrs={"accept": ".xlsx"}))
+    rdl_cell_gap = forms.FileField(
+        widget=forms.FileInput(attrs={"accept": ".xlsx"})
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -137,7 +143,8 @@ class RDLCellGapUploadForm(forms.Form):
 
     def save(self):
         rdl_cell_gap = pd.read_excel(self.cleaned_data["rdl_cell_gap"])
-        experiment = Experiment.objects.get(name=str(self.cleaned_data["exp_id"]))
+        experiment = Experiment.objects.get(
+            name=str(self.cleaned_data["exp_id"]))
 
         factory = Factory.default("Fab1")
         instrument = Instrument.default("RETS", factory)
@@ -146,7 +153,8 @@ class RDLCellGapUploadForm(forms.Form):
             # Check if there is chip data, otherwise skip.
             try:
                 chip = Chip.objects.get(
-                    short_name=row["short id"], sub__condition__experiment=experiment
+                    short_name=row["short id"], 
+                    sub__condition__experiment=experiment
                 )
             except:
                 continue
@@ -154,6 +162,7 @@ class RDLCellGapUploadForm(forms.Form):
             RDLCellGap.objects.create(
                 chip=chip, cell_gap=row["cell gap(um)"], instrument=instrument
             )
+
 
 class OptUploadForm(forms.Form):
     exp_id = forms.ChoiceField(choices=("", ""), initial=None)
@@ -186,92 +195,101 @@ class OptUploadForm(forms.Form):
         self.fields["factory"].initial = ("TOC", "TOC")
 
     def save(self, request):
-        files = request.FILES.getlist('opts')
-        experiment = Experiment.objects.get(name=str(self.cleaned_data["exp_id"]))
+        files = request.FILES.getlist("opts")
+        experiment = Experiment.objects.get(
+            name=str(self.cleaned_data["exp_id"]))
         # print(files)
         factory = Factory.default(self.cleaned_data["factory"])
-        
+
         opt_df = pd.DataFrame()
-        for file in  files:
+        for file in files:
             # Using pd read csv this time
-            tmp_df = pd.read_csv(file, encoding='utf-8', encoding_errors='ignore')
+            tmp_df = pd.read_csv(
+                file, encoding="utf-8", encoding_errors="ignore")
             opt_df = pd.concat([opt_df, tmp_df])
-            
+
         if len(opt_df) == 0:
             return
         # print(opt_df.head())
         # 0. drop na for chip, date, time
         opt_df = opt_df.dropna(
             subset=[
-                opt_df.columns[0], # Date
-                opt_df.columns[1], # Time
-                opt_df.columns[2], # ID
-                opt_df.columns[3], # measure point
-                opt_df.columns[6], # voltage
+                opt_df.columns[0],  # Date
+                opt_df.columns[1],  # Time
+                opt_df.columns[2],  # ID
+                opt_df.columns[3],  # measure point
+                opt_df.columns[6],  # voltage
             ]
         )
         # 1. drop V == 1, the data separate note
-        opt_df = opt_df[opt_df.iloc[:,6] != 1]
+        opt_df = opt_df[opt_df.iloc[:, 6] != 1]
         # 2. change Vpp to Vop
-        opt_df.iloc[:,6] = opt_df.iloc[:,6] / 2
+        opt_df.iloc[:, 6] = opt_df.iloc[:, 6] / 2
         # 3. transform datetime
-        opt_df['datetime'] = [datetime.strptime(
-            f'{opt_df.iloc[i, 0]} {opt_df.iloc[i, 1]} +0800', 
-            r'%Y/%m/%d %H:%M:%S %z'
-        ) for i in range(len(opt_df))]
+        opt_df["datetime"] = [
+            datetime.strptime(
+                f"{opt_df.iloc[i, 0]} {opt_df.iloc[i, 1]} +0800",
+                r"%Y/%m/%d %H:%M:%S %z",
+            )
+            for i in range(len(opt_df))
+        ]
 
         # 4. drop duplicate (keep newer)
-        opt_df = opt_df.sort_values('datetime') \
-            .drop_duplicates(
-                subset=[
-                    # cause sometime the header maybe different?
-                    # using the position otherwise.
-                    opt_df.columns[2], # ID
-                    opt_df.columns[3], # measure point
-                    opt_df.columns[6], # voltage
-                ], 
-                keep='last'
-            )
-        
+        opt_df = opt_df.sort_values("datetime").drop_duplicates(
+            subset=[
+                # cause sometime the header maybe different?
+                # using the position otherwise.
+                opt_df.columns[2],  # ID
+                opt_df.columns[3],  # measure point
+                opt_df.columns[6],  # voltage
+            ],
+            keep="last",
+        )
+
         # 5. drop chip that already logged
-        chip_could_log = [ i.name for i in Chip.objects.filter(
-            sub__condition__experiment=experiment,
-            opticallog__isnull=True).distinct()]
-        
-        opt_df = opt_df[opt_df.iloc[:,2].isin(chip_could_log)]
+        chip_could_log = [
+            i.name
+            for i in Chip.objects.filter(
+                sub__condition__experiment=experiment, opticallog__isnull=True
+            ).distinct()
+        ]
+
+        opt_df = opt_df[opt_df.iloc[:, 2].isin(chip_could_log)]
 
         # 6. modified data type
-        opt_df.iloc[:, 3] = opt_df.iloc[:, 3].astype('int')     # measure point
-        opt_df.iloc[:, 5] = opt_df.iloc[:, 5].astype('str')     # operator
-        opt_df.iloc[:, 6] = opt_df.iloc[:, 6].astype('float')   # voltage
-        opt_df.iloc[:, 11] = opt_df.iloc[:, 11].astype('float') # lc percent
-        opt_df.iloc[:, 23] = opt_df.iloc[:, 23].astype('float') # w_capital_y
-        opt_df.iloc[:, 32] = opt_df.iloc[:, 32].astype('float') # w_x
-        opt_df.iloc[:, 33] = opt_df.iloc[:, 33].astype('float') # w_y
+        opt_df.iloc[:, 3] = opt_df.iloc[:, 3].astype("int")  # measure point
+        opt_df.iloc[:, 5] = opt_df.iloc[:, 5].astype("str")  # operator
+        opt_df.iloc[:, 6] = opt_df.iloc[:, 6].astype("float")  # voltage
+        opt_df.iloc[:, 11] = opt_df.iloc[:, 11].astype("float")  # lc percent
+        opt_df.iloc[:, 23] = opt_df.iloc[:, 23].astype("float")  # w_capital_y
+        opt_df.iloc[:, 32] = opt_df.iloc[:, 32].astype("float")  # w_x
+        opt_df.iloc[:, 33] = opt_df.iloc[:, 33].astype("float")  # w_y
         # 7. batch create for each chip
         logs = []
-        instrument_id = Instrument.default(opt_df.iloc[0,4], factory).id
-        
-        for chip_name in opt_df.iloc[:,2].unique():
+        instrument_id = Instrument.default(opt_df.iloc[0, 4], factory).id
+
+        for chip_name in opt_df.iloc[:, 2].unique():
             chip_id = Chip.objects.get(
-                name = chip_name,
-                sub__condition__experiment=experiment).id
-            tmp_df = opt_df[opt_df.iloc[:,2]==chip_name]
+                name=chip_name, sub__condition__experiment=experiment
+            ).id
+            tmp_df = opt_df[opt_df.iloc[:, 2] == chip_name]
             if len(tmp_df) == 0:
                 continue
             for row in tmp_df.to_numpy():
-                logs.append(OpticalLog(
-                    chip_id=chip_id,
-                    measure_point=row[3],
-                    measure_time=row[-1],
-                    instrument_id=instrument_id,
-                    operator=row[5],
-                    voltage=row[6],
-                    lc_percent=row[11],
-                    w_capital_y=row[23],
-                    w_x=row[32],
-                    w_y=row[33],
-                ))
+                logs.append(
+                    OpticalLog(
+                        chip_id=chip_id,
+                        measure_point=row[3],
+                        measure_time=row[-1],
+                        instrument_id=instrument_id,
+                        operator=row[5],
+                        voltage=row[6],
+                        lc_percent=row[11],
+                        w_capital_y=row[23],
+                        w_x=row[32],
+                        w_y=row[33],
+                    )
+                )
 
         OpticalLog.objects.bulk_create(logs)
 
@@ -307,90 +325,100 @@ class ResponseTimeUploadForm(forms.Form):
         self.fields["factory"].initial = ("TOC", "TOC")
 
     def save(self, request):
-        files = request.FILES.getlist('rts')
-        experiment = Experiment.objects.get(name=str(self.cleaned_data["exp_id"]))
+        files = request.FILES.getlist("rts")
+        experiment = Experiment.objects.get(
+            name=str(self.cleaned_data["exp_id"]))
         # print(files)
         factory = Factory.default(self.cleaned_data["factory"])
 
         rt_df = []
         for file in files:
-            tmp_df = pd.read_table(file, encoding='utf-8', encoding_errors='ignore')
+            tmp_df = pd.read_table(
+                file, encoding="utf-8", encoding_errors="ignore")
             rt_df.append(tmp_df)
         rt_df = pd.concat(rt_df)
-        
+
         # There are some row are the header, cause they just
-        # merge the file directory. 
+        # merge the file directory.
         # Yea, I don't know why ether...
-        unwanted_mask = rt_df.iloc[:,7].astype('str').str.match('[ a-zA-Z]+')
+        unwanted_mask = rt_df.iloc[:, 7].astype("str").str.match("[ a-zA-Z]+")
         rt_df = rt_df[~unwanted_mask]
         if len(rt_df) == 0:
             return
 
         # modified types
         for col in [3, 7, 17, 19]:
-            rt_df.iloc[:,col] = rt_df.iloc[:,col].astype('float')
+            rt_df.iloc[:, col] = rt_df.iloc[:, col].astype("float")
         # operator should store in str
-        rt_df.iloc[:,5] = rt_df.iloc[:,5].astype('str')
-        
+        rt_df.iloc[:, 5] = rt_df.iloc[:, 5].astype("str")
+
         print(rt_df.head())
         # 0. drop na for chip, date, time
         rt_df = rt_df.dropna(
             subset=[
-                rt_df.columns[0], # Date
-                rt_df.columns[1], # Time
-                rt_df.columns[2], # ID
-                rt_df.columns[3], # measure point
-                rt_df.columns[7], # voltage
+                rt_df.columns[0],  # Date
+                rt_df.columns[1],  # Time
+                rt_df.columns[2],  # ID
+                rt_df.columns[3],  # measure point
+                rt_df.columns[7],  # voltage
             ]
         )
         # 1. trasform datetime
-        rt_df['datetime'] = [datetime.strptime(
-            f'{rt_df.iloc[i, 0]} {rt_df.iloc[i, 1]} +0800', 
-            r'%Y/%m/%d %H:%M:%S %z'
-        ) for i in range(len(rt_df))]
+        rt_df["datetime"] = [
+            datetime.strptime(
+                f"{rt_df.iloc[i, 0]} {rt_df.iloc[i, 1]} +0800", 
+                r"%Y/%m/%d %H:%M:%S %z"
+            )
+            for i in range(len(rt_df))
+        ]
 
         # 2. drop duplicate(keep newer)
-        rt_df = rt_df.sort_values('datetime') \
-            .drop_duplicates(
-                subset=[
-                    # cause sometime the header maybe different?
-                    # using the position otherwise.
-                    rt_df.columns[2], # ID
-                    rt_df.columns[3], # measure point
-                    rt_df.columns[7], # voltage
-                ], 
-                keep='last'
-            )
+        rt_df = rt_df.sort_values("datetime").drop_duplicates(
+            subset=[
+                # cause sometime the header maybe different?
+                # using the position otherwise.
+                rt_df.columns[2],  # ID
+                rt_df.columns[3],  # measure point
+                rt_df.columns[7],  # voltage
+            ],
+            keep="last",
+        )
 
         # 3. drop chip that already logged
-        chip_could_log = [ i.name for i in Chip.objects.filter(
-            sub__condition__experiment=experiment,
-            responsetimelog__isnull=True).distinct()]
+        chip_could_log = [
+            i.name
+            for i in Chip.objects.filter(
+                sub__condition__experiment=experiment, 
+                responsetimelog__isnull=True
+            ).distinct()
+        ]
 
-        rt_df = rt_df[rt_df.iloc[:,2].isin(chip_could_log)]
+        rt_df = rt_df[rt_df.iloc[:, 2].isin(chip_could_log)]
         logs = []
-        instrument_id = Instrument.default(rt_df.iloc[0,4], factory).id
+        instrument_id = Instrument.default(rt_df.iloc[0, 4], factory).id
 
         # 4. batch create for each chip
-        for chip_name in rt_df.iloc[:,2].unique():
+        for chip_name in rt_df.iloc[:, 2].unique():
             chip_id = Chip.objects.get(
-                name=chip_name,
-                sub__condition__experiment=experiment
+                name=chip_name, sub__condition__experiment=experiment
             ).id
-            tmp_df = rt_df[rt_df.iloc[:,2]==chip_name]
+            tmp_df = rt_df[rt_df.iloc[:, 2] == chip_name]
             for row in tmp_df.to_numpy():
-                logs.append(ResponseTimeLog(
-                    chip_id=chip_id,
-                    measure_point=row[3],
-                    measure_time=row[-1],
-                    instrument_id=instrument_id,
-                    operator=row[5],
-                    voltage=row[7],
-                    time_rise=row[17],
-                    time_fall=row[19],
-                ))
-        
+                logs.append(
+                    ResponseTimeLog(
+                        chip_id=chip_id,
+                        measure_point=row[3],
+                        measure_time=row[-1],
+                        instrument_id=instrument_id,
+                        operator=row[5],
+                        voltage=row[7],
+                        time_rise=row[17],
+                        time_fall=row[19],
+                    )
+                )
+
         ResponseTimeLog.objects.bulk_create(logs)
+
 
 class CalculateOpticalForm(forms.Form):
     exp_id = forms.ChoiceField(choices=("", ""), initial=None)
@@ -406,21 +434,21 @@ class CalculateOpticalForm(forms.Form):
         if last_exp is not None:
             last_exp_id = last_exp.name
             self.fields["exp_id"].initial = (last_exp_id, last_exp_id)
-        self.fields['ref_product'].choices = list(
-            OpticalReference.objects.all().values_list('slug', 'slug')
+        self.fields["ref_product"].choices = list(
+            OpticalReference.objects.all().values_list("slug", "slug")
         )
         last_ref = OpticalReference.objects.last()
         if last_ref is not None:
-            self.fields['ref_product'].initial = (last_ref.slug, last_ref.slug)
+            self.fields["ref_product"].initial = (last_ref.slug, last_ref.slug)
 
     def check_origin_data(self):
-        print('Check Origin Data')
+        print("Check Origin Data")
 
     def calculate(self, request):
-        request.session['message'] = f'Calculate {self.cleaned_data["exp_id"]}, '\
-            +  f'ref: {self.cleaned_data["ref_product"]}'
-
-        
+        request.session["message"] = (
+            f'Calculate {self.cleaned_data["exp_id"]}, '
+            + f'ref: {self.cleaned_data["ref_product"]}'
+        )
 
     def save(self):
-        print('Save the Right Result')
+        print("Save the Right Result")
