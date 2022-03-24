@@ -16,7 +16,8 @@ from td_toolkits_v3.opticals.models import (
     OpticalLog, 
     OpticalReference, 
     RDLCellGap,
-    ResponseTimeLog
+    ResponseTimeLog,
+    OpticalsFittingModel,
 )
 
 class OptLoader():
@@ -215,7 +216,7 @@ class OptFitting():
         rt_df: pandas.DataFrame
             Fields need contain ('Cell Gap', 'Vop', 'RT', 'Tr', 'Tf')
         opt_df: Pandas.DataFrame
-            Fields need contain ('Cell Gap', 'Vop', 'Wx', 'Wy', 'T%', 'LC%')
+            Fields need contain ('Cell Gap', 'Vop', 'Wx', 'Wy', 'WY', 'T%', 'LC%')
         opt_cutoff: float, optional, default is 3
             Couse opt is variance at low Vop(maybe come from the detection limit)
             We need set a cut of.
@@ -279,7 +280,36 @@ class OptFitting():
         
 
     def save(self, lc, experiment):
-        pass
+        try:
+            OpticalsFittingModel.objects.get(
+                experiment=experiment,
+                lc=lc,
+            )
+            return 'There is such model in log, please delete it first' \
+                 + 'or try to update[TODO]'
+
+        except:
+            # calculation first
+            self.calc()
+            # saving
+            obj = OpticalsFittingModel.objects.create(
+                experiment=experiment,
+                lc=lc,
+                cell_gap_upper=self.cell_gap_range[1],
+                cell_gap_lower=self.cell_gap_range[0],
+                voltage=self.voltage_model,
+                response_time=self.response_time_model,
+                time_rise=self.time_rise_model,
+                time_fall=self.time_fall_model,
+                w_x=self.wx_model,
+                w_y=self.wy_model,
+                w_capital_y=self.w_capital_y_model,
+                lc_percent=self.lc_percent_model,
+                transmittance=self.transmittance_model,
+                v_percent=self.v_percent_model,
+                r2=self.r2,
+            )
+            return obj
     @property
     def voltage_model(self):
         """
@@ -302,6 +332,16 @@ class OptFitting():
         self.r2['f(Tr, Cell Gap) |-> Vop'] = model.score(x_test, y_test)
         return model
 
+    @staticmethod
+    def _rt_transformer_f(x):
+        new_x = np.empty(shape=(len(x), 5), dtype=float)
+        new_x[:, 0] = 1
+        new_x[:, 1] = x[:, 0]
+        new_x[:, 2] = x[:, 1]
+        new_x[:, 3] = x[:, 0] * x[:, 1]
+        new_x[:, 4] = x[:, 0] ** 2
+        return new_x
+
     @property
     def rt_transformer(self):
         """
@@ -312,16 +352,7 @@ class OptFitting():
         if self.__rt_transformer is not None:
             return self.__rt_transformer
 
-        def f(x):
-            new_x = np.empty(shape=(len(x), 5), dtype=float)
-            new_x[:, 0] = 1
-            new_x[:, 1] = x[:, 0]
-            new_x[:, 2] = x[:, 1]
-            new_x[:, 3] = x[:, 0] * x[:, 1]
-            new_x[:, 4] = x[:, 0] ** 2
-            return new_x
-
-        transformer = FunctionTransformer(f)
+        transformer = FunctionTransformer(self._rt_transformer_f)
         self.__rt_transformer = transformer
         return transformer
 
@@ -375,6 +406,19 @@ class OptFitting():
         self.r2['f(Vop, Cell Gap) |-> Tf'] = r2_score
         return self.__time_fall_model
 
+    @staticmethod
+    def _opt_transformer_f(x):
+        new_x = np.empty(shape=(len(x), 7), dtype=float)
+        new_x[:, 0] = 1
+        new_x[:, 1] = x[:, 0]
+        new_x[:, 2] = x[:, 1]
+        new_x[:, 3] = x[:, 0] * x[:, 1]
+        new_x[:, 4] = x[:, 0] ** 2
+        new_x[:, 5] = x[:, 0] ** 3
+        new_x[:, 6] = x[:, 0] ** 4
+        return new_x
+
+    
     @property
     def opt_transformer(self):
         """
@@ -385,18 +429,7 @@ class OptFitting():
         if self.__opt_transformer is not None:
             return self.__opt_transformer
 
-        def f(x):
-            new_x = np.empty(shape=(len(x), 7), dtype=float)
-            new_x[:, 0] = 1
-            new_x[:, 1] = x[:, 0]
-            new_x[:, 2] = x[:, 1]
-            new_x[:, 3] = x[:, 0] * x[:, 1]
-            new_x[:, 4] = x[:, 0] ** 2
-            new_x[:, 5] = x[:, 0] ** 3
-            new_x[:, 6] = x[:, 0] ** 4
-            return new_x
-
-        transformer = FunctionTransformer(f)
+        transformer = FunctionTransformer(self._opt_transformer_f)
         self.__opt_transformer = transformer
         return transformer
 
@@ -481,6 +514,19 @@ class OptFitting():
             'T%', self.opt_transformer)
         self.r2['f(Vop, Cell Gap) |-> T%'] = r2_score
         return self.__transmittance_model
+
+    @staticmethod
+    def _v_percent_model_tranformer_f(x):
+        """
+        [x0, x1] = [T%, Cell Gap]
+        [x0, x1] |-> [1, x1, exp(x0+10)]
+        """
+        new_x = np.empty(shape=(len(x), 3), dtype=float)
+        new_x[:, 0] = 1
+        new_x[:, 1] = x[:, 1]
+        new_x[:, 2] = np.exp(x[:, 0]+10)
+
+        return new_x
     
     @property
     def v_percent_model(self):
@@ -510,43 +556,15 @@ class OptFitting():
         x_test = test[['T%', 'Cell Gap']].to_numpy()
         y_test = test['Vop'].to_numpy()
 
-        # 3. Using the special transformer
-        #    This is just by try and guess funtion
-        def f(x):
-            """
-            [x0, x1] = [T%, Cell Gap]
-            [x0, x1] |-> [1, x1, exp(x0+10)]
-            """
-            new_x = np.empty(shape=(len(x), 3), dtype=float)
-            new_x[:, 0] = 1
-            new_x[:, 1] = x[:, 1]
-            new_x[:, 2] = np.exp(x[:, 0]+10)
-
-            return new_x
+        # 3. Using pipeline the special transformer
         
         model = Pipeline([
             ('Scalar', StandardScaler()),
-            ('Custom Transform', FunctionTransformer(f)),
+            ('Custom Transform', FunctionTransformer(
+                self._v_percent_model_tranformer_f)),
             ('Linear', linear_model.TheilSenRegressor(fit_intercept=False))
         ])
         model.fit(x_train, y_train)
         self.__v_percent_model = model
         self.r2['f(T%, Cell Gap) |-> Vop'] = model.score(x_test, y_test)
-        return model        
-
-    def extend_optical(self):
-        """
-        f(Vop, cell gap) |-> u', v', Δ(u', v'), ΔEab*
-        """
-        def F(x, option):
-            """
-            Eab aux F funtion, come from [TODO]
-
-            Parameters
-            ----------
-            x: 
-
-            option: str
-                Select 'Xn', 'Yn', 'Zn'
-            """
-        pass
+        return model

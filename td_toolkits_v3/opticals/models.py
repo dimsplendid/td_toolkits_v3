@@ -209,19 +209,28 @@ class ValidManager(models.Manager):
 
 
 class OpticalsFittingModel(TimeStampedModel):
-    experiment = models.ForeignKey("products.Experiment", on_delete=models.CASCADE)
+    experiment = models.ForeignKey(
+        "products.Experiment", on_delete=models.CASCADE)
     lc = models.ForeignKey("materials.LiquidCrystal", on_delete=models.CASCADE)
     # Origin data ranges
     cell_gap_upper = models.FloatField()
     cell_gap_lower = models.FloatField()
+    
     # Fitting models
+    # RTs
+    voltage = PickledObjectField()
     response_time = PickledObjectField()
     time_rise = PickledObjectField()
     time_fall = PickledObjectField()
+    # OPTs
     w_x = PickledObjectField()
     w_y = PickledObjectField()
+    w_capital_y = PickledObjectField()
     lc_percent = PickledObjectField()
     transmittance = PickledObjectField()
+    v_percent = PickledObjectField()
+    # collect all r2
+    r2 = models.JSONField()
 
     # Custom model manager
     objects = ValidManager()
@@ -238,7 +247,7 @@ class OpticalsFittingModel(TimeStampedModel):
         self.save()
 
     def __str__(self):
-        return f"{self.lc.name} @ {self.experiment.name}"
+        return f"fitting model of {self.lc.name} @ {self.experiment.name}"
 
     class Meta:
         constraints = [
