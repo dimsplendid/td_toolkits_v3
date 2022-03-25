@@ -24,7 +24,7 @@ from td_toolkits_v3.opticals.models import (
 
 class OptLoader():
     
-    def __init__(self, experiment_name: str, ref=None, cell_gap='axo'):
+    def __init__(self, experiment_name: str, cell_gap='axo'):
         """
         Simple Loader to load needed data from database.
         experiment_name: str
@@ -37,7 +37,6 @@ class OptLoader():
             There are 'rdl' and 'axo' now.
         """
         self.experiment_name = experiment_name
-        self.ref = ref
         self.cell_gap = cell_gap
         
     def load_by_experiment(self, header, model):
@@ -167,15 +166,22 @@ class OptLoader():
         df['RT'] = df['Tr'] + df['Tf']
         return df
     
+    
+    
+class RefOptLoader():
+
+    def __init__(self, ref=None):
+        self.__ref = ref
+
     @property
     def ref(self):
         
-        if self._ref == None:
+        if self.__ref is None:
             print('Should set the (Factory, Product) first.')
             return
         
-        factory_name = self._ref[0]
-        type_name = self._ref[1]
+        factory_name = self.__ref[0]
+        type_name = self.__ref[1]
         header = {
             "product_model_type__name": "Product",
             "product_model_type__factory__name": "Factory",
@@ -186,13 +192,15 @@ class OptLoader():
             "time_fall": "Tf",
             "gray_to_gray": "G2G",
             "w_x": "Wx",
-            "w_y": "Wx",
+            "w_y": "Wy",
             "contrast_ratio": "CR"
         }
         df = pd.DataFrame.from_records(
             OpticalReference.objects
-            .filter(product_model_type__name=type_name, product_model_type__factory__name=factory_name)
-            .values(*header)
+            .filter(
+                product_model_type__name=type_name, 
+                product_model_type__factory__name=factory_name
+            ).values(*header)
         ).rename(
             columns=header
         )
@@ -201,10 +209,10 @@ class OptLoader():
             return f'There is no {type_name} reference, maybe you can build one.'
         
         return df
-    
+
     @ref.setter
     def ref(self, ref_product):
-        self._ref = ref_product
+        self.__ref = ref_product
 
 
 class OptFitting():
@@ -572,3 +580,40 @@ class OptFitting():
         self.__v_percent_model = model
         self.r2['f(T%, Cell Gap) |-> Vop'] = model.score(x_test, y_test)
         return model
+
+class OptResultGenerator():
+    
+    def __init__(self, lc:str, ref:tuple):
+        """
+        loading the newest optical model of lc, 
+        and calculate some differece base on reference
+        lc: str
+            The name of liquid crystal, need add first
+        ref: tuple(str, str)
+            The ref product, encoding in (Factory, Product) like ('T2', '6512')
+        """
+        self.model = OpticalsFittingModel.objects.filter(
+            lc__name=lc
+        ).latest('created')
+        self.range = (self.model.cell_gap_lower, self.model.cell_gap_upper)
+        self.ref_data = RefOptLoader(ref).ref.to_dict('records')[0]
+        self.__ref = None
+
+    @property
+    def ref(self):
+        if self.__ref is None:
+            ref_models = OpticalsFittingModel.objects.filter(
+                lc__name=self.ref_data['LC']
+            ).latest('created')
+            ref_x = [[self.ref_data['Tr'], self.ref_data['Cell Gap']]]
+            self.__ref = self.ref_data
+            # calculate ref vop by the voltage model
+            self.__ref['Vop'] = float(ref_models.voltage.predict(ref_x))
+            # CR index to calculate relate CR
+            self.__ref['CR index'] = self.__ref['CR']
+
+        return self.__ref
+        
+
+    
+

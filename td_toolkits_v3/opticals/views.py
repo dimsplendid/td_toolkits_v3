@@ -156,10 +156,17 @@ class CalculateCheckView(TemplateView):
         # changing some notation to make it easier see on website
         df.columns = [column.replace('|->', '=') for column in df.columns]
         df.columns = [column.replace('Cell Gap', 'd') for column in df.columns]
+        # add link to LC
+        def url(x):
+            url = reverse_lazy("materials:lc_detail", kwargs={'slug': x.lower()})
+            return f'<a href="{url}">{x}</a>'
+        df['LC'] = df['LC'].apply(url)
         context['table'] = df.to_html(
             float_format=lambda x: f'{x:.3f}',
             classes=['table', 'table-hover', 'text-center', 'table-striped'],
             justify='center',
             index=False,
+            escape=False,
         )
+        context['id'] = self.request.session['exp_id']
         return context

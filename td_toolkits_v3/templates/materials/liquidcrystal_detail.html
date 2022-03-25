@@ -7,8 +7,84 @@
 {% block content %}
 <h2>{{ liquidcrystal.name }}</h2>
 
-{% if liquidcrystal.vender %}
-    Vender: {{ liquidcrystal.vender.name }}
-{% endif %}
+<table class='table table-hover text-center table-striped'>
+    <thead>
+        <tr>
+            <th>Item</th>
+            <th>Value</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th>Vender</th>
+            <td>{{ liquidcrystal.vender.name }}</td>
+        </tr>
+        <tr>
+            <th>Cell Gap(um)</th>
+            <td>{{ liquidcrystal.designed_cell_gap|floatformat:1 }}</td>
+        </tr>
+        <tr>
+            <th>T<sub>NI</sub>(°C)</th>
+            <td>{{ liquidcrystal.t_ni|floatformat:1 }}</td>
+        </tr>
+        <tr>
+            <th>T<sub>CN</sub>(°C)</th>
+            <td>{{ liquidcrystal.t_cn|floatformat:1 }}</td>
+        </tr>
+        <tr>
+            <th>ν(mm<sup>2</sup>/s)</th>
+            <td>{{ liquidcrystal.flow_viscosity|floatformat:4 }}</td>
+        </tr>
+        <tr>
+            <th>γ1(mPa·s)</th>
+            <td>{{ liquidcrystal.rotational_viscosity|floatformat:4 }}</td>
+        </tr>
+        <tr>
+            <th>n<sub>e</sub></th>
+            <td>{{ liquidcrystal.n_e|floatformat:4 }}</td>
+        </tr>
+        <tr>
+            <th>n<sub>o</sub></th>
+            <td>{{ liquidcrystal.n_o|floatformat:4 }}</td>
+        </tr>
+        <tr>
+            <th>Δn</th>
+            <td>{{ liquidcrystal.delta_n|floatformat:4 }}</td>
+        </tr>
+        <tr>
+            <th>Δnd</th>
+            <td>{{ liquidcrystal.retardation|floatformat:4 }}</td>
+        </tr>
+        <tr>
+            <th>ε<sub>∥</sub></th>
+            <td>{{ liquidcrystal.e_para|floatformat:4 }}</td>
+        </tr>
+        <tr>
+            <th>ε<sub>⟂</sub></th>
+            <td>{{ liquidcrystal.e_perp|floatformat:4 }}</td>
+        </tr>
+        <tr>
+            <th>k<sub>11</sub></th>
+            <td>{{ liquidcrystal.k_11|floatformat:2 }}</td>
+        </tr>
+        <tr>
+            <th>k<sub>22</sub></th>
+            <td>{{ liquidcrystal.k_22|floatformat:2 }}</td>
+        </tr>
+        <tr>
+            <th>k<sub>33</sub></th>
+            <td>{{ liquidcrystal.k_33|floatformat:2 }}</td>
+        </tr>
+        <tr>
+            <th>density(g/cm<sup>3</sup>)</th>
+            <td>{{ liquidcrystal.density|floatformat:4 }}</td>
+        </tr>
+        <tr>
+            <th>Scatter Index</th>
+            <td>{{ liquidcrystal.scatter_index|floatformat:4 }}</td>
+        </tr>
+    </tbody>
+</table>
+
 
 {% endblock content %}

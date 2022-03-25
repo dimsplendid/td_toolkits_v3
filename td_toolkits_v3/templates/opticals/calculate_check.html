@@ -3,11 +3,13 @@
 {% block title %}Opticals Check{% endblock title %}
 
 {% block content %}
+<h1>{{id}} Models R<sup>2</sup> for Checking</h1>
 <p>
     {{ message }}
 </p>
 <div>
     {{ table|safe }}
 </div>
+<p>* The low R<sup>2</sup> for Tf is okay, cause it's not depend on Vop.</p>
 <a href="" class="btn btn-info">Show Check Figures</a> 
 {% endblock content %}
