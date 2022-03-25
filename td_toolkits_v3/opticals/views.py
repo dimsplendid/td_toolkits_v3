@@ -1,3 +1,5 @@
+import pandas as pd
+
 from django.urls import reverse_lazy
 from django.views.generic import (
     TemplateView,
@@ -14,7 +16,7 @@ from .forms import (
     ResponseTimeUploadForm,
     CalculateOpticalForm,
 )
-from .models import OpticalReference
+from .models import OpticalReference, OpticalsFittingModel
 
 
 class IndexView(TemplateView):
@@ -127,14 +129,37 @@ class CalculateOpticalView(FormView):
         return super().form_valid(form)
     success_url = reverse_lazy('opticals:calculate_check')
 
-
 class CalculateCheckView(TemplateView):
     # Todo: check and update to data base
     # form_class = None
     template_name = 'opticals/calculate_check.html'
 
+    def get(self, request, *args, **kwargs):
+        if request.GET.get('experiment'):
+            request.session['exp_id'] = request.GET.get('experiment')
+
+        return super().get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['message'] = self.request.session.get('message')
-        print(self.slug)
+        # render r2 score table
+        all_r2 = []
+        models = OpticalsFittingModel.objects.filter(
+            experiment__name = self.request.session['exp_id']
+        ).values('lc__name','r2')
+        for record in models:
+            df = pd.DataFrame(record['r2'], index=[0])
+            df.insert(0, 'LC', record['lc__name'])
+            all_r2.append(df)
+        df = pd.concat(all_r2, ignore_index=True)
+        # changing some notation to make it easier see on website
+        df.columns = [column.replace('|->', '=') for column in df.columns]
+        df.columns = [column.replace('Cell Gap', 'd') for column in df.columns]
+        context['table'] = df.to_html(
+            float_format=lambda x: f'{x:.3f}',
+            classes=['table', 'table-hover', 'text-center', 'table-striped'],
+            justify='center',
+            index=False,
+        )
         return context
