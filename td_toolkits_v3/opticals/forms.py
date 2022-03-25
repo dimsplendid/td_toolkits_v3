@@ -20,7 +20,7 @@ from td_toolkits_v3.materials.models import (
     Polyimide,
     Seal,
 )
-from td_toolkits_v3.products.tests.factories import experiment
+
 from .models import (
     Instrument,
     AxometricsLog,
@@ -30,6 +30,7 @@ from .models import (
     OpticalReference,
     OpticalReference,
 )
+from .tools.utils import OptLoader, OptFitting
 
 
 class AxoUploadForm(forms.Form):
@@ -422,7 +423,6 @@ class ResponseTimeUploadForm(forms.Form):
 
 class CalculateOpticalForm(forms.Form):
     exp_id = forms.ChoiceField(choices=("", ""), initial=None)
-    ref_product = forms.ChoiceField(choices=("", ""), initial=None)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -434,21 +434,32 @@ class CalculateOpticalForm(forms.Form):
         if last_exp is not None:
             last_exp_id = last_exp.name
             self.fields["exp_id"].initial = (last_exp_id, last_exp_id)
-        self.fields["ref_product"].choices = list(
-            OpticalReference.objects.all().values_list("slug", "slug")
-        )
-        last_ref = OpticalReference.objects.last()
-        if last_ref is not None:
-            self.fields["ref_product"].initial = (last_ref.slug, last_ref.slug)
-
-    def check_origin_data(self):
-        print("Check Origin Data")
 
     def calculate(self, request):
-        request.session["message"] = (
-            f'Calculate {self.cleaned_data["exp_id"]}, '
-            + f'ref: {self.cleaned_data["ref_product"]}'
-        )
+        request.session["message"] = 'Error:'   
+        data_loader = OptLoader(self.cleaned_data['exp_id'])
+        # Check data loading correctly
+        opt_df = data_loader.opt
+        if type(opt_df) == str:
+            request.session["message"] += opt_df
+            return
+        rt_df = data_loader.rt
+        if type(rt_df) == str:
+            request.session["message"] += opt_df
+            return
 
-    def save(self):
-        print("Save the Right Result")
+        # Check both data have the same kinds of LC
+        if not list(opt_df['LC'].unique()) == list(rt_df['LC'].unique()):
+            request.session["message"] += 'The opt and rt has different kinds lc'
+            return
+
+        for lc in opt_df['LC'].unique():
+            tmp_rt_df = rt_df[rt_df['LC'] == lc]
+            tmp_opt_df = opt_df[opt_df['LC'] == lc]
+            opt_fitting = OptFitting(lc, tmp_rt_df, tmp_opt_df)
+            opt_fitting.save(lc, self.cleaned_data['exp_id'])
+
+
+        request.session["message"] = f'Calculate {self.cleaned_data["exp_id"]}'\
+                                   + ' success.'
+        request.session["exp_id"] = self.cleaned_data['exp_id']

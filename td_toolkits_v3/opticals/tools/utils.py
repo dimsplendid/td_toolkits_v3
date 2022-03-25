@@ -11,6 +11,8 @@ from sklearn.preprocessing import (
 )
 from sklearn.pipeline import Pipeline
 
+from td_toolkits_v3.materials.models import LiquidCrystal
+from td_toolkits_v3.products.models import Experiment
 from td_toolkits_v3.opticals.models import (
     AxometricsLog, 
     OpticalLog, 
@@ -279,11 +281,11 @@ class OptFitting():
             setattr(self, model[:-6], getattr(self, model).predict)
         
 
-    def save(self, lc, experiment):
+    def save(self, lc_name, experiment_name):
         try:
             OpticalsFittingModel.objects.get(
-                experiment=experiment,
-                lc=lc,
+                experiment__name=experiment_name,
+                lc__name=lc_name,
             )
             return 'There is such model in log, please delete it first' \
                  + 'or try to update[TODO]'
@@ -292,6 +294,8 @@ class OptFitting():
             # calculation first
             self.calc()
             # saving
+            experiment = Experiment.objects.get(name=experiment_name)
+            lc = LiquidCrystal.objects.get(name=lc_name)
             obj = OpticalsFittingModel.objects.create(
                 experiment=experiment,
                 lc=lc,
