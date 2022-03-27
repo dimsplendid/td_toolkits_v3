@@ -494,12 +494,11 @@ class OptFitting():
         """
         f(Vop, Cell Gap) |-> WY
         """
-        if self.__w_capital_y_model is not None:
-            return self.__w_capital_y_model
+        if self.__w_capital_y_model is None:
+            self.__w_capital_y_model, r2_score = self.__opt_model('WY')
+            self.r2['f(Vop, Cell Gap) |-> WY'] = r2_score
         
-        self.__wy_model, r2_score = self.__opt_model('WY')
-        self.r2['f(Vop, Cell Gap) |-> WY'] = r2_score
-        return self.__wy_model
+        return self.__w_capital_y_model
 
     @property
     def lc_percent_model(self):
@@ -581,6 +580,7 @@ class OptFitting():
         self.r2['f(T%, Cell Gap) |-> Vop'] = model.score(x_test, y_test)
         return model
 
+
 class OptResultGenerator():
     
     def __init__(self, lc:str, ref:tuple):
@@ -592,28 +592,163 @@ class OptResultGenerator():
         ref: tuple(str, str)
             The ref product, encoding in (Factory, Product) like ('T2', '6512')
         """
-        self.model = OpticalsFittingModel.objects.filter(
+        self.lc = LiquidCrystal.objects.get(name=lc)
+        # TODO: Need re-consider what's the better way to construct result
+        self.models = OpticalsFittingModel.objects.filter(
             lc__name=lc
         ).latest('created')
-        self.range = (self.model.cell_gap_lower, self.model.cell_gap_upper)
+        self.range = (self.models.cell_gap_lower, self.models.cell_gap_upper)
         self.ref_data = RefOptLoader(ref).ref.to_dict('records')[0]
         self.__ref = None
 
     @property
     def ref(self):
+        """
+        Generate ref data
+        
+        Return
+        ------
+        ref: dict
+        """
         if self.__ref is None:
+            # add origin data to ref
+            self.__ref = self.ref_data
+            # get some fitting property of ref
             ref_models = OpticalsFittingModel.objects.filter(
                 lc__name=self.ref_data['LC']
             ).latest('created')
-            ref_x = [[self.ref_data['Tr'], self.ref_data['Cell Gap']]]
-            self.__ref = self.ref_data
+            x = [[self.__ref['Tr'], self.__ref['Cell Gap']]]
             # calculate ref vop by the voltage model
-            self.__ref['Vop'] = float(ref_models.voltage.predict(ref_x))
+            self.__ref['Vop'] = ref_models.voltage.predict(x)[0]
             # CR index to calculate relate CR
-            self.__ref['CR index'] = self.__ref['CR']
+            # deduction:
+            # CR = (W/W_ref)/(D/D_ref) * CR_ref
+            #    = W/D / (W_ref/D_ref) * CR_ref
+            #    = W/D * (scatter_index * cell_gap) / T_ref * CR
+            #    = W/D * CR_index
+            # TODO: maybe use the LC% make more sense?
+            x = [[self.__ref['Vop'], self.__ref['Cell Gap']]]
+            self.__ref['CR index'] = self.__ref['CR'] \
+                                   / float(ref_models.transmittance.predict(x)) \
+                                   * self.__ref['Cell Gap'] \
+                                   * LiquidCrystal.objects.get(
+                                       name=self.__ref['LC']).scatter_index
+            self.__ref['Cell Gap range'] = np.arange(
+                round(self.__ref['Cell Gap'])-0.6, # get one more for diff
+                round(self.__ref['Cell Gap'])+0.5,
+                0.1,
+            )
 
         return self.__ref
-        
-
     
+    @property
+    def table(self):
+        """
+        Generate the table for require ref LC
+        TODO: add the choice of V%?
+        """
+        table ={}
+        ref_d = self.ref['Cell Gap']
+        target_d = self.ref['Cell Gap range']
+        v = self.ref['Vop']
+        predict_region = np.array([[v] * len(target_d), target_d]).T
+
+        table['LC'] = self.lc.name
+        table['V90'] = self.models.v_percent.predict([[90, ref_d]])[0]
+        table['V95'] = self.models.v_percent.predict([[95, ref_d]])[0]
+        table['V99'] = self.models.v_percent.predict([[99, ref_d]])[0]
+        table['Vop'] = self.ref['Vop']
+        table['Cell Gap'] = target_d
+        table['Δnd'] = target_d * self.lc.delta_n
+        
+        # RT part
+        table['RT'] = self.models.response_time.predict(predict_region)
+        table['Tr'] = self.models.time_rise.predict(predict_region)
+        table['Tf'] = self.models.time_fall.predict(predict_region)
+        table['G2G'] = self.ref['G2G'] * table['RT'] \
+                        / (self.ref['Tr']+self.ref['Tf'])
+        # Opt Part
+        table['Wx'] = self.models.w_x.predict(predict_region)
+        table['ΔWx'] = table['Wx'] - self.ref['Wx']
+        table['Wy'] = self.models.w_y.predict(predict_region)
+        table['ΔWy'] = table['Wy'] - self.ref['Wy']
+        table['WY'] = self.models.w_capital_y.predict(predict_region)
+        table['WX'] = table['Wx'] * table['WY'] / table['Wy']
+        table['WZ'] = (1-table['Wx']-table['Wy']) * table['WY'] / table['Wy']
+        table['T%'] = self.models.transmittance.predict(predict_region)
+        table['LC%'] = self.models.lc_percent.predict(predict_region)
+
+        # Eab part
+        f_x = self.f(table['WX'], 'Xn')
+        f_y = self.f(table['WY'], 'Yn')
+        f_z = self.f(table['WZ'], 'Zn')
+        table['a*'] = 500 * (f_x-f_y)
+        table['b*'] = 200 * (f_y-f_z)
+        table['L*'] = 116 * f_y - 16
+        table["u'"] = 4 * table['Wx'] / (-2*table['Wx'] + 12*table['Wy'] + 3)
+        table["v'"] = 9 * table['Wy'] / (-2*table['Wx'] + 12*table['Wy'] + 3)
+        # prepend 0 to keep the length the same, eleminate after tablize
+        table['Δa*'] = np.diff(table['a*'], prepend=0)
+        table['Δb*'] = np.diff(table['b*'], prepend=0)
+        table['ΔL*'] = np.diff(table['L*'], prepend=0)
+        # Euclidean distance is the same with L2 norm
+        # so numpy.linalg.norm() can get the distance between columns
+        # see https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html
+        table['ΔEab*'] = np.linalg.norm(
+            [table['Δa*'], table['Δb*'], table['ΔL*']], 
+            axis=0,
+        )
+        table["Δu'"] = np.diff(table["u'"], prepend=0)
+        table["Δv'"] = np.diff(table["v'"], prepend=0)
+        table["Δu'v'"] = np.linalg.norm([table["Δu'"], table["Δv'"]], axis=0)
+
+        # CR part
+        table['D'] = self.lc.scatter_index * table['Cell Gap']
+        table['W'] = table['T%']
+        table['CR'] = table['W']/table['D'] * self.ref['CR index']
+        table['ΔCR'] = table['CR'] - self.ref['CR']
+
+        table['Remark'] = ['Interpolation' \
+                            if (d > self.range[0] and d < self.range[1]) \
+                            else 'Extrapolation' \
+                            for d in target_d]
+        
+        # eliminate the redundant 0-th row, which for calculate diff.
+        return pd.DataFrame(table)[1:] 
+
+    @property
+    def vt_curve(self):
+        """
+        generate V-T curve at 3 to 10
+        """
+        # gennerate a grid from Vop and cell gap range
+        v = np.arange(3, 10, 0.1)
+        v, d = np.meshgrid(v, self.ref['Cell Gap range'])
+        x = list(zip(v.flatten(), d.flatten()))
+        t = self.models.transmittance.predict(x)
+        df = pd.DataFrame({
+            'LC': self.models.lc.name,
+            'Cell Gap': d.flatten(),
+            'Vop': v.flatten(),
+            'T%': t
+        })
+        return df
+
+    @staticmethod
+    def f(x, opt):
+        """
+        Aux fuction for calculating Eab
+        """
+        blu = {
+            'Xn': 95.04,
+            'Yn': 100.,
+            'Zn': 108.86
+        }
+        x_over_blu = x/blu[opt]
+        return np.where(
+            x_over_blu < 0.008856,
+            7.787 * x/blu[opt] + 16/116,
+            (x/blu[opt]) ** (1/3)
+        )
+
 
