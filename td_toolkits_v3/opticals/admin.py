@@ -8,6 +8,7 @@ from .models import (
     ResponseTimeLog,
     OpticalReference,
     OpticalsFittingModel,
+    OpticalSearchProfile,
 )
 
 admin.site.register(Instrument)
@@ -17,3 +18,4 @@ admin.site.register(OpticalLog)
 admin.site.register(ResponseTimeLog)
 admin.site.register(OpticalReference)
 admin.site.register(OpticalsFittingModel)
+admin.site.register(OpticalSearchProfile)

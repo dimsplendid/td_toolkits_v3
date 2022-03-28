@@ -39,14 +39,14 @@ urlpatterns = [
         name='ref_add'
     ),
     path(
-        'ref/update/',
-        views.OpticalReferenceUpdateView.as_view(),
-        name='ref_update'
-    ),
-    path(
         'ref/<slug:slug>/',
         views.OpticalReferenceDetailView.as_view(),
         name='ref_detail'
+    ),
+    path(
+        'ref/<slug:slug>/update/',
+        views.OpticalReferenceUpdateView.as_view(),
+        name='ref_update'
     ),
     path(
         'calculate/',
@@ -57,5 +57,35 @@ urlpatterns = [
         'calculate/check/',
         views.CalculateCheckView.as_view(),
         name='calculate_check'
-    )
+    ),
+    path(
+        'search/',
+        views.OpticalSearchView.as_view(),
+        name='search'
+    ),
+    path(
+        'search/download/',
+        views.OpticalSearchResultDownload.as_view(),
+        name='search_download'
+    ),
+    path(
+        'search/profile/list/',
+        views.OpticalSearchProfileListView.as_view(),
+        name='search_profile_list'
+    ),
+    path(
+        'search/profile/add/',
+        views.OpticalSearchProfileCreateView.as_view(),
+        name='search_profile_add'
+    ),
+    path(
+        'search/profile/<slug:slug>/',
+        views.OpticalSearchProfileDetailView.as_view(),
+        name='search_profile_detail'
+    ),
+    path(
+        'search/profile/<slug:slug>/update/',
+        views.OpticalSearchProfileUpdateView.as_view(),
+        name='search_profile_update'
+    ),
 ]

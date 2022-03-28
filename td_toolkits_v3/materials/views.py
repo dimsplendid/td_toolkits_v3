@@ -1,4 +1,3 @@
-from urllib import response
 from django.urls import reverse_lazy
 from django.views.generic import (
     ListView, 
@@ -6,7 +5,7 @@ from django.views.generic import (
     CreateView,
     TemplateView,
 )
-from django.views.generic.edit import FormView
+from django.views.generic.edit import FormView, UpdateView
 from django.http.response import HttpResponse
 from config.settings.base import APPS_DIR
 
@@ -47,6 +46,21 @@ class LiquidCrystalCreateView(CreateView):
         'k_33',
         'density'
     ]
+
+class LiquidCrystalUpdateView(UpdateView):
+    model = LiquidCrystal
+    fields = ['designed_cell_gap']
+    template_name = 'upload_generic.html'
+
+    def get(self, request, *args, **kwargs):
+        request.session['next'] = request.GET.get('next')
+
+        return super().get(request, *args, **kwargs)
+
+    def get_success_url(self) -> str:
+        if self.request.session['next']:
+            return self.request.session['next']
+        return super().get_success_url()
 
 class MaterialsUploadView(FormView):
     template_name = 'materials/materials_upload.html'

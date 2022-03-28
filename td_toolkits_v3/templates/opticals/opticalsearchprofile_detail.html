@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}
+Optical Search Profile: {{ opticalsearchprofile}}
+{% endblock title %}
+{% block content %}
+<h2>Optical Search Profile: {{ opticalsearchprofile }}</h2>
+<div class='table'>
+<table class='table table-hover text-center table-striped'>
+    <thead>
+        <tr>
+            <th>Item</th>
+            <th>Value</th>
+            <th>Weight</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th>Ref Product</th>
+            <td>{{ opticalsearchprofile.ref_product }}</td>
+            <td></td>
+        </tr>
+        <tr>
+            <th>LC% (larger than)</th>
+            <td>{{ opticalsearchprofile.lc_percent }}</td>
+            <td>{{ opticalsearchprofile.lc_percent_weight }}</td>
+        </tr>
+        <tr>
+            <th>RT (less than)</th>
+            <td>{{ opticalsearchprofile.response_time }}</td>
+            <td>{{ opticalsearchprofile.response_time_weight }}</td>
+        </tr>
+        <tr>
+            <th>ΔEab* (less than)</th>
+            <td>{{ opticalsearchprofile.delta_e_ab }}</td>
+            <td>{{ opticalsearchprofile.delta_e_ab_weight }}</td>
+        </tr>
+        <tr>
+            <th>CR (larger than)</th>
+            <td>{{ opticalsearchprofile.contrast_ratio }}</td>
+            <td>{{ opticalsearchprofile.contrast_ratio_weight }}</td>
+        </tr>
+        <tr>
+            <th>Remark</th>
+            <td>{{ opticalsearchprofile.remark }}</td>
+            <td></td>
+        </tr>
+    </tbody>
+</table>
+</div>
+<a href="{% url 'opticals:search_profile_update' opticalsearchprofile.slug %}"
+    class='btn btn-info'
+>
+    Update
+</a>
+{% endblock content %}

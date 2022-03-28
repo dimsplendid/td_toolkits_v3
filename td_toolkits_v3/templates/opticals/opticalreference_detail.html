@@ -2,18 +2,72 @@
 {% block title %}Opt Ref: {{ opticalreference }}{% endblock title %}
 {% block content %}
 <h2>{{ opticalreference }}</h2>
-<p>LC: {{ opticalreference.lc }}</p>
-<p>PI: {{ opticalreference.pi }}</p>
-<p>Seal: {{ opticalreference.seal }}</p>
-<p>Cell Gap: {{ opticalreference.cell_gap }}</p>
-<p>ITO Slit: {{ opticalreference.ito_slit }}</p>
-<p>TFT: {{ opticalreference.get_tft_tech_display }}</p>
-<p>T%: {{ opticalreference.transmittance }}</p>
-<p>Tr: {{ opticalreference.time_rise }}</p>
-<p>Tf: {{ opticalreference.time_fall }}</p>
-<p>RT: {{ opticalreference.response_time }}</p>
-<p>G2G: {{ opticalreference.gray_to_gray }}</p>
-<p>Wx: {{ opticalreference.w_x }}</p>
-<p>Wy: {{ opticalreference.w_y }}</p>
-<p>CR: {{ opticalreference.contrast_ratio }}</p>
+<table class='table table-hover text-center table-striped'>
+    <thead>
+        <tr>
+            <th>Item</th>
+            <th>Value</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th>LC</th>
+            <td>{{ opticalreference.lc }}</td>
+        </tr>
+        <tr>
+            <th>PI</th>
+            <td>{{ opticalreference.pi }}</td>
+        </tr>
+        <tr>
+            <th>Seal</th>
+            <td>{{ opticalreference.seal }}</td>
+        </tr>
+        <tr>
+            <th>Cell Gap</th>
+            <td>{{ opticalreference.cell_gap }}</td>
+        </tr>
+        <tr>
+            <th>ITO Slit</th>
+            <td>{{ opticalreference.ito_slit }}</td>
+        </tr>
+        <tr>
+            <th>TFT</th>
+            <td>{{ opticalreference.get_tft_tech_display }}</td>
+        </tr>
+        <tr>
+            <th>T%</th>
+            <td>{{ opticalreference.transmittance }}</td>
+        </tr>
+        <tr>
+            <th>Tr</th>
+            <td>{{ opticalreference.time_rise }}</td>
+        </tr>
+        <tr>
+            <th>Tf</th>
+            <td>{{ opticalreference.time_fall }}</td>
+        </tr>
+        <tr>
+            <th>RT</th>
+            <td>{{ opticalreference.response_time }}</td>
+        </tr>
+        <tr>
+            <th>G2G</th>
+            <td>{{ opticalreference.gray_to_gray }}</td>
+        </tr>
+        <tr>
+            <th>Wx</th>
+            <td>{{ opticalreference.w_x }}</td>
+        </tr>
+        <tr>
+            <th>Wy</th>
+            <td>{{ opticalreference.w_y }}</td>
+        </tr>
+        <tr>
+            <th>CR</th>
+            <td>{{ opticalreference.contrast_ratio }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<a href="{% url 'opticals:ref_update' opticalreference.slug %}" class="btn btn-info">Update</a>
 {% endblock content %}

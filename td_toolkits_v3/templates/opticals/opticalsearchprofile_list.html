@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Optical Search Profile List{% endblock title %}
+
+{% block content %}
+<h2>Optical Search Profile List</h2>
+<ul>
+{% for obj in opticalsearchprofile_list %}
+<li><a href="{% url 'opticals:search_profile_detail' obj.slug %}">{{ obj }}</a></li>
+{% endfor %}
+</ul>
+<hr/>
+<p>Add more profile if you like.</p>
+<p>
+<a class="btn btn-primary"
+href="{% url 'opticals:search_profile_add' %}" role="button">
+Add Profile
+</a>
+</p>
+{% endblock content %}

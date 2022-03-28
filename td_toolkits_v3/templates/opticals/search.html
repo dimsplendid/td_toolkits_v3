@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}
+Optical Search
+{% endblock title %}
+{% block content %}
+<h2>Select <a href="{% url 'materials:lc_list' %}">LCs</a></h2>
+<form action='' method='GET'>
+    <select class='form-select' multiple name='q'>
+        {% for lc in lc_list %}
+        <option> {{ lc }}</option>
+        {% endfor %}
+    </select>
+    <h2><a href="{% url 'opticals:search_profile_list' %}">Search Profile</a></h2>
+    <select class='form-selec' name='profile'>
+        {% for profile in profile_list %}
+        <option 
+        {% if request.GET.profile == profile %}
+        selected
+        {% endif %}>
+            {{ profile }}
+        </option>
+        {% endfor %}
+    </select>
+    <button class='btn btn-primary' type='submit'>Change</button>
+    <a href="{% url 'opticals:search_profile_update' profile %}?next={{request.path}}"
+        class='btn btn-info'
+    >
+        Update
+    </a>
+    <div class='table'>
+        {{ profile_table|safe }}
+    </div>
+    <button class='btn btn-primary' type='submit'>Search</button>
+</form>
+
+{% if q %}
+<table class='table text-center small table-hover'>
+    <thead>
+        <th>LC</th>
+        <th>Designed Cell Gap</th>
+        <th>Change</th>
+    </thead>
+    <tbody>
+        {% for lc in q_lc_list  %}
+        <tr>
+            <td>
+                {{ lc.name }}
+            </td>
+            <td>
+                {{ lc.designed_cell_gap }}
+            </td>
+            <td>
+                <form action="{% url 'materials:lc_update' slug=lc.slug %}" method='GET'>
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type='submit' class='btn btn-info'>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<div>
+    {{ opt_plot|safe }}
+</div>
+<div>
+    {{ opt_score|safe }}
+</div>
+<div>
+    {{ opt_score_raw|safe }}
+</div>
+<a class='btn btn-primary' href="{% url 'opticals:search_download' %}">
+    Download
+</a>
+<a class='btn btn-primary' href="">
+    Next
+</a>
+{% endif %}
+{% endblock content %}

@@ -457,9 +457,12 @@ class CalculateOpticalForm(forms.Form):
             tmp_rt_df = rt_df[rt_df['LC'] == lc]
             tmp_opt_df = opt_df[opt_df['LC'] == lc]
             opt_fitting = OptFitting(lc, tmp_rt_df, tmp_opt_df)
-            opt_fitting.save(lc, self.cleaned_data['exp_id'])
+            msg = opt_fitting.save(lc, self.cleaned_data['exp_id'])
 
-
-        request.session["message"] = f'Calculate {self.cleaned_data["exp_id"]}'\
-                                   + ' success.'
+        if type(msg) == str:
+            request.session["message"] = msg
+        else:
+            request.session["message"] = 'Calculate' \
+                + self.cleaned_data["exp_id"] \
+                + ' success.'
         request.session["exp_id"] = self.cleaned_data['exp_id']

@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+import plotly.express as px
+from plotly.offline import plot
 import re
 from scipy.interpolate import interp1d
 from sklearn import linear_model
@@ -296,7 +298,7 @@ class OptFitting():
                 lc__name=lc_name,
             )
             return 'There is such model in log, please delete it first' \
-                 + 'or try to update[TODO]'
+                 + ' or try to update[TODO]'
 
         except:
             # calculation first
@@ -750,5 +752,126 @@ class OptResultGenerator():
             7.787 * x/blu[opt] + 16/116,
             (x/blu[opt]) ** (1/3)
         )
+def tr2_score(column, method='mean', cmp='gt', scale=1., formatter=None):
+    """
+    Calculate the score base on the data.
+    Parameters
+    ----------
+    column: numpy.array
+    method: str, optional, default 'mean'
+        'mean': Mean Normalization: score = (x - mean) / stdev
+        'min-max': Min-Max Normalization: score = (x - min) / (max - min)
+    cmp: str, optional, default 'gt'
+        'gt': larger the better
+        'lt': smaller the better
+    scale: float, optional, default 1
+        Scale the score by multiply.
+        Scale would after formatter.
+    formatter: one parameter function, optional, default None
+        Modified final score, like round to integer
+    Returns
+    -------
+    numpy.array
+    """
+    if len(column) == 1:
+        score = 0
 
+    if method == 'mean':
+        # Mean Normalization
+        stdev = column.std()
+        mean = column.mean()
+        score = (column - mean) / stdev
+        if cmp == 'lt':
+            score = -score
 
+    if method == 'min-max':
+        # Min-Max Normalization
+        min = column.min()
+        max = column.max()
+        if cmp == 'gt':
+            score = (column - min) / (max - min)
+        else:
+            score = (max - column) / (max - min)
+
+    if formatter:
+        score = formatter(score)
+    
+    score *= scale
+
+    return score
+
+class OptictalsScore():
+
+    def __init__(self, data, profile):
+        """
+        Parameters
+        ----------
+        data: pandas.DataFrame
+            The result of the Optical Search
+        profile: pandas.DataFrame
+            The setting of limits. Only using first row
+        """
+        self.data = data[['LC', 'Cell Gap', 'LC%', 'ΔEab*', 'RT', 'CR', 'Remark']]
+        header = {
+            'name': 'LC',
+            'designed_cell_gap': 'Designed Cell Gap'
+        }
+        designed_cell_gap = pd.DataFrame.from_records(
+            LiquidCrystal.objects.filter(
+                name__in = self.data['LC'].unique()
+            ).values(
+                *header
+            )
+        ).rename(columns=header)
+        self.data = pd.merge(self.data, designed_cell_gap, on='LC', how='left')
+        # print(self.data)
+        self.constrain = profile.to_dict(orient='records')[0]
+        mask = (
+            # (self.data['LC%']    >  self.constrain['LC%'])
+            #  & (self.data['ΔEab*']  <  self.constrain['ΔEab*'])
+            #  & (self.data['RT']     <  self.constrain['RT'])
+            #  & (self.data['CR']     >  self.constrain['CR'])
+            #  & (self.data['Remark'] == self.constrain['Remark'])\
+              (np.abs(self.data['Cell Gap']-self.data['Designed Cell Gap']) < 0.01)
+        )
+        # print((self.data['Cell Gap']-self.data['Designed Cell Gap']))
+        self.data = self.data[mask].iloc[:,:-1]
+        self.__score = None
+        self.__plot = None
+
+    @property
+    def score(self):
+        if self.__score is None:
+            def f(x):
+                return np.round(9 * x) + 1
+            score_df = self.data[['LC']].copy()
+            score_df['LC%'] = tr2_score(
+                self.data['LC%'], 
+                'min-max', 'gt',self.constrain['w(LC%)'] , f)
+            score_df['ΔEab*'] = tr2_score(
+                self.data['ΔEab*'], 
+                'min-max', 'lt', self.constrain['w(ΔEab*)'], f)
+            score_df['RT'] = tr2_score(
+                self.data['RT'], 
+                'min-max', 'lt', self.constrain['w(RT)'], f)
+            score_df['CR'] = tr2_score(
+                self.data['CR'], 
+                'min-max', 'gt', self.constrain['w(CR)'], f)
+            score_df['Sum'] = score_df.iloc[:,1:].sum(axis=1)
+            # score_df['Remark'] = self.data['Remark']
+            # score_df['Cell Gap'] = self.data['Cell Gap']
+            score_df = score_df.sort_values(by='Sum', ascending=False)
+            self.__score = score_df
+
+        return self.__score
+
+    @property
+    def plot(self):
+        if self.__plot is None:
+            plot_df = self.score.set_index('LC').stack().reset_index()
+            plot_df.columns = ['LC', 'Item', 'Score']
+            fig = px.bar(
+                plot_df, x='Item', y='Score', color='LC', barmode='group')
+            self.__plot = plot(fig, output_type='div')
+        
+        return self.__plot

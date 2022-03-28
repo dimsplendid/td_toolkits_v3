@@ -1,3 +1,6 @@
+from io import BytesIO
+from django.http import HttpResponse
+from django.shortcuts import redirect
 import pandas as pd
 
 from django.urls import reverse_lazy
@@ -5,9 +8,16 @@ from django.views.generic import (
     TemplateView,
     ListView,
     DetailView,
+    View,
 )
 from django.views.generic.edit import FormView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from td_toolkits_v3.materials.models import LiquidCrystal
+
+from td_toolkits_v3.opticals.tools.utils import (
+    OptResultGenerator, 
+    OptictalsScore,
+)
 
 from .forms import (
     AxoUploadForm,
@@ -16,7 +26,11 @@ from .forms import (
     ResponseTimeUploadForm,
     CalculateOpticalForm,
 )
-from .models import OpticalReference, OpticalsFittingModel
+from .models import (
+    OpticalReference, 
+    OpticalsFittingModel,
+    OpticalSearchProfile
+)
 
 
 class IndexView(TemplateView):
@@ -170,3 +184,162 @@ class CalculateCheckView(TemplateView):
         )
         context['id'] = self.request.session['exp_id']
         return context
+
+class OpticalSearchProfileListView(ListView):
+    model = OpticalSearchProfile
+
+class OpticalSearchProfileDetailView(DetailView):
+    model = OpticalSearchProfile
+
+class OpticalSearchProfileCreateView(CreateView):
+    template_name = 'upload_generic.html'
+    model = OpticalSearchProfile
+    fields = [
+        'name',
+        'ref_product',
+        'lc_percent',
+        'lc_percent_weight',
+        'response_time',
+        'response_time_weight',
+        'delta_e_ab',
+        'delta_e_ab_weight',
+        'contrast_ratio',
+        'contrast_ratio_weight',
+        'remark',
+    ]
+
+class OpticalSearchProfileUpdateView(UpdateView):
+    template_name = 'upload_generic.html'
+    model = OpticalSearchProfile
+    fields = [
+        'name',
+        'ref_product',
+        'lc_percent',
+        'lc_percent_weight',
+        'response_time',
+        'response_time_weight',
+        'delta_e_ab',
+        'delta_e_ab_weight',
+        'contrast_ratio',
+        'contrast_ratio_weight',
+        'remark',
+    ]
+
+class OpticalSearchView(TemplateView):
+    template_name = 'opticals/search.html'
+    def get(self, request, *args, **kwargs):
+        # setting the profile through get method
+        if request.GET.get('profile'):
+            request.session['profile'] = request.GET.get('profile')
+        else:
+            request.session['profile'] = 'Default'
+        
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['lc_list'] = [
+            i[0] for i in 
+            OpticalsFittingModel.objects.all()
+            .values_list('lc__name')
+            .order_by('modified')
+            .distinct()
+        ]
+        context['profile_list'] = [
+            i[0] for i in
+            OpticalSearchProfile.objects.all()
+            .values_list('name')
+            .order_by('modified')
+        ]
+        context['profile'] = self.request.session['profile'].lower()
+
+        header = {
+            "ref_product__product_model_type__name": "Product",
+            "ref_product__product_model_type__factory__name": "Factory",
+            "ref_product__lc__name": "LC",
+            "ref_product__cell_gap": "Cell Gap",
+            'response_time': 'RT',
+            'response_time_weight': 'w(RT)',
+            "lc_percent": "LC%",
+            "lc_percent_weight": "w(LC%)",
+            'delta_e_ab':  'ΔEab*',
+            'delta_e_ab_weight':  'w(ΔEab*)',
+            'contrast_ratio': 'CR',
+            'contrast_ratio_weight': 'w(CR)',
+            'remark': 'Remark'
+        }
+        profile_df = pd.DataFrame.from_records(
+            OpticalSearchProfile.objects
+            .filter(name=self.request.session['profile'])
+            .values(*header)
+        ).rename(
+            columns=header
+        )
+        context['profile_table'] = profile_df.to_html(
+            float_format=lambda x: f'{x:.2f}',
+            classes=['table', 'table-hover', 'text-center', 'table-striped'],
+            justify='center',
+            index=False,
+            escape=False,
+        )
+        lc_list = self.request.GET.getlist('q')
+        context['q'] = lc_list
+        context['q_lc_list'] = None
+        if lc_list:
+            context['q_lc_list'] = LiquidCrystal.objects.filter(
+                name__in=lc_list)
+            ref = (profile_df['Factory'][0], profile_df['Product'][0])
+            results = []
+            for lc in lc_list:
+                result_generator = OptResultGenerator(lc, ref)
+                results += [result_generator.table]
+
+            # concat all results into one table
+            result = pd.concat(results, ignore_index=True)
+            opt_score = OptictalsScore(result, profile_df)
+            self.request.session['opt_result'] = result.to_json()
+            self.request.session['opt_plot'] = opt_score.plot
+            self.request.session['opt_score_raw'] = opt_score.data.to_json()
+            self.request.session['opt_score'] = opt_score.score.to_json()
+
+            context['opt_plot'] = opt_score.plot
+            context['opt_score'] = opt_score.score.to_html(
+                float_format=lambda x: f'{x:.2f}',
+                classes=['table', 'table-hover', 'text-center', 'table-striped'],
+                justify='center',
+                index=False,
+                escape=False,
+            )
+            context['opt_score_raw'] = opt_score.data.to_html(
+                float_format=lambda x: f'{x:.2f}',
+                classes=['table', 'table-hover', 'text-center', 'table-striped'],
+                justify='center',
+                index=False,
+                escape=False,
+            )
+        return context
+
+class OpticalSearchResultDownload(View):
+    def get(self, request, *args, **kwargs):
+        if 'opt_result' in request.session:
+            opt_result = pd.read_json(request.session['opt_result'])
+            opt_score_raw = pd.read_json(request.session['opt_score_raw'])
+            opt_score = pd.read_json(request.session['opt_score'])
+            # print(request.session['opt_result'])
+            with BytesIO() as b:
+                writer = pd.ExcelWriter(b, engine='openpyxl')
+                opt_result.to_excel(
+                    writer, sheet_name='OPT Result', index=False)
+                opt_score_raw.to_excel(
+                    writer, sheet_name='OPT Score Raw', index=False)
+                opt_score.to_excel(
+                    writer, sheet_name='OPT Score', index=False)
+                writer.save()
+                file_name = 'OptResult.xlsx'
+                response = HttpResponse(
+                    b.getvalue(),
+                    content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                )
+                response['Content-Disposition'] = f'attachment; filename={file_name}'
+                return response
+        return redirect(reverse_lazy('opticals:search'))

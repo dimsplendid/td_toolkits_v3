@@ -1,3 +1,5 @@
+from enum import unique
+from urllib import response
 from django.db import models
 from django.urls import reverse
 
@@ -149,7 +151,8 @@ class OpticalReference(TimeStampedModel):
         return f"{product}-{factory}"
 
     slug = AutoSlugField(
-        "opt ref addr", unique=True, always_update=False, populate_from=slug_gen
+        "opt ref addr", unique=True, always_update=False, 
+        populate_from=slug_gen
     )
 
     lc = models.ForeignKey(
@@ -183,7 +186,8 @@ class OpticalReference(TimeStampedModel):
 
         __empty__ = "Unknown"
 
-    tft_tech = models.CharField("TFT Tech", choices=TFTTech.choices, max_length=20)
+    tft_tech = models.CharField(
+        "TFT Tech", choices=TFTTech.choices, max_length=20)
     transmittance = models.FloatField("T%")
     time_rise = models.FloatField("Tr")
     time_fall = models.FloatField("Tf")
@@ -255,3 +259,39 @@ class OpticalsFittingModel(TimeStampedModel):
                 fields=["experiment", "lc"], name="opticals_scipy_model"
             )
         ]
+
+class OpticalSearchProfile(TimeStampedModel):
+    name = models.CharField('Profile Name', max_length=255, default='Default')
+    slug = AutoSlugField(
+        'Optical Search Profile Address', unique=True, always_update=False,
+        populate_from='name'
+    )
+    ref_product = models.ForeignKey(
+        OpticalReference, 
+        verbose_name='Ref Product',
+        on_delete=models.CASCADE
+    )
+
+    lc_percent = models.FloatField('LC%', default=0.)
+    lc_percent_weight = models.FloatField('LC% Weight', default=1.)
+    response_time = models.FloatField('RT', default=30.)
+    response_time_weight = models.FloatField('RT Weight', default=1.)
+    delta_e_ab = models.FloatField('ΔEab*', default=0.)
+    delta_e_ab_weight = models.FloatField('ΔEab* Weight', default=1.)
+    contrast_ratio = models.FloatField('CR', default=1500.)
+    contrast_ratio_weight = models.FloatField('CR Weight', default=1.)
+    class RemarkChoice(models.TextChoices):
+        ALL = 'All', 'All'
+        INTER = 'Interpolation', 'Interpolation'
+        EXTRA = 'Extrapolation', 'Extrapolation'
+
+    remark = models.TextField(
+        choices=RemarkChoice.choices, max_length=20, default=RemarkChoice.INTER)
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse(
+            "opticals:search_profile_detail", kwargs={"slug": self.slug})
+    

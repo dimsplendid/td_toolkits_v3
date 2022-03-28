@@ -24,6 +24,11 @@ urlpatterns = [
         name='lc_detail'
     ),
     path(
+        route='lc/<slug:slug>/update/',
+        view=views.LiquidCrystalUpdateView.as_view(),
+        name='lc_update'
+    ),
+    path(
         route='vender/list',
         view=views.VenderListView.as_view(),
         name='vender_list'

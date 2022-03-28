@@ -11,3 +11,8 @@
   background-color: #f2dede;
   border-color: #eed3d7;
 }
+
+.note {
+  color: rgba(255,255,255,0.774);
+  font-size: 12px;
+}
