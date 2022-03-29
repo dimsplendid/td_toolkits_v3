@@ -13,18 +13,18 @@ Optical Search
         {% endfor %}
     </select>
     <h3><a href="{% url 'opticals:search_profile_list' %}">Search Profile</a></h3>
-    <select class='form-selec' name='profile'>
-        {% for profile in profile_list %}
+    <select class='form-select' name='profile'>
+        {% for profile_name in profile_list %}
         <option 
-        {% if request.GET.profile == profile %}
+        {% if request.GET.profile == profile_name %}
         selected
         {% endif %}>
-            {{ profile }}
+            {{ profile_name }}
         </option>
         {% endfor %}
     </select>
     <button class='btn btn-primary' type='submit'>Change</button>
-    <a href="{% url 'opticals:search_profile_update' profile %}?next={{request.path}}"
+    <a href="{% url 'opticals:search_profile_update' profile.slug %}?next={{request.path}}"
         class='btn btn-info'
     >
         Update
@@ -36,6 +36,7 @@ Optical Search
 </form>
 
 {% if q %}
+<hr>
 <h3>LC Cell Gap Setting</h3>
 <table class='table text-center small table-hover'>
     <thead>
@@ -63,6 +64,7 @@ Optical Search
         {% endfor %}
     </tbody>
 </table>
+<hr>
 <h2>Result</h2>
 <div>
     <h3>Figure 1: Opt Score Histagram</h3>

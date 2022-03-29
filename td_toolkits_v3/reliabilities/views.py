@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import (
     TemplateView,
@@ -108,9 +109,22 @@ class ReliabilitySearchView(TemplateView):
         context = super().get_context_data(**kwargs)
         profile = self.request.GET.get('profile')
         if profile is None:
-            profile = 'Default'
+            profile = 'default'
 
+        if self.request.GET.get('pure'):
+            self.request.session['opt_lc_list'] = None
         
+        # opt result part
+        if self.request.session['opt_lc_list']:
+            pass
+        
+        # ra part
+        context['profile_list'] = ReliabilitySearchProfile.objects.all()
+        context['profile'] = get_object_or_404(
+            ReliabilitySearchProfile,
+            slug=profile
+        )
+
 
         return context
     

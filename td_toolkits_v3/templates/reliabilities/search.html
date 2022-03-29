@@ -4,4 +4,117 @@ Reliability Search
 {% endblock title %}
 {% block content %}
 <h2>Reliability Search</h2>
+<form action='' method='GET'>
+    <h3>Select Configurations</h3>
+    TODO
+
+    <h3>
+        <a href="{% url 'reliabilities:search_profile_list' %}">
+            Search Profile
+        </a>
+    </h3>
+    <select class='from-select' name='profile'>
+        {% for obj in profile_list %}
+        <option 
+        {% if obj.slug == profile.slug %}
+        selected
+        {% endif %}
+        value={{ obj.slug }}
+        >
+            {{ obj.name }}
+        </option>
+        {% endfor %}
+    </select>
+    <button class='btn btn-primary' type='submit'>Change</button>
+    <a href="{% url 'reliabilities:search_profile_update' profile.slug %}?next={{request.path}}"
+        class='btn btn-info'
+    >
+        Update
+    </a>
+    <table class='table table-hover text-center table-striped'>
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Value</th>
+                <th>Weight</th>
+                <th>Vender</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <th>VHR</th>
+                <td>{{ profile.voltage_holding_ratio }}</td>
+                <td>{{ profile.voltage_holding_ratio_weight }}</td>
+                <td>
+                    {% for vender in profile.voltage_holding_ratio_venders.values %}
+                    {{ vender.name }}
+                    {% endfor %}
+                </td>
+            </tr>
+            <tr>
+                <th>Δ angle</th>
+                <td>{{ profile.delta_angle }}</td>
+                <td>{{ profile.delta_angle_weight }}</td>
+                <td>
+                    {% for vender in profile.delta_angle_venders.values %}
+                    {{ vender.name }}
+                    {% endfor %}
+                </td>
+            </tr>
+            <tr>
+                <th>Adhesion</th>
+                <td>{{ profile.adhesion }}</td>
+                <td>{{ profile.adhesion_weight }}</td>
+                <td>
+                    {% for vender in profile.adhesion_venders.values %}
+                    {{ vender.name }}
+                    {% endfor %}
+                </td>
+            </tr>
+            <tr>
+                <th>LTS</th>
+                <td>{{ profile.low_temperature_storage }}</td>
+                <td>{{ profile.low_temperature_storage_weight }}</td>
+                <td>
+                    {% for vender in profile.low_temperature_storage_venders.values %}
+                    {{ vender.name }}
+                    {% endfor %}
+                </td>
+            </tr>
+            <tr>
+                <th>PCT</th>
+                <td>{{ profile.pressure_cooking_test }}</td>
+                <td>{{ profile.pressure_cooking_test_weight }}</td>
+                <td>
+                    {% for vender in profile.pressure_cooking_test_venders.values %}
+                    {{ vender.name }}
+                    {% endfor %}
+                </td>
+            </tr>
+            <tr>
+                <th>Seal WVTR</th>
+                <td>{{ profile.seal_wvtr }}</td>
+                <td>{{ profile.seal_wvtr_weight }}</td>
+                <td>
+                    {% for vender in profile.seal_wvtr_venders.values %}
+                    {{ vender.name }}
+                    {% endfor %}
+                </td>
+            </tr>
+            <tr>
+                <th>U-Shape AC</th>
+                <td>{{ profile.u_shape_ac }}</td>
+                <td>{{ profile.u_shape_ac_weight }}</td>
+                <td>
+                    {% for vender in profile.u_shape_ac_venders.values %}
+                    {{ vender.name }}
+                    {% endfor %}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+
+</form>
+
 {% endblock content %}

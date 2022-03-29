@@ -1,6 +1,6 @@
 from io import BytesIO
 from django.http import HttpResponse
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 import pandas as pd
 
 from django.urls import reverse_lazy
@@ -251,7 +251,10 @@ class OpticalSearchView(TemplateView):
             .values_list('name')
             .order_by('modified')
         ]
-        context['profile'] = self.request.session['profile'].lower()
+        context['profile'] = get_object_or_404(
+            OpticalSearchProfile,
+            name=self.request.session['profile']
+        )
 
         header = {
             "ref_product__product_model_type__name": "Product",
@@ -288,6 +291,8 @@ class OpticalSearchView(TemplateView):
         if lc_list:
             context['q_lc_list'] = LiquidCrystal.objects.filter(
                 name__in=lc_list)
+            # store lc list cookies to for the ra searching
+            self.request.session['opt_lc_list'] = lc_list
             ref = (profile_df['Factory'][0], profile_df['Product'][0])
             results = []
             for lc in lc_list:
