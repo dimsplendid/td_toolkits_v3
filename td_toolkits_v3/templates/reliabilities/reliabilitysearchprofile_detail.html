@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}
+Optical Search Profile: {{ reliabilitysearchprofile }}
+{% endblock title %}
+{% block content %}
+<h2>Optical Search Profile: {{ reliabilitysearchprofile }}</h2>
+<div class='table'>
+<table class='table table-hover text-center table-striped'>
+    <thead>
+        <tr>
+            <th>Item</th>
+            <th>Value</th>
+            <th>Weight</th>
+            <th>Vender</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th>VHR</th>
+            <td>{{ reliabilitysearchprofile.voltage_holding_ratio }}</td>
+            <td>{{ reliabilitysearchprofile.voltage_holding_ratio_weight }}</td>
+            <td>
+                {% for vender in reliabilitysearchprofile.voltage_holding_ratio_venders.values %}
+                {{ vender.name }}
+                {% endfor %}
+            </td>
+        </tr>
+        <tr>
+            <th>Δ angle</th>
+            <td>{{ reliabilitysearchprofile.delta_angle }}</td>
+            <td>{{ reliabilitysearchprofile.delta_angle_weight }}</td>
+            <td>
+                {% for vender in reliabilitysearchprofile.delta_angle_venders.values %}
+                {{ vender.name }}
+                {% endfor %}
+            </td>
+        </tr>
+        <tr>
+            <th>Adhesion</th>
+            <td>{{ reliabilitysearchprofile.adhesion }}</td>
+            <td>{{ reliabilitysearchprofile.adhesion_weight }}</td>
+            <td>
+                {% for vender in reliabilitysearchprofile.adhesion_venders.values %}
+                {{ vender.name }}
+                {% endfor %}
+            </td>
+        </tr>
+        <tr>
+            <th>LTS</th>
+            <td>{{ reliabilitysearchprofile.low_temperature_storage }}</td>
+            <td>{{ reliabilitysearchprofile.low_temperature_storage_weight }}</td>
+            <td>
+                {% for vender in reliabilitysearchprofile.low_temperature_storage_venders.values %}
+                {{ vender.name }}
+                {% endfor %}
+            </td>
+        </tr>
+        <tr>
+            <th>PCT</th>
+            <td>{{ reliabilitysearchprofile.pressure_cooking_test }}</td>
+            <td>{{ reliabilitysearchprofile.pressure_cooking_test_weight }}</td>
+            <td>
+                {% for vender in reliabilitysearchprofile.pressure_cooking_test_venders.values %}
+                {{ vender.name }}
+                {% endfor %}
+            </td>
+        </tr>
+        <tr>
+            <th>Seal WVTR</th>
+            <td>{{ reliabilitysearchprofile.seal_wvtr }}</td>
+            <td>{{ reliabilitysearchprofile.seal_wvtr_weight }}</td>
+            <td>
+                {% for vender in reliabilitysearchprofile.seal_wvtr_venders.values %}
+                {{ vender.name }}
+                {% endfor %}
+            </td>
+        </tr>
+        <tr>
+            <th>U-Shape AC</th>
+            <td>{{ reliabilitysearchprofile.u_shape_ac }}</td>
+            <td>{{ reliabilitysearchprofile.u_shape_ac_weight }}</td>
+            <td>
+                {% for vender in reliabilitysearchprofile.u_shape_ac_venders.values %}
+                {{ vender.name }}
+                {% endfor %}
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+<a href="{% url 'reliabilities:search_profile_update' reliabilitysearchprofile.slug %}"
+    class='btn btn-info'
+>
+    Update
+</a>
+{% endblock content %}

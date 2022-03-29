@@ -3,14 +3,16 @@
 Optical Search
 {% endblock title %}
 {% block content %}
-<h2>Select <a href="{% url 'materials:lc_list' %}">LCs</a></h2>
+<h2>Optical Search</h2>
+<h3>Select <a href="{% url 'materials:lc_list' %}">LCs</a></h3>
+<div>
 <form action='' method='GET'>
     <select class='form-select' multiple name='q'>
         {% for lc in lc_list %}
         <option> {{ lc }}</option>
         {% endfor %}
     </select>
-    <h2><a href="{% url 'opticals:search_profile_list' %}">Search Profile</a></h2>
+    <h3><a href="{% url 'opticals:search_profile_list' %}">Search Profile</a></h3>
     <select class='form-selec' name='profile'>
         {% for profile in profile_list %}
         <option 
@@ -34,6 +36,7 @@ Optical Search
 </form>
 
 {% if q %}
+<h3>LC Cell Gap Setting</h3>
 <table class='table text-center small table-hover'>
     <thead>
         <th>LC</th>
@@ -60,13 +63,17 @@ Optical Search
         {% endfor %}
     </tbody>
 </table>
+<h2>Result</h2>
 <div>
+    <h3>Figure 1: Opt Score Histagram</h3>
     {{ opt_plot|safe }}
 </div>
 <div>
+    <h3>Table 1: Opt Score</h3>
     {{ opt_score|safe }}
 </div>
 <div>
+    <h3>Table 2: Opt Score Raw</h3>
     {{ opt_score_raw|safe }}
 </div>
 <a class='btn btn-primary' href="{% url 'opticals:search_download' %}">
@@ -76,4 +83,5 @@ Optical Search
     Next
 </a>
 {% endif %}
+</div>
 {% endblock content %}

@@ -78,6 +78,7 @@ class ReliabilitiesUploadForm(forms.Form):
         )
         # Store each table
         if len(adhesion_df):
+            # TODO: The field would change later
             for _, row in adhesion_df.iterrows():
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[8])
@@ -148,6 +149,7 @@ class ReliabilitiesUploadForm(forms.Form):
                     )
 
         if len(seal_wvtr_df):
+            # TODO: The field would change
             for _, row in seal_wvtr_df.iterrows():
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[8])

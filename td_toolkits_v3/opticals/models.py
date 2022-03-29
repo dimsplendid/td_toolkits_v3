@@ -1,5 +1,3 @@
-from enum import unique
-from urllib import response
 from django.db import models
 from django.urls import reverse
 

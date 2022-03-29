@@ -5,10 +5,14 @@
 
 {% block content %}
 <h1>Reliabilities</h1>
+<a href="#TODO" class='btn btn-info'>
+    RA Search
+</a>
+<hr>
+<h2>Management</h2>
 <ol>
-    <li> <a href="#TODO">Supplier RA data upload</a> </li>
-    <li> <a href="#TODO">RA Search</a> </li>
-    <li> <a href="#TODO">RA Search Profile</a> </li>
+    <li> <a href="{% url 'reliabilities:upload' %}">Supplier RA data upload</a> </li>
+    <li> <a href="{% url 'reliabilities:search_profile_list' %}">RA Search Profile</a> </li>
 </ol>
 
 {% endblock content %}

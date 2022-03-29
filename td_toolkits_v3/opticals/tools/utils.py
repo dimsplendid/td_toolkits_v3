@@ -22,6 +22,7 @@ from td_toolkits_v3.opticals.models import (
     RDLCellGap,
     ResponseTimeLog,
     OpticalsFittingModel,
+    OpticalSearchProfile
 )
 
 class OptLoader():
@@ -752,6 +753,7 @@ class OptResultGenerator():
             7.787 * x/blu[opt] + 16/116,
             (x/blu[opt]) ** (1/3)
         )
+
 def tr2_score(column, method='mean', cmp='gt', scale=1., formatter=None):
     """
     Calculate the score base on the data.
@@ -827,13 +829,14 @@ class OptictalsScore():
         # print(self.data)
         self.constrain = profile.to_dict(orient='records')[0]
         mask = (
-            # (self.data['LC%']    >  self.constrain['LC%'])
-            #  & (self.data['ΔEab*']  <  self.constrain['ΔEab*'])
-            #  & (self.data['RT']     <  self.constrain['RT'])
-            #  & (self.data['CR']     >  self.constrain['CR'])
-            #  & (self.data['Remark'] == self.constrain['Remark'])\
-              (np.abs(self.data['Cell Gap']-self.data['Designed Cell Gap']) < 0.01)
+            (self.data['LC%']    >  self.constrain['LC%'])
+            & (self.data['ΔEab*']  <  self.constrain['ΔEab*'])
+            & (self.data['RT']     <  self.constrain['RT'])
+            & (self.data['CR']     >  self.constrain['CR'])
+            &  (np.abs(self.data['Cell Gap']-self.data['Designed Cell Gap']) < 0.001)
         )
+        if self.constrain['Remark'] != OpticalSearchProfile.RemarkChoice.ALL:
+            mask = mask & (self.data['Remark'] == self.constrain['Remark'])
         # print((self.data['Cell Gap']-self.data['Designed Cell Gap']))
         self.data = self.data[mask].iloc[:,:-1]
         self.__score = None
