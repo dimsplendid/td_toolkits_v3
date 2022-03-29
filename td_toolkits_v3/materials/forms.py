@@ -11,7 +11,7 @@ from .models import (
 
 class MaterialsUploadForm(forms.Form):
     materials = forms.FileField(
-        help_text='Excel files(.xlsx)',
+        help_text='Excel file(.xlsx)',
         widget=forms.FileInput(attrs={'accept': '.xlsx'})
     )
 

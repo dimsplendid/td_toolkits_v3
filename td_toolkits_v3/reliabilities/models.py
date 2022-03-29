@@ -63,7 +63,7 @@ class DeltaAngle(Configuration, TimeStampedModel):
     measure_voltage = models.FloatField(default=14.0)
     measure_freq = models.FloatField(default=60.0)
     measure_time = models.FloatField(default=72.0)
-    measure_temperature = models.FloatField(default=60.0)
+    measure_temperature = models.FloatField(default=60.0, null=True, blank=True)
     value = models.FloatField(default=0.)
     vender = ForeignKey('materials.Vender', on_delete=models.CASCADE, null=True)
     unit = '°'
