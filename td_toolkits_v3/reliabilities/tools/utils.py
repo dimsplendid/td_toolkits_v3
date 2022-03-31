@@ -24,7 +24,9 @@ class ReliabilityScore():
     def __init__(self, query, profile) -> None:
         self.lc, self.pi, self.seal = query
         self.constraint = profile
+        # pattern using for tranform the model name
         self.pattern = re.compile(r'(?<!^)(?=[A-Z])')
+        # header using for query and modified field name
         self.header = {
             'lc__name': 'LC',
             'pi__name': 'PI',
@@ -34,20 +36,21 @@ class ReliabilityScore():
             'file_source__name': 'file source'
         }
         
-        # run all models
+        self.__name_map = {}
+        # generate all tables
         _ = self.__table(Adhesion, opt=3)
         _ = self.__table(DeltaAngle, opt=6)
-        _ = self.__table(UShapeAC,name='u_shape_ac', opt=6)
+        _ = self.__table(UShapeAC, 'u_shape_ac', opt=6, f=np.abs)
         _ = self.__table(VoltageHoldingRatio)
         _ = self.__table(LowTemperatureStorage, opt=4)
         _ = self.__table(PressureCookingTest)
         _ = self.__table(SealWVTR, 'seal_wvtr', opt=1)
 
-        self.__score = None
+        self.__result = None
         self.__plot_df = []
         self.__plot = None
 
-    def __table(self, Model=None, name=None, opt=7):
+    def __table(self, Model=None, name=None, opt=7, f=None):
         """
         Model: django.db.models.Model
             The RA log model you need
@@ -59,6 +62,8 @@ class ReliabilityScore():
         opt: int, default is 7(all)
             Using binary to represent query lc, pi, seal,
             eg. need all, (lc, pi, seal) = 111 = 7
+        f: funcion, default is None
+            Transfer the value x to f(x) if needed
         """
         if (Model is None) and (name is None):
             return 'You should at least offer one of Model or name'
@@ -69,11 +74,16 @@ class ReliabilityScore():
         if name is None:
             name = self.pattern.sub('_', Model.__name__).lower()
 
-        if getattr(self, name, None) is None:
-            # parse option
+        if getattr(self, f'table_{name}', None) is None:
+            # option early gardian
             if (opt > 7) and (opt < 1):
                 return 'no such option, opt need to be 1~7'
+
+            # get the compare condition, should be 'gt' or 'lt'
             cmp = getattr(self.constraint, f'{name}_cmp')
+            if cmp not in ['gt', 'lt']:
+                return f'Check the profile {name}_cmp, something wrong.'
+            # setting query parameter for the model filter
             q = {
                 'lc__in': self.lc,
                 'pi__in': self.pi,
@@ -81,6 +91,8 @@ class ReliabilityScore():
                 'vender__in': getattr(self.constraint, f'{name}_venders').all(),
                 f'value__{cmp}': getattr(self.constraint, name)
             }
+
+            # parse option
             opt = f'{opt:03b}'
             groupby = []
             if opt[0] == '0':
@@ -107,9 +119,12 @@ class ReliabilityScore():
                     'raw': None,
                     'mean': None,
                 }
-                setattr(self, f'{name}', result)
-                return getattr(self, name)
+                setattr(self, f'table_{name}', result)
+                return getattr(self, f'table_{name}')
+            if f:
+                df['Value'] = f(df['Value'])
 
+            self.__name_map[name] = Model.name
             mean_df = df.groupby(
                 by=groupby, 
                 as_index=False
@@ -119,20 +134,19 @@ class ReliabilityScore():
                 'mean': mean_df
             }
 
-            setattr(self, f'{name}', result)
+            setattr(self, f'table_{name}', result)
 
-        return getattr(self, name)    
+        return getattr(self, f'table_{name}')    
+
+    @staticmethod
+    def score_f(x):
+        return np.round(9 * x) + 1
 
     @property
-    def score(self):
-        if self.__score is None:
-            # custome score function
-            def f(x):
-                return np.round(9 * x) + 1
+    def result(self):
+        if self.__result is None:
 
-            def is_good(table):
-                return not(table.empty or (table.iloc[:,-1].sum() == 0))
-
+            # generate all configuration table
             df_lc = pd.DataFrame.from_records(
                 self.lc.values('name')
             ).rename(columns={'name': 'LC'})
@@ -143,92 +157,43 @@ class ReliabilityScore():
                 self.seal.values('name')
             ).rename(columns={'name': 'Seal'})
             tmp_df = df_lc.merge(df_pi, how='cross')
-            df = tmp_df.merge(df_seal, how='cross')
-            df_raw = df.copy()
+            score_df = tmp_df.merge(df_seal, how='cross')
+            raw_df = score_df.copy()
 
-            # adhesion part
-            if self.adhesion:
-                adhesion_score = self.adhesion['mean'][['PI', 'Seal']]
-                adhesion_score['Adhesion'] = tr2_score(
-                    self.adhesion['mean']['Value'],
-                    'min-max', 'gt', self.constraint.adhesion_weight, f
-                )
-                if is_good(adhesion_score):
-                    df = df.merge(adhesion_score, on=['PI', 'Seal'], how='left')
-            
-            # delta angle
-            if self.delta_angle:
-                delta_angle_score = self.delta_angle['mean'][['LC', 'PI']]
-                delta_angle_score['Δ angle'] = tr2_score(
-                    self.delta_angle['mean']['Value'],
-                    'min-max', 'gt', self.constraint.delta_angle_weight, f
-                )
-                if is_good(delta_angle_score):
-                    df = df.merge(
-                        delta_angle_score, on=['LC', 'PI'], how='left')
-                
-            # U Shape
-            if self.ushape_ac:
-                ushape_ac_score = self.ushape_ac['mean'][['LC', 'PI']]
-                ushape_ac_score['U-Shape AC%'] = tr2_score(
-                    self.ushape_ac['mean']['Value'],
-                    'min-max', 'gt', self.constraint.u_shape_ac_weight, f
-                )
-                if is_good(ushape_ac_score):
-                    df = df.merge(ushape_ac_score, on=['LC', 'PI'], how='left')
-                
-            # VHR
-            if self.vhr:
-                vhr_score = self.vhr['mean'][['LC', 'PI', 'Seal']]
-                vhr_score['VHR'] = tr2_score(
-                    self.vhr['mean']['Value'],
-                    'min-max', 'gt', 
-                    self.constraint.voltage_holding_ratio_weight, f
-                )
-                if is_good(vhr_score):
-                    df = df.merge(
-                        vhr_score, on=['LC', 'PI', 'Seal'], how='left')
-                
-            # LTS
-            if self.lts:
-                lts_score = self.lts['mean'][['LC']]
-                lts_score['LTS'] = tr2_score(
-                    self.lts['mean']['Value'],
-                    'min-max', 'gt', 
-                    self.constraint.low_temperature_storage_weight, f
-                )
-                if is_good(lts_score):
-                    df = df.merge(lts_score, on=['LC'], how='left')
-                
-            # PCT
-            if self.pct:
-                pct_score = self.pct['mean'][['LC', 'PI', 'Seal']]
-                pct_score['PCT'] = tr2_score(
-                    self.pct['mean']['Value'],
-                    'min-max', 'gt', 
-                    self.constraint.pressure_cooking_test_weight, f
-                )
-                if is_good(pct_score):
-                    df = df.merge(
-                        pct_score, on=['LC', 'PI', 'Seal'], how='left')
-                
-            # Seal WVTR
-            if self.seal_wvtr:
-                seal_wvtr_score = self.seal_wvtr['mean'][['Seal']]
-                seal_wvtr_score['Seal WVTR'] = tr2_score(
-                    self.seal_wvtr['mean']['Value'],
-                    'min-max', 'gt', self.constraint.seal_wvtr_weight, f
-                )
-                if is_good(seal_wvtr_score):
-                    df = df.merge(seal_wvtr_score, on=['Seal'], how='left')
-                
-            #TODO: These should have more explicit way to implement...
 
-            df = df.fillna(0)
-            df['Sum'] = df.iloc[:, 3:].sum(axis=1)
-            self.__score = df.sort_values('Sum', ascending=False)
+            for table in self.__dir__():
+                # skip not table attribute
+                if not table.startswith('table_'):
+                    continue
+                # skip None table
+                if (mean := getattr(self, table)['mean']) is None:
+                    continue
+                
+                item = table[6:]
+                columns = list(mean.columns[:-1])
+                score = mean[columns]
+                score[item] = tr2_score(
+                    mean['Value'], 
+                    'min-max', 
+                    getattr(self.constraint, f'{item}_cmp'),
+                    getattr(self.constraint, f'{item}_weight'),
+                    self.score_f
+                )
+                mean = mean.rename(columns={'Value':item})
+                score_df = score_df.merge(score, on=columns, how='left')
+                raw_df = raw_df.merge(mean, on=columns, how='left')
 
-        return self.__score
+            score_df = score_df.fillna(0)
+            score_df['Sum'] = score_df.iloc[:, 3:].sum(axis=1)
+            score_df = score_df[score_df['Sum']>0]
+            score_df = score_df.sort_values('Sum', ascending=False)
+            raw_df = raw_df.iloc[score_df.index, :]
+            self.__result = {
+                'normalized': score_df.rename(columns=self.__name_map),
+                'raw': raw_df.rename(columns=self.__name_map),
+            }
+
+        return self.__result
 
     @property
     def plot(self):
