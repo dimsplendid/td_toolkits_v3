@@ -6,7 +6,24 @@ Reliability Search
 <h2>Reliability Search</h2>
 <form action='' method='GET'>
     <h3>Select Configurations</h3>
-    TODO
+    <select class='form-select' multiple name='lc_list'>
+        <option>ALL</option>
+        {% for lc in lc_list %}
+        <option> {{ lc }}</option>
+        {% endfor %}
+    </select>
+    <select class='form-select' multiple name='pi_list'>
+        <option>ALL</option>
+        {% for pi in pi_list %}
+        <option> {{ pi }}</option>
+        {% endfor %}
+    </select>
+    <select class='form-select' multiple name='seal_list'>
+        <option>ALL</option>
+        {% for seal in seal_list %}
+        <option> {{ seal }}</option>
+        {% endfor %}
+    </select>
 
     <h3>
         <a href="{% url 'reliabilities:search_profile_list' %}">
@@ -113,8 +130,14 @@ Reliability Search
             </tr>
         </tbody>
     </table>
-
-
+    <button class='btn btn-primary' type='submit'>Search</button>
 </form>
+{% if q %}
+<hr>
+<h2>Result</h2>
+{% for lc in q_lc_list %}<p>{{lc}}</p>{% endfor %}
+{% for pi in q_pi_list %}<p>{{pi}}</p>{% endfor %}
+{% for seal in q_seal_list %}<p>{{seal}}</p>{% endfor %}
 
+{% endif %}
 {% endblock content %}

@@ -11,21 +11,16 @@ from django.views.generic.edit import (
     UpdateView,
 )
 
+from td_toolkits_v3.materials.models import (
+    LiquidCrystal,
+    Polyimide,
+    Seal,
+)
+
 from .forms import (
     ReliabilitiesUploadForm
 )
-from .models import (
-    Adhesion,
-    DeltaAngle,
-    File,
-    LowTemperatureOperation,
-    LowTemperatureStorage,
-    PressureCookingTest,
-    ReliabilitySearchProfile,
-    SealWVTR,
-    UShapeAC,
-    VoltageHoldingRatio,
-)
+from .models import ReliabilitySearchProfile
 
 
 class IndexView(TemplateView):
@@ -119,12 +114,42 @@ class ReliabilitySearchView(TemplateView):
             pass
         
         # ra part
+        context['lc_list'] = LiquidCrystal.objects.all()
+        context['pi_list'] = Polyimide.objects.all()
+        context['seal_list'] = Seal.objects.all()
+
         context['profile_list'] = ReliabilitySearchProfile.objects.all()
         context['profile'] = get_object_or_404(
             ReliabilitySearchProfile,
             slug=profile
         )
-
+        query = self.configuration_query()
+        if query is not None:
+            context['q'] = True
+            q_lc, q_pi, q_seal = query
+            context['q_lc_list'] = q_lc
+            context['q_pi_list'] = q_pi
+            context['q_seal_list'] = q_seal
 
         return context
+
+    def configuration_query(self):
+        lc_list = self.request.GET.getlist('lc_list')
+        pi_list = self.request.GET.getlist('pi_list')
+        seal_list = self.request.GET.getlist('seal_list')
+        if (not lc_list) and (not pi_list) and (not seal_list):
+            return None
+
+        def qeury(model, qlist):
+            print(qlist)
+            if (not qlist) or ('ALL' in qlist):
+                return model.objects.all()
+            else:
+                return model.objects.filter(name__in=qlist)
+
+        q_lc = qeury(LiquidCrystal, lc_list)
+        q_pi = qeury(Polyimide, pi_list)
+        q_seal = qeury(Seal, seal_list)
+
+        return (q_lc, q_pi, q_seal)
     

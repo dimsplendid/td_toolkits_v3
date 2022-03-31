@@ -266,6 +266,7 @@ class ReliabilitySearchProfile(TimeStampedModel):
         related_name='voltage_holding_ratio_venders'
     )
     voltage_holding_ratio_weight = models.FloatField('VHR Weight', default=1.)
+    voltage_holding_ratio_cmp = 'gt'
 
     delta_angle = models.FloatField('Δ angle', default=90.)
     delta_angle_venders = models.ManyToManyField(
@@ -274,6 +275,7 @@ class ReliabilitySearchProfile(TimeStampedModel):
         related_name='delta_angle_venders'
     )
     delta_angle_weight = models.FloatField('Δ angle Weight', default=1.)
+    delta_angle_cmp = 'lt'
 
     adhesion = models.FloatField('Adhesion', default=0.)
     adhesion_venders = models.ManyToManyField(
@@ -282,6 +284,7 @@ class ReliabilitySearchProfile(TimeStampedModel):
         related_name='adhesion_venders'
     )
     adhesion_weight = models.FloatField('Adhesion Weight', default=1.)
+    adhesion_cmp = 'gt'
 
     low_temperature_storage = models.FloatField('LTS', default=0.)
     low_temperature_storage_venders = models.ManyToManyField(
@@ -290,7 +293,7 @@ class ReliabilitySearchProfile(TimeStampedModel):
         related_name='low_temperature_storage_venders'
     )
     low_temperature_storage_weight = models.FloatField('LTS Weight', default=1.)
-
+    low_temperature_storage_cmp = 'gt'
     
     pressure_cooking_test = models.FloatField('PCT', default=0.)
     pressure_cooking_test_venders = models.ManyToManyField(
@@ -299,6 +302,7 @@ class ReliabilitySearchProfile(TimeStampedModel):
         related_name='pressure_cooking_test_venders'
     )
     pressure_cooking_test_weight = models.FloatField('PCT Weight', default=0.)
+    pressure_cooking_test_cmp = 'gt'
 
     seal_wvtr = models.FloatField('Seal WVTR', default=0.)
     seal_wvtr_venders = models.ManyToManyField(
@@ -307,6 +311,7 @@ class ReliabilitySearchProfile(TimeStampedModel):
         related_name='seal_wvtr_venders'
     )
     seal_wvtr_weight = models.FloatField('Seal WVTR Weight', default=0.)
+    seal_wvtr_cmp = 'lt'
 
     u_shape_ac = models.FloatField('U-Shape AC%', default=0.)
     u_shape_ac_venders = models.ManyToManyField(
@@ -315,6 +320,7 @@ class ReliabilitySearchProfile(TimeStampedModel):
         related_name='u_shape_ac_venders'
     )
     u_shape_ac_weight = models.FloatField('U-Shape AC% Weight', default=0.)
+    u_shape_ac_cmp = 'lt'
 
     def __str__(self):
         return self.name

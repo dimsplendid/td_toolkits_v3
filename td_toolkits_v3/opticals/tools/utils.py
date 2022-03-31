@@ -827,16 +827,16 @@ class OptictalsScore():
         ).rename(columns=header)
         self.data = pd.merge(self.data, designed_cell_gap, on='LC', how='left')
         # print(self.data)
-        self.constrain = profile.to_dict(orient='records')[0]
+        self.constraint = profile.to_dict(orient='records')[0]
         mask = (
-            (self.data['LC%']    >  self.constrain['LC%'])
-            & (self.data['ΔEab*']  <  self.constrain['ΔEab*'])
-            & (self.data['RT']     <  self.constrain['RT'])
-            & (self.data['CR']     >  self.constrain['CR'])
+            (self.data['LC%']    >  self.constraint['LC%'])
+            & (self.data['ΔEab*']  <  self.constraint['ΔEab*'])
+            & (self.data['RT']     <  self.constraint['RT'])
+            & (self.data['CR']     >  self.constraint['CR'])
             &  (np.abs(self.data['Cell Gap']-self.data['Designed Cell Gap']) < 0.001)
         )
-        if self.constrain['Remark'] != OpticalSearchProfile.RemarkChoice.ALL:
-            mask = mask & (self.data['Remark'] == self.constrain['Remark'])
+        if self.constraint['Remark'] != OpticalSearchProfile.RemarkChoice.ALL:
+            mask = mask & (self.data['Remark'] == self.constraint['Remark'])
         # print((self.data['Cell Gap']-self.data['Designed Cell Gap']))
         self.data = self.data[mask].iloc[:,:-1]
         self.__score = None
@@ -850,16 +850,16 @@ class OptictalsScore():
             score_df = self.data[['LC']].copy()
             score_df['LC%'] = tr2_score(
                 self.data['LC%'], 
-                'min-max', 'gt',self.constrain['w(LC%)'] , f)
+                'min-max', 'gt',self.constraint['w(LC%)'] , f)
             score_df['ΔEab*'] = tr2_score(
                 self.data['ΔEab*'], 
-                'min-max', 'lt', self.constrain['w(ΔEab*)'], f)
+                'min-max', 'lt', self.constraint['w(ΔEab*)'], f)
             score_df['RT'] = tr2_score(
                 self.data['RT'], 
-                'min-max', 'lt', self.constrain['w(RT)'], f)
+                'min-max', 'lt', self.constraint['w(RT)'], f)
             score_df['CR'] = tr2_score(
                 self.data['CR'], 
-                'min-max', 'gt', self.constrain['w(CR)'], f)
+                'min-max', 'gt', self.constraint['w(CR)'], f)
             score_df['Sum'] = score_df.iloc[:,1:].sum(axis=1)
             # score_df['Remark'] = self.data['Remark']
             # score_df['Cell Gap'] = self.data['Cell Gap']
