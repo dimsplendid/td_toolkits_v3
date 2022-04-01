@@ -19,6 +19,46 @@ from td_toolkits_v3.reliabilities.models import (
     VoltageHoldingRatio,
 )
 
+def table_shrink(df, step=0.1, ratio=1.5):
+    """
+    A greedy method to find the max dense part of the sparse table.
+    Reduce rows and columns with NaN step by step.
+
+    Only consider number fields.
+
+    The effect is like:
+    ⎡1  -1  Na⎤    ⎡1  -1⎤ 
+    ⎢         ⎥ -> ⎢     ⎥
+    ⎢3   2  Na⎥    ⎣3   2⎦
+    ⎢         ⎥
+    ⎣Na  2  Na⎦
+
+    
+    Parameters
+    ----------
+    df: pd.DataFrame
+        The table to shrink
+    step: float, default is 0.1
+        The na ratio change for each step, smaller the better, but maybe slower
+    ratio: float, default is 1.5
+        The shrink speed ratio between row and columns, in mose sceanary,
+        we may want keep more columns(feature) than rows(log)
+    """
+    # The column/raw contain na ratio
+    na_ratio = 1
+
+    #  count not number(cnn) columns
+    cnn = (df.dtypes != np.number).sum()
+
+    while df.isna().any(None) and (na_ratio > 0):
+        na_ratio -= step
+        # reduce row by the zero ratio of all columns
+        df = df.loc[df.isna().sum(axis=1) / (len(df.columns)-cnn) < na_ratio]
+        # reduce column by the zero ratio of all rows
+        df = df.loc[:, df.isna().sum(axis=0) / len(df) < (na_ratio*ratio)]
+       
+    return df
+
 class ReliabilityScore():
 
     def __init__(self, query, profile) -> None:
@@ -50,7 +90,7 @@ class ReliabilityScore():
         self.__plot_df = []
         self.__plot = None
 
-    def __table(self, Model=None, name=None, opt=7, f=None):
+    def __table(self, Model=None, name=None, opt=7, f=None, add_header=None):
         """
         Model: django.db.models.Model
             The RA log model you need
@@ -84,6 +124,8 @@ class ReliabilityScore():
             if cmp not in ['gt', 'lt']:
                 return f'Check the profile {name}_cmp, something wrong.'
             # setting query parameter for the model filter
+            # TODO: add condition filter, I think maybe just using 
+            # dictionary union(`{**a, **b}`) to q.
             q = {
                 'lc__in': self.lc,
                 'pi__in': self.pi,
@@ -108,11 +150,14 @@ class ReliabilityScore():
                 del q['seal__in']
             else:
                 groupby.append('Seal')
-
+            
+            header = self.header
+            if add_header is not None:
+                header = {**self.header, **add_header}
 
             df = pd.DataFrame.from_records(
-                Model.objects.filter(**q).values(*self.header)
-            ).rename(columns=self.header)
+                Model.objects.filter(**q).values(*header)
+            ).rename(columns=header)
             # check the query result
             if len(df) == 0:
                 result = {
@@ -124,6 +169,7 @@ class ReliabilityScore():
             if f:
                 df['Value'] = f(df['Value'])
 
+            # Store the human readable name
             self.__name_map[name] = Model.name
             mean_df = df.groupby(
                 by=groupby, 
@@ -157,10 +203,9 @@ class ReliabilityScore():
                 self.seal.values('name')
             ).rename(columns={'name': 'Seal'})
             tmp_df = df_lc.merge(df_pi, how='cross')
-            score_df = tmp_df.merge(df_seal, how='cross')
-            raw_df = score_df.copy()
+            raw_df = tmp_df.merge(df_seal, how='cross')
 
-
+            # 1. construct raw table
             for table in self.__dir__():
                 # skip not table attribute
                 if not table.startswith('table_'):
@@ -171,33 +216,87 @@ class ReliabilityScore():
                 
                 item = table[6:]
                 columns = list(mean.columns[:-1])
-                score = mean[columns]
-                score[item] = tr2_score(
-                    mean['Value'], 
+                
+                mean = mean.rename(columns={'Value':item})
+                raw_df = raw_df.merge(mean, on=columns, how='left')
+
+            # 2. shrink the raw_df to get a better table to estimate score
+            shrink_df = table_shrink(raw_df)
+            score_df = shrink_df.iloc[:,:3].copy()
+            for item in shrink_df.columns[3:]:
+                score_df[item] = tr2_score(
+                    shrink_df[item], 
                     'min-max', 
                     getattr(self.constraint, f'{item}_cmp'),
                     getattr(self.constraint, f'{item}_weight'),
                     self.score_f
                 )
-                mean = mean.rename(columns={'Value':item})
-                score_df = score_df.merge(score, on=columns, how='left')
-                raw_df = raw_df.merge(mean, on=columns, how='left')
 
-            score_df = score_df.fillna(0)
+            # rename columns to more human readable name
+            raw_df = raw_df.rename(columns=self.__name_map)
+            shrink_df = shrink_df.rename(columns=self.__name_map)
+            score_df.columns = shrink_df.columns
+
             score_df['Sum'] = score_df.iloc[:, 3:].sum(axis=1)
-            score_df = score_df[score_df['Sum']>0]
             score_df = score_df.sort_values('Sum', ascending=False)
-            raw_df = raw_df.iloc[score_df.index, :]
+            shrink_df = shrink_df.loc[score_df.index, :]
             self.__result = {
-                'normalized': score_df.rename(columns=self.__name_map),
-                'raw': raw_df.rename(columns=self.__name_map),
+                'normalized': score_df,
+                'raw': shrink_df,
+                'all': raw_df,
             }
 
         return self.__result
 
-    @property
-    def plot(self):
+    def plot(self, row_fill = 0.6, column_fill = 0.6):
+        """
+        generate plotly plot and 
+        """
         if self.__plot is None:
             pass
 
+# Test main
+# Show the difference ratio and the final table of the table shrink
+if __name__ == '__main__':
+    from td_toolkits_v3.materials.models import (
+        LiquidCrystal,
+        Polyimide,
+        Seal,
+    )
+    import matplotlib.pyplot as plt
 
+    query = (
+        LiquidCrystal.objects.all(),
+        Polyimide.objects.all(),
+        Seal.objects.all(),
+    )
+
+    profile = ReliabilitySearchProfile.objects.get(name='Default')
+
+    ra_score = ReliabilityScore(query, profile)
+
+    ratio_range = np.arange(0.5, 4, 0.1)
+    columns_lens = []
+    rows_lens = []
+    for i in ratio_range:
+        df = table_shrink(ra_score.result['all'], ratio=i)
+        columns_lens.append(len(df.columns)-3)
+        rows_lens.append(len(df))
+
+    # plot the feature lenth change
+    fig, ax1 = plt.subplots()
+    color = 'tab:red'
+    ax1.set_xlabel('ratio')
+    ax1.set_ylabel('features', color=color)
+    ax1.plot(ratio_range, columns_lens, color=color)
+    ax1.tick_params(axis='y', labelcolor=color)
+
+    ax2 = ax1.twinx()
+
+    color = 'tab:blue'
+    ax2.set_ylabel('# of logs', color=color)  # we already handled the x-label with ax1
+    ax2.plot(ratio_range, rows_lens, color=color)
+    ax2.tick_params(axis='y', labelcolor=color)
+
+    fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    plt.show()
