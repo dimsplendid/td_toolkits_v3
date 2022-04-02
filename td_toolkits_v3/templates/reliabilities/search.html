@@ -135,9 +135,20 @@ Reliability Search
 {% if q %}
 <hr>
 <h2>Result</h2>
-{% for lc in q_lc_list %}<p>{{lc}}</p>{% endfor %}
-{% for pi in q_pi_list %}<p>{{pi}}</p>{% endfor %}
-{% for seal in q_seal_list %}<p>{{seal}}</p>{% endfor %}
-
+<div>
+    <h3>Figure 1: RA Score Histagram</h3>
+    {{ ra_plot|safe }}
+</div>
+<div>
+    <h3>Table 1: RA Score</h3>
+    {{ ra_score|safe }}
+</div>
+<div>
+    <h3>Table 2: RA Score Raw</h3>
+    {{ ra_score_raw|safe }}
+</div>
+<a class='btn btn-primary' href="{% url 'opticals:search_download' %}">
+    Opt Download
+</a>
 {% endif %}
 {% endblock content %}

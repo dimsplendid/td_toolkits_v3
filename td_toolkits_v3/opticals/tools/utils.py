@@ -775,14 +775,14 @@ def tr2_score(column, method='mean', cmp='gt', scale=1., formatter=None):
     -------
     numpy.array
     """
-    if len(column) == 1:
-        score = 0
-
     if method == 'mean':
         # Mean Normalization
         stdev = column.std()
         mean = column.mean()
-        score = (column - mean) / stdev
+        if stdev == 0:
+            score = np.zeros(len(column))
+        else:
+            score = (column - mean) / stdev
         if cmp == 'lt':
             score = -score
 
@@ -790,10 +790,13 @@ def tr2_score(column, method='mean', cmp='gt', scale=1., formatter=None):
         # Min-Max Normalization
         min = column.min()
         max = column.max()
-        if cmp == 'gt':
-            score = (column - min) / (max - min)
+        if min == max:
+            score = np.array([0.5] * len(column))
         else:
-            score = (max - column) / (max - min)
+            if cmp == 'gt':
+                score = (column - min) / (max - min)
+            else:
+                score = (max - column) / (max - min)
 
     if formatter:
         score = formatter(score)

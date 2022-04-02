@@ -21,7 +21,7 @@ from .forms import (
     ReliabilitiesUploadForm
 )
 from .models import ReliabilitySearchProfile
-
+from .tools.utils import ReliabilityScore
 
 class IndexView(TemplateView):
     template_name = 'reliabilities/index.html'
@@ -126,14 +126,40 @@ class ReliabilitySearchView(TemplateView):
         query = self.configuration_query()
         if query is not None:
             context['q'] = True
-            q_lc, q_pi, q_seal = query
-            context['q_lc_list'] = q_lc
-            context['q_pi_list'] = q_pi
-            context['q_seal_list'] = q_seal
+            ra_score = ReliabilityScore(query, context['profile'])
+            context['ra_plot'] = ra_score.plot
+
+            # TODO: maybe this style should move to other place, and I can
+            #       use the for all my pandas render
+            table_style = {
+                'float_format': lambda x: f'{x:.2f}',
+                'classes': [
+                    'table', 
+                    'table-hover', 
+                    'text-center', 
+                    'table-striped'
+                ],
+                'justify': 'center',
+                'index': False,
+                'escape': False,
+            }
+
+            # Only render first 10 result
+            context['ra_score'] = ra_score.result['normalized'][:10].to_html(
+                **table_style
+            )
+            context['ra_score_raw'] = ra_score.result['raw'][:10].to_html(
+                **table_style
+            )
+
 
         return context
 
     def configuration_query(self):
+        """
+        Deal with the ra qeury, transfer 'ALL' and None to Model.objects.all(),
+        otherwise just search using name__in()
+        """
         lc_list = self.request.GET.getlist('lc_list')
         pi_list = self.request.GET.getlist('pi_list')
         seal_list = self.request.GET.getlist('seal_list')

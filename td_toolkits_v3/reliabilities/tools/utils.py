@@ -284,7 +284,8 @@ class ReliabilityScore():
                 plot_df, x='Item', y='Score', color='Configuration',
                 barmode='group',
             )
-            return fig
+            self.__plot = plot(fig, output_type='div')
+            return self.__plot
 
 # Test main
 # Show the difference ratio and the final table of the table shrink
