@@ -292,7 +292,6 @@ class OpticalSearchView(TemplateView):
             context['q_lc_list'] = LiquidCrystal.objects.filter(
                 name__in=lc_list)
             # store lc list cookies to for the ra searching
-            self.request.session['opt_lc_list'] = lc_list
             ref = (profile_df['Factory'][0], profile_df['Product'][0])
             results = []
             for lc in lc_list:
@@ -306,6 +305,9 @@ class OpticalSearchView(TemplateView):
             self.request.session['opt_plot'] = opt_score.plot
             self.request.session['opt_score_raw'] = opt_score.data.to_json()
             self.request.session['opt_score'] = opt_score.score.to_json()
+            # Only transfer success result to next level
+            self.request.session['opt_lc_list'] = list(
+                opt_score.score['LC'].unique())
 
             context['opt_plot'] = opt_score.plot
             context['opt_score'] = opt_score.score.to_html(

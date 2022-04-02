@@ -7,19 +7,25 @@ Reliability Search
 <form action='' method='GET'>
     <h3>Select Configurations</h3>
     <select class='form-select' multiple name='lc_list'>
-        <option>ALL</option>
+        {% if q_opt %}
+        {% for lc in lc_list %}
+        <option selected> {{ lc }}</option>
+        {% endfor %}
+        {% else %}
+        <option selected>ALL</option>
         {% for lc in lc_list %}
         <option> {{ lc }}</option>
         {% endfor %}
+        {% endif %}
     </select>
     <select class='form-select' multiple name='pi_list'>
-        <option>ALL</option>
+        <option selected>ALL</option>
         {% for pi in pi_list %}
         <option> {{ pi }}</option>
         {% endfor %}
     </select>
     <select class='form-select' multiple name='seal_list'>
-        <option>ALL</option>
+        <option selected>ALL</option>
         {% for seal in seal_list %}
         <option> {{ seal }}</option>
         {% endfor %}
@@ -147,9 +153,11 @@ Reliability Search
     <h3>Table 2: RA Score Raw</h3>
     {{ ra_score_raw|safe }}
 </div>
+{% if q_opt %}
 <a class='btn btn-primary' href="{% url 'opticals:search_download' %}">
     Opt Download
 </a>
+{% endif %}
 <a class='btn btn-primary' href="{% url 'reliabilities:search_download' %}">
     RA Download
 </a>

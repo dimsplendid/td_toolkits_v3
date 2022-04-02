@@ -116,10 +116,15 @@ class ReliabilitySearchView(TemplateView):
         
         # opt result part
         if opt_lc_list:= self.request.session.get('opt_lc_list'):
-            pass
+            context['lc_list'] = LiquidCrystal.objects.filter(
+                name__in=opt_lc_list
+            )
+            context['q_opt'] = True
+        else:
+            context['lc_list'] = LiquidCrystal.objects.all()
+
         
         # ra part
-        context['lc_list'] = LiquidCrystal.objects.all()
         context['pi_list'] = Polyimide.objects.all()
         context['seal_list'] = Seal.objects.all()
 
