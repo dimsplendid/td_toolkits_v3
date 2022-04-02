@@ -52,6 +52,7 @@ class ReliabilitiesUploadForm(forms.Form):
         return lc, pi, seal
 
     def save(self):
+        # TODO: This should also have a more elegant way to implment it.
         adhesion_df = pd.read_excel(
             self.cleaned_data['reliabilites'], sheet_name='Adhesion'
         )

@@ -340,7 +340,7 @@ class OpticalSearchResultDownload(View):
                 opt_score.to_excel(
                     writer, sheet_name='OPT Score', index=False)
                 writer.save()
-                file_name = 'OptResult.xlsx'
+                file_name = 'OPT Result.xlsx'
                 response = HttpResponse(
                     b.getvalue(),
                     content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'

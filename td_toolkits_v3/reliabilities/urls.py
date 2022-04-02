@@ -16,6 +16,12 @@ urlpatterns = [
         name='search',
     ),
     path(
+        'search/download/',
+        view=views.ReliabilitySearchResultDownload.as_view(),
+        name='search_download'
+    )
+    ,
+    path(
         'search/profile/list/',
         views.ReliabilitySearchProfileListView.as_view(),
         name='search_profile_list',
