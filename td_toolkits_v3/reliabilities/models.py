@@ -67,8 +67,8 @@ class DeltaAngle(Configuration, TimeStampedModel):
     measure_time = models.FloatField(default=72.0)
     measure_temperature = models.FloatField(default=60.0, null=True, blank=True)
     value = models.FloatField(default=0.)
-    vender = ForeignKey('materials.Vender', on_delete=models.CASCADE, null=True)
     unit = '°'
+    vender = ForeignKey('materials.Vender', on_delete=models.CASCADE, null=True)
     file_source = ForeignKey(File, on_delete=models.CASCADE)
 
     @property

@@ -81,7 +81,18 @@ class ReliabilityScore():
         _ = self.__table(Adhesion, opt=3)
         _ = self.__table(DeltaAngle, opt=6)
         _ = self.__table(UShapeAC, 'u_shape_ac', opt=6, f=np.abs)
-        _ = self.__table(VoltageHoldingRatio)
+
+        vhr_add ={
+            'add_q': {
+                'measure_voltage': 1.,
+                'measure_freq': 0.6,
+            },
+            'add_header': {
+                'measure_voltage': 'Measure Voltage',
+                'measure_freq': 'Measure Frequency'
+            }
+        }
+        _ = self.__table(VoltageHoldingRatio, **vhr_add)
         _ = self.__table(LowTemperatureStorage, opt=4)
         _ = self.__table(PressureCookingTest)
         _ = self.__table(SealWVTR, 'seal_wvtr', opt=1)
@@ -90,7 +101,10 @@ class ReliabilityScore():
         self.__plot_df = []
         self.__plot = None
 
-    def __table(self, Model=None, name=None, opt=7, f=None, add_header=None):
+    def __table(
+            self, Model=None, name=None, opt=7, f=None, 
+            add_q=None, add_header=None
+        ):
         """
         Model: django.db.models.Model
             The RA log model you need
@@ -133,6 +147,8 @@ class ReliabilityScore():
                 'vender__in': getattr(self.constraint, f'{name}_venders').all(),
                 f'value__{cmp}': getattr(self.constraint, name)
             }
+            if add_q:
+                q = {**q, **add_q}
 
             # parse option
             opt = f'{opt:03b}'
@@ -171,7 +187,9 @@ class ReliabilityScore():
 
             # Store the human readable name
             self.__name_map[name] = Model.name
-            mean_df = df.groupby(
+            # only store configure and value in the mean table
+            columns = [v for _, v in self.header.items()]
+            mean_df = df[columns].groupby(
                 by=groupby, 
                 as_index=False
             ).mean().sort_values(by='Value', ascending=False)
@@ -215,8 +233,8 @@ class ReliabilityScore():
                     continue
                 
                 item = table[6:]
+                # calculate the score, drop the last column(file source)
                 columns = list(mean.columns[:-1])
-                
                 mean = mean.rename(columns={'Value':item})
                 raw_df = raw_df.merge(mean, on=columns, how='left')
 
@@ -248,12 +266,25 @@ class ReliabilityScore():
 
         return self.__result
 
-    def plot(self, row_fill = 0.6, column_fill = 0.6):
+    @property
+    def plot(self):
         """
         generate plotly plot and 
         """
         if self.__plot is None:
-            pass
+            df = self.result['normalized'].copy()
+            df['Configuration'] = df['LC']+ ', '+df['PI']+ ', '+df['Seal']
+            # drop the LC, PI, Seal columns
+            # and only show the first 10 logs
+            # (If logs are less than 10, keep all)
+            df = df.iloc[:10, 3:]
+            plot_df = df.set_index('Configuration').stack().reset_index()
+            plot_df.columns = ['Configuration', 'Item', 'Score']
+            fig = px.bar(
+                plot_df, x='Item', y='Score', color='Configuration',
+                barmode='group',
+            )
+            return fig
 
 # Test main
 # Show the difference ratio and the final table of the table shrink
