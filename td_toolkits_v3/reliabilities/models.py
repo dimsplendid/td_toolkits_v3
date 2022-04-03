@@ -91,7 +91,7 @@ class Adhesion(Configuration, TimeStampedModel):
     method = models.CharField(max_length=255)
 
     value = models.FloatField(default=0.)
-    unit = 'kgw'
+    unit = models.CharField(max_length=255, default='kgw')
 
     peeling = models.CharField(
         max_length=40, help_text="Enter peeling interface.", blank=True, null=True)
@@ -214,7 +214,8 @@ class PressureCookingTest(Configuration, TimeStampedModel):
 class SealWVTR(Configuration, TimeStampedModel):
     name = 'Seal WVTR'
     value = models.FloatField(default=0.)
-    unit = ''
+    unit = models.CharField(max_length=255 ,default='%')
+    time = models.FloatField(default=24)
     temperature = models.FloatField(default=0)
     humidity = models.FloatField(default=0)
     thickness = models.FloatField(default=0)

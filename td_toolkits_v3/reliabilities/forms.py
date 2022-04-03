@@ -82,18 +82,19 @@ class ReliabilitiesUploadForm(forms.Form):
             # TODO: The field would change later
             for _, row in adhesion_df.iterrows():
                 lc, pi, seal = self.get_configureation(row)
-                vender, _ = Vender.objects.get_or_create(name=row[8])
-                file, _ = File.objects.get_or_create(name=row[9])
+                vender, _ = Vender.objects.get_or_create(name=row[9])
+                file, _ = File.objects.get_or_create(name=row[10])
                 if not Adhesion.objects.filter(
                     lc=lc, pi=pi, seal=seal, vender=vender, file_source=file,
-                    adhesion_interface=row[5], method=row[6]).exists():
+                    adhesion_interface=row[6], method=row[7]).exists():
                     Adhesion.objects.create(
                         lc=lc, pi=pi, seal=seal, vender=vender, 
                         file_source=file,
-                        adhesion_interface=row[5], 
-                        method=row[6], 
+                        unit=row[5],
+                        adhesion_interface=row[6], 
+                        method=row[7], 
                         value=row[4], 
-                        peeling=row[7]
+                        peeling=row[8]
                     )
 
         if len(lto_df):
@@ -153,16 +154,17 @@ class ReliabilitiesUploadForm(forms.Form):
             # TODO: The field would change
             for _, row in seal_wvtr_df.iterrows():
                 lc, pi, seal = self.get_configureation(row)
-                vender, _ = Vender.objects.get_or_create(name=row[8])
-                file, _ = File.objects.get_or_create(name=row[9])
+                vender, _ = Vender.objects.get_or_create(name=row[10])
+                file, _ = File.objects.get_or_create(name=row[11])
                 if not SealWVTR.objects.filter(
                     lc=lc, pi=pi, seal=seal, vender=vender, file_source=file,
-                    temperature=row[5], humidity=row[6], thickness=row[7]
+                    temperature=row[7], humidity=row[8], thickness=row[9]
                     ).exists():
                     SealWVTR.objects.create(
                         value=row[4], lc=lc, pi=pi, seal=seal, vender=vender, 
                         file_source=file,
-                        temperature=row[5], humidity=row[6], thickness=row[7])
+                        unit=row[5], time=row[6],
+                        temperature=row[7], humidity=row[8], thickness=row[9])
 
         if len(delta_angle_df):
             for _, row in delta_angle_df.iterrows():
