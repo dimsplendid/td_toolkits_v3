@@ -50,7 +50,7 @@ class LiquidCrystalCreateView(CreateView):
 class LiquidCrystalUpdateView(UpdateView):
     model = LiquidCrystal
     fields = ['designed_cell_gap']
-    template_name = 'upload_generic.html'
+    template_name = 'form_generic.html'
 
     def get(self, request, *args, **kwargs):
         request.session['next'] = request.GET.get('next')

@@ -47,7 +47,7 @@ class AxoUploadView(FormView):
         return super().form_valid(form)
 
 class RDLCellGapUploadView(FormView):
-    template_name = 'upload_generic.html'
+    template_name = 'form_generic.html'
     form_class = RDLCellGapUploadForm
     success_url = reverse_lazy('opticals:rdl_cell_gap_upload')
 
@@ -61,7 +61,7 @@ class RDLCellGapUploadView(FormView):
         return context
 
 class OptUploadView(FormView):
-    template_name = 'upload_generic.html'
+    template_name = 'form_generic.html'
     form_class = OptUploadForm
     success_url = reverse_lazy('opticals:toc_opt_log_upload')
 
@@ -75,7 +75,7 @@ class OptUploadView(FormView):
         return context
 
 class ResponseTimeUploadView(FormView):
-    template_name = 'upload_generic.html'
+    template_name = 'form_generic.html'
     form_class = ResponseTimeUploadForm
     success_url = reverse_lazy('opticals:toc_rt_log_upload')
 
@@ -90,7 +90,7 @@ class ResponseTimeUploadView(FormView):
 
 
 class OpticalReferenceCreateView(LoginRequiredMixin, CreateView):
-    template_name = 'upload_generic.html'
+    template_name = 'form_generic.html'
     model = OpticalReference
     fields = [
         'product_model_type',
@@ -110,7 +110,7 @@ class OpticalReferenceCreateView(LoginRequiredMixin, CreateView):
     ]
 
 class OpticalReferenceUpdateView(LoginRequiredMixin, UpdateView):
-    template_name = 'upload_generic.html'
+    template_name = 'form_generic.html'
     model = OpticalReference
     fields = [
         'lc',
@@ -136,7 +136,7 @@ class OpticalReferenceDetailView(DetailView):
 
 class CalculateOpticalView(FormView):
     form_class = CalculateOpticalForm
-    template_name = 'upload_generic.html'
+    template_name = 'form_generic.html'
 
     def form_valid(self, form):
         form.calculate(self.request)
@@ -192,7 +192,7 @@ class OpticalSearchProfileDetailView(DetailView):
     model = OpticalSearchProfile
 
 class OpticalSearchProfileCreateView(CreateView):
-    template_name = 'upload_generic.html'
+    template_name = 'form_generic.html'
     model = OpticalSearchProfile
     fields = [
         'name',
@@ -209,7 +209,7 @@ class OpticalSearchProfileCreateView(CreateView):
     ]
 
 class OpticalSearchProfileUpdateView(UpdateView):
-    template_name = 'upload_generic.html'
+    template_name = 'form_generic.html'
     model = OpticalSearchProfile
     fields = [
         'name',

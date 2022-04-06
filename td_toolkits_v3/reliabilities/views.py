@@ -38,7 +38,7 @@ class ReliabilitySearchProfileDetailView(DetailView):
     model = ReliabilitySearchProfile
 
 class ReliabilitySearchProfileCreateView(CreateView):
-    template_name = 'upload_generic.html'
+    template_name = 'form_generic.html'
     model = ReliabilitySearchProfile
     fields = [
         'name',
@@ -66,7 +66,7 @@ class ReliabilitySearchProfileCreateView(CreateView):
     ]
 
 class ReliabilitySearchProfileUpdateView(UpdateView):
-    template_name = 'upload_generic.html'
+    template_name = 'form_generic.html'
     model = ReliabilitySearchProfile
     fields = [
         'name',
@@ -94,7 +94,7 @@ class ReliabilitySearchProfileUpdateView(UpdateView):
     ]
 
 class ReliabilitiesUploadView(FormView):
-    template_name = 'upload_generic.html'
+    template_name = 'form_generic.html'
     form_class = ReliabilitiesUploadForm
     success_url = reverse_lazy('reliabilities:index')
 
