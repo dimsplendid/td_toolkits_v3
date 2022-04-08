@@ -48,4 +48,9 @@ urlpatterns = [
         view=views.SealListView.as_view(),
         name='seal_list'
     ),
+    path(
+        'template/',
+        views.TemplateDownloadView.as_view(),
+        name='template'
+    )
 ]

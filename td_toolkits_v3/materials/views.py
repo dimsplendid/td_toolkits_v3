@@ -1,4 +1,8 @@
+from io import BytesIO
+from django.http import Http404, HttpRequest
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
+from django.views import View
 from django.views.generic import (
     ListView, 
     DetailView,
@@ -7,7 +11,9 @@ from django.views.generic import (
 )
 from django.views.generic.edit import FormView, UpdateView
 from django.http.response import HttpResponse
+import pandas as pd
 from config.settings.base import APPS_DIR
+from config.settings.base import UPLOAD_TEMPLATE_DIR
 
 from .models import (
     Vender,
@@ -91,3 +97,42 @@ class PolyimideListView(ListView):
 
 class SealListView(ListView):
     model = Seal
+
+class TemplateDownloadView(View):
+    def get(self, request:HttpRequest, *args, **kwargs) -> HttpResponse:
+        # make sure there is download keywords
+        if not (file_name := request.GET.get('download')):
+            raise Http404
+
+        file_name += '.xlsx'
+        file_path = UPLOAD_TEMPLATE_DIR / file_name
+
+        # read all file from static template file
+        try:
+            df_map = pd.read_excel(file_path, sheet_name=None)
+        except:
+            print(f'File not found: {file_path}')
+            print('Or somethin wrong in pandas read_excel')
+            raise Http404
+
+        buffer = BytesIO()
+        with pd.ExcelWriter(buffer) as writer:
+            for item in df_map:
+                df_map[item].to_excel(writer, sheet_name=item, index=False)
+
+            # add additional regested data for reference
+            # TODO: testing now
+            pd.DataFrame({
+                'item': ['LC'],
+                'value': ['LCT-15-1098']
+            }).to_excel(writer, sheet_name='regested', index=False)
+        
+        response = HttpResponse(
+            buffer.getvalue(),
+            content_type=(
+                'application/'
+                'vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+        )
+        response['Content-Disposition'] = f'attachment; filename={file_name}'
+        return response

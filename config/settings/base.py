@@ -286,3 +286,5 @@ SOCIALACCOUNT_ADAPTER = (
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+# upload template directory
+UPLOAD_TEMPLATE_DIR = APPS_DIR / 'static' / 'sheets'
