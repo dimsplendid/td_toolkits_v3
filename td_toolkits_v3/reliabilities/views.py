@@ -1,6 +1,7 @@
 from io import BytesIO
 import pandas as pd
 
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
@@ -37,7 +38,7 @@ class ReliabilitySearchProfileListView(ListView):
 class ReliabilitySearchProfileDetailView(DetailView):
     model = ReliabilitySearchProfile
 
-class ReliabilitySearchProfileCreateView(CreateView):
+class ReliabilitySearchProfileCreateView(LoginRequiredMixin, CreateView):
     template_name = 'form_generic.html'
     model = ReliabilitySearchProfile
     fields = [
@@ -65,7 +66,7 @@ class ReliabilitySearchProfileCreateView(CreateView):
         'u_shape_ac_weight',
     ]
 
-class ReliabilitySearchProfileUpdateView(UpdateView):
+class ReliabilitySearchProfileUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'form_generic.html'
     model = ReliabilitySearchProfile
     fields = [
@@ -93,7 +94,7 @@ class ReliabilitySearchProfileUpdateView(UpdateView):
         'u_shape_ac_weight',
     ]
 
-class ReliabilitiesUploadView(FormView):
+class ReliabilitiesUploadView(LoginRequiredMixin, FormView):
     template_name = 'form_generic.html'
     form_class = ReliabilitiesUploadForm
     success_url = reverse_lazy('reliabilities:index')

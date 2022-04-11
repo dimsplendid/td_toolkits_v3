@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from io import BytesIO
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import Http404, HttpRequest
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
@@ -36,7 +37,7 @@ class LiquidCrystalListView(ListView):
 class LiquidCrystalDetailView(DetailView):
     model = LiquidCrystal
 
-class LiquidCrystalCreateView(CreateView):
+class LiquidCrystalCreateView(LoginRequiredMixin, CreateView):
     model = LiquidCrystal
     fields = [
         'name',
@@ -56,7 +57,7 @@ class LiquidCrystalCreateView(CreateView):
         'density'
     ]
 
-class LiquidCrystalUpdateView(UpdateView):
+class LiquidCrystalUpdateView(LoginRequiredMixin, UpdateView):
     model = LiquidCrystal
     fields = ['designed_cell_gap']
     template_name = 'form_generic.html'
@@ -71,7 +72,7 @@ class LiquidCrystalUpdateView(UpdateView):
             return self.request.session['next']
         return super().get_success_url()
 
-class MaterialsUploadView(FormView):
+class MaterialsUploadView(LoginRequiredMixin, FormView):
     # template_name = 'materials/materials_upload.html'
     template_name = 'form_generic.html'
     form_class = MaterialsUploadForm

@@ -1,13 +1,12 @@
 import imp
 from re import template
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
-
 from django.views.generic import (
     ListView,
     CreateView,
 )
 from django.views.generic.edit import FormView
-
 from .models import (
     Chip,
 )
@@ -17,7 +16,7 @@ class ChipListView(ListView):
     model = Chip
     paginate_by = 100
 
-class ChipsBatchCreateView(FormView):
+class ChipsBatchCreateView(LoginRequiredMixin, FormView):
     template_name = 'form_generic.html'
     form_class = ChipsUploadForm
     success_url = reverse_lazy('products:chip_list')

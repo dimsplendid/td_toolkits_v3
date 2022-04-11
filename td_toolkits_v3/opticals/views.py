@@ -1,8 +1,9 @@
 from io import BytesIO
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect
 import pandas as pd
 
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import (
     TemplateView,
@@ -37,7 +38,7 @@ class IndexView(TemplateView):
     template_name = 'opticals/index.html'
 
 
-class AxoUploadView(FormView):
+class AxoUploadView(LoginRequiredMixin, FormView):
     template_name = 'opticals/axo_upload.html'
     form_class = AxoUploadForm
     success_url = reverse_lazy('opticals:axo_upload')
@@ -46,7 +47,7 @@ class AxoUploadView(FormView):
         form.save(self.request)
         return super().form_valid(form)
 
-class RDLCellGapUploadView(FormView):
+class RDLCellGapUploadView(LoginRequiredMixin, FormView):
     template_name = 'form_generic.html'
     form_class = RDLCellGapUploadForm
     success_url = reverse_lazy('opticals:rdl_cell_gap_upload')
@@ -62,7 +63,7 @@ class RDLCellGapUploadView(FormView):
                              + '?download=optical_rdl_cellgap_upload_template'
         return context
 
-class OptUploadView(FormView):
+class OptUploadView(LoginRequiredMixin, FormView):
     template_name = 'form_generic.html'
     form_class = OptUploadForm
     success_url = reverse_lazy('opticals:toc_opt_log_upload')
@@ -76,7 +77,7 @@ class OptUploadView(FormView):
         context['title'] = "TOC OPT Upload"
         return context
 
-class ResponseTimeUploadView(FormView):
+class ResponseTimeUploadView(LoginRequiredMixin, FormView):
     template_name = 'form_generic.html'
     form_class = ResponseTimeUploadForm
     success_url = reverse_lazy('opticals:toc_rt_log_upload')
@@ -136,7 +137,7 @@ class OpticalReferenceListView(ListView):
 class OpticalReferenceDetailView(DetailView):
     model = OpticalReference
 
-class CalculateOpticalView(FormView):
+class CalculateOpticalView(LoginRequiredMixin, FormView):
     form_class = CalculateOpticalForm
     template_name = 'form_generic.html'
 
@@ -193,7 +194,7 @@ class OpticalSearchProfileListView(ListView):
 class OpticalSearchProfileDetailView(DetailView):
     model = OpticalSearchProfile
 
-class OpticalSearchProfileCreateView(CreateView):
+class OpticalSearchProfileCreateView(LoginRequiredMixin, CreateView):
     template_name = 'form_generic.html'
     model = OpticalSearchProfile
     fields = [
@@ -210,7 +211,7 @@ class OpticalSearchProfileCreateView(CreateView):
         'remark',
     ]
 
-class OpticalSearchProfileUpdateView(UpdateView):
+class OpticalSearchProfileUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'form_generic.html'
     model = OpticalSearchProfile
     fields = [
