@@ -58,6 +58,8 @@ class RDLCellGapUploadView(FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = "RDL Cell Gap Upload"
+        context['file_path'] = reverse_lazy('materials:template') \
+                             + '?download=optical_rdl_cellgap_upload_template'
         return context
 
 class OptUploadView(FormView):

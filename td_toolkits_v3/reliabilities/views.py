@@ -102,6 +102,14 @@ class ReliabilitiesUploadView(FormView):
         form.save()
         return super().form_valid(form)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'RA Upload'
+        context['file_path'] = reverse_lazy('materials:template') \
+                             + '?download=reliability_upload_template'
+
+        return context
+
 class ReliabilitySearchView(TemplateView):
     template_name = 'reliabilities/search.html'
 

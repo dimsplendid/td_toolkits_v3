@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from io import BytesIO
 from django.http import Http404, HttpRequest
 from django.shortcuts import redirect
@@ -22,6 +24,7 @@ from .models import (
     Seal
 )
 from .forms import MaterialsUploadForm
+from td_toolkits_v3.materials.tools import utils
 
 class VenderListView(ListView):
     model = Vender
@@ -69,21 +72,18 @@ class LiquidCrystalUpdateView(UpdateView):
         return super().get_success_url()
 
 class MaterialsUploadView(FormView):
-    template_name = 'materials/materials_upload.html'
+    # template_name = 'materials/materials_upload.html'
+    template_name = 'form_generic.html'
     form_class = MaterialsUploadForm
     success_url = reverse_lazy('materials:lc_list')
 
-    def get(self, request, *args, **kwargs):
-        if request.GET.get('download'):
-            filename = APPS_DIR / "materials/tests/test_files/batch_upload_test_null.xlsx"
-            with open(filename, 'rb') as fp:
-                response = HttpResponse(
-                    fp,
-                    content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                )
-                response['content-Disposition'] = f'attachment; filename=materials_upload.xlsx'
-                return response
-        return super().get(request, *args, **kwargs)
+    def get_context_data(self, **kwargs) -> dict[str, ]:
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Materials Upload'
+        context['file_path'] = reverse_lazy('materials:template') \
+                             + '?download=material_upload_template'
+
+        return context
 
     def form_valid(self, form):
         form.save()
@@ -120,12 +120,9 @@ class TemplateDownloadView(View):
             for item in df_map:
                 df_map[item].to_excel(writer, sheet_name=item, index=False)
 
-            # add additional regested data for reference
-            # TODO: testing now
-            pd.DataFrame({
-                'item': ['LC'],
-                'value': ['LCT-15-1098']
-            }).to_excel(writer, sheet_name='regested', index=False)
+            # add additional registered data for reference
+            df = utils.get_registered_name()
+            df.to_excel(writer, sheet_name='registerted', index=False)
         
         response = HttpResponse(
             buffer.getvalue(),
