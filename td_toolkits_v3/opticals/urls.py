@@ -33,9 +33,14 @@ urlpatterns = [
         views.OpticalReferenceListView.as_view(),
         name='ref_list'
     ),
+    # path(
+    #     'ref/add/',
+    #     views.OpticalReferenceCreateView.as_view(),
+    #     name='ref_add'
+    # ),
     path(
         'ref/add/',
-        views.OpticalReferenceCreateView.as_view(),
+        views.ProductModelTypeCreateView.as_view(),
         name='ref_add'
     ),
     path(

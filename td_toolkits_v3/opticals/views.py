@@ -26,6 +26,8 @@ from .forms import (
     OptUploadForm,
     ResponseTimeUploadForm,
     CalculateOpticalForm,
+    ProductModelTypeForm,
+    OpticalReferenceFormset,
 )
 from .models import (
     OpticalReference, 
@@ -353,3 +355,43 @@ class OpticalSearchResultDownload(View):
                 response['Content-Disposition'] = f'attachment; filename={file_name}'
                 return response
         return redirect(reverse_lazy('opticals:search'))
+
+class ProductModelTypeCreateView(CreateView):
+    form_class = ProductModelTypeForm
+    template_name = 'formset_generic.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Ref Product Create'
+
+        context['formset'] = OpticalReferenceFormset()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = None
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        optical_reference_formset = OpticalReferenceFormset(self.request.POST)
+
+        if form.is_valid() and optical_reference_formset.is_valid():
+            return self.form_valid(form, optical_reference_formset)
+        else:
+            return self.form_invalid(form, optical_reference_formset)
+
+    def form_valid(self, form, formset):
+        self.object = form.save(commit=False)
+        self.object.save()
+        # saving OpticalReference Instances
+        optical_references = formset.save(commit=False)
+        for ref in optical_references:
+            ref.product_model_type = self.object
+            ref.save()
+        return redirect(reverse_lazy('opticals:ref_list'))
+
+    def form_invalid(self, form, formset):
+        return self.render_to_response(
+            self.get_context_data(
+                form=form,
+                formset=formset,
+            )
+        )

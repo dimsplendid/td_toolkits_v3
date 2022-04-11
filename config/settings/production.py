@@ -12,7 +12,7 @@ ALLOWED_HOSTS = env.list(
 
 # DATABASES
 # ------------------------------------------------------------------------------
-DATABASES["default"] = env.db("DATABASE_URL")  # noqa: F405
+# DATABASES["default"] = env.db("DATABASE_URL")  # noqa: F405
 DATABASES["default"]["ATOMIC_REQUESTS"] = True  # noqa: F405
 DATABASES["default"]["CONN_MAX_AGE"] = env.int(  # noqa: F405
     "CONN_MAX_AGE", default=60
@@ -20,16 +20,23 @@ DATABASES["default"]["CONN_MAX_AGE"] = env.int(  # noqa: F405
 
 # CACHES
 # ------------------------------------------------------------------------------
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": env("REDIS_URL"),
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+#             # Mimicing memcache behavior.
+#             # http://niwinz.github.io/django-redis/latest/#_memcached_exceptions_behavior
+#             "IGNORE_EXCEPTIONS": True,
+#         },
+#     }
+# }
+
 CACHES = {
     "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": env("REDIS_URL"),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            # Mimicing memcache behavior.
-            # http://niwinz.github.io/django-redis/latest/#_memcached_exceptions_behavior
-            "IGNORE_EXCEPTIONS": True,
-        },
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "",
     }
 }
 
@@ -68,9 +75,9 @@ STATICFILES_STORAGE = (
 )
 
 # https://github.com/antonagestam/collectfast#upload-strategies
-COLLECTFAST_STRATEGY = (
-    "collectfast.strategies.filesystem.FileSystemStrategy"
-)
+# COLLECTFAST_STRATEGY = (
+#     "collectfast.strategies.filesystem.FileSystemStrategy"
+# )
 
 # MEDIA
 # ------------------------------------------------------------------------------
@@ -109,27 +116,27 @@ EMAIL_SUBJECT_PREFIX = env(
 # ADMIN
 # ------------------------------------------------------------------------------
 # Django Admin URL regex.
-ADMIN_URL = env("DJANGO_ADMIN_URL")
+# ADMIN_URL = env("DJANGO_ADMIN_URL")
 
 # Anymail (Mailgun)
 # ------------------------------------------------------------------------------
 # https://anymail.readthedocs.io/en/stable/installation/#installing-anymail
-INSTALLED_APPS += ["anymail"]  # noqa: F405
-EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
-# https://anymail.readthedocs.io/en/stable/installation/#anymail-settings-reference
-ANYMAIL = {
-    "MAILGUN_API_KEY": env("MAILGUN_API_KEY"),
-    "MAILGUN_SENDER_DOMAIN": env("MAILGUN_DOMAIN"),
-    "MAILGUN_API_URL": env(
-        "MAILGUN_API_URL", default="https://api.mailgun.net/v3"
-    ),
-}
+# INSTALLED_APPS += ["anymail"]  # noqa: F405
+# EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
+# # https://anymail.readthedocs.io/en/stable/installation/#anymail-settings-reference
+# ANYMAIL = {
+#     "MAILGUN_API_KEY": env("MAILGUN_API_KEY"),
+#     "MAILGUN_SENDER_DOMAIN": env("MAILGUN_DOMAIN"),
+#     "MAILGUN_API_URL": env(
+#         "MAILGUN_API_URL", default="https://api.mailgun.net/v3"
+#     ),
+# }
 
 
 # Collectfast
 # ------------------------------------------------------------------------------
 # https://github.com/antonagestam/collectfast#installation
-INSTALLED_APPS = ["collectfast"] + INSTALLED_APPS  # noqa: F405
+# INSTALLED_APPS = ["collectfast"] + INSTALLED_APPS  # noqa: F405
 # LOGGING
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#logging

@@ -24,6 +24,7 @@ from td_toolkits_v3.materials.models import (
 from .models import (
     Instrument,
     AxometricsLog,
+    OpticalSearchProfile,
     RDLCellGap,
     OpticalLog,
     ResponseTimeLog,
@@ -466,3 +467,33 @@ class CalculateOpticalForm(forms.Form):
                 + self.cleaned_data["exp_id"] \
                 + ' success.'
         request.session["exp_id"] = self.cleaned_data['exp_id']
+
+class ProductModelTypeForm(forms.ModelForm):
+    class Meta:
+        model = ProductModelType
+        fields = ['name', 'model_name', 'factory']
+
+class OpticalReferenceForm(forms.ModelForm):
+    class Meta:
+        model = OpticalReference
+        fields = [
+        'lc',
+        'pi',
+        'seal',
+        'cell_gap',
+        'ito_slit',
+        'tft_tech',
+        'transmittance',
+        'time_rise',
+        'time_fall',
+        'gray_to_gray',
+        'w_x',
+        'w_y',
+        'contrast_ratio',
+    ]
+
+OpticalReferenceFormset = forms.inlineformset_factory(
+    ProductModelType, 
+    OpticalReference,
+    form=OpticalReferenceForm,
+)
