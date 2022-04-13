@@ -424,6 +424,10 @@ class ResponseTimeUploadForm(forms.Form):
 
 class CalculateOpticalForm(forms.Form):
     exp_id = forms.ChoiceField(choices=("", ""), initial=None)
+    cell_gap = forms.ChoiceField(
+        choices=[('axo', 'AXO'), ('rdl', 'RDL')],
+        initial=('axo', 'AXO'),
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -437,8 +441,12 @@ class CalculateOpticalForm(forms.Form):
             self.fields["exp_id"].initial = (last_exp_id, last_exp_id)
 
     def calculate(self, request):
-        request.session["message"] = 'Error:'   
-        data_loader = OptLoader(self.cleaned_data['exp_id'])
+
+        request.session["message"] = 'Error:'
+        data_loader = OptLoader(
+            self.cleaned_data['exp_id'],
+            self.cleaned_data['cell_gap'],
+        )
         # Check data loading correctly
         opt_df = data_loader.opt
         if type(opt_df) == str:
@@ -446,7 +454,7 @@ class CalculateOpticalForm(forms.Form):
             return
         rt_df = data_loader.rt
         if type(rt_df) == str:
-            request.session["message"] += opt_df
+            request.session["message"] += rt_df
             return
 
         # Check both data have the same kinds of LC
