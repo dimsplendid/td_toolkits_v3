@@ -632,7 +632,7 @@ class OptResultGenerator():
             # TODO: maybe use the LC% make more sense?
             x = [[self.__ref['Vop'], self.__ref['Cell Gap']]]
             self.__ref['CR index'] = self.__ref['CR'] \
-                                   / float(ref_models.transmittance.predict(x)) \
+                                   / float(ref_models.lc_percent.predict(x)) \
                                    * self.__ref['Cell Gap'] \
                                    * LiquidCrystal.objects.get(
                                        name=self.__ref['LC']).scatter_index
@@ -707,7 +707,7 @@ class OptResultGenerator():
 
         # CR part
         table['D'] = self.lc.scatter_index * table['Cell Gap']
-        table['W'] = table['T%']
+        table['W'] = table['LC%']
         table['CR'] = table['W']/table['D'] * self.ref['CR index']
         table['ΔCR'] = table['CR'] - self.ref['CR']
 

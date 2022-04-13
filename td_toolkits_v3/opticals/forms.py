@@ -471,7 +471,7 @@ class CalculateOpticalForm(forms.Form):
         if type(msg) == str:
             request.session["message"] = msg
         else:
-            request.session["message"] = 'Calculate' \
+            request.session["message"] = 'Calculate ' \
                 + self.cleaned_data["exp_id"] \
                 + ' success.'
         request.session["exp_id"] = self.cleaned_data['exp_id']
