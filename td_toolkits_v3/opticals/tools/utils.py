@@ -86,7 +86,7 @@ class OptLoader():
         to worry about it later.
         """
         # check parameter
-        if self.cell_gap not in ['axo', 'rdl']:
+        if self.cell_gap not in ['axo', 'rdl', None]:
             return f'The {self.cell_gap} method is not implement now.'
 
         # Setting the needed data, and the proper columns name for later use.
@@ -104,6 +104,10 @@ class OptLoader():
         df = self.load_by_experiment(header, OpticalLog)
         # check is there opt data
         if type(df) == str:
+            return df
+
+        # no cell gap assignment, return raw directly
+        if self.cell_gap is None:
             return df
 
         if self.cell_gap == 'axo':

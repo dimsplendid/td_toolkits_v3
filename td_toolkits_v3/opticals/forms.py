@@ -127,10 +127,8 @@ class AxoUploadForm(forms.Form):
 
 
 class RDLCellGapUploadForm(forms.Form):
-    exp_id = forms.CharField(
-        max_length=255,
-        initial=None,
-    )
+    exp_id = forms.ChoiceField(choices=("", ""), initial=None)
+
     rdl_cell_gap = forms.FileField(
         widget=forms.FileInput(attrs={"accept": ".xlsx"})
     )
@@ -138,10 +136,13 @@ class RDLCellGapUploadForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Set the last experiment name for the upload axo data
+        self.fields["exp_id"].choices = list(
+            Experiment.objects.all().values_list("name", "name")
+        )
         last_exp = Experiment.objects.last()
         if last_exp is not None:
             last_exp_id = last_exp.name
-            self.fields["exp_id"].initial = last_exp_id
+            self.fields["exp_id"].initial = (last_exp_id, last_exp_id)
 
     def save(self):
         rdl_cell_gap = pd.read_excel(self.cleaned_data["rdl_cell_gap"])
@@ -151,18 +152,18 @@ class RDLCellGapUploadForm(forms.Form):
         factory = Factory.default("Fab1")
         instrument = Instrument.default("RETS", factory)
 
-        for row in rdl_cell_gap.to_dict(orient="records"):
+        for row in rdl_cell_gap.to_numpy():
             # Check if there is chip data, otherwise skip.
             try:
                 chip = Chip.objects.get(
-                    short_name=row["short id"], 
+                    short_name=row[0], 
                     sub__condition__experiment=experiment
                 )
             except:
                 continue
 
             RDLCellGap.objects.create(
-                chip=chip, cell_gap=row["cell gap(um)"], instrument=instrument
+                chip=chip, cell_gap=row[1], instrument=instrument
             )
 
 
