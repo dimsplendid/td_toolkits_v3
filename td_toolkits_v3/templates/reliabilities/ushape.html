@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}UShape{% endblock title %}
+{% block content %}
+<h1>U Shape</h1>
+<h2>Voltage Calculate</h2>
+<form action='.' method='GET'>
+    <h3>Select Data</h3>
+    <select class='form-select' name='experiment'>
+        {% for exp in experiments %}
+        <option>{{ exp }}</option>
+        {% endfor %}
+    </select>
+    <button class='btn btn-primary' type="submit">Submit</button>
+</form>
+{% if q %}
+<h2>Result</h2>
+<div>
+    <h3>V T curve</h3>
+    {{plot|safe}}
+</div>
+<a href="{% url 'reliabilities:ushape' %}?download=1"
+    class='btn btn-primary'
+>Download</a>
+{% endif %}
+{% endblock content %}

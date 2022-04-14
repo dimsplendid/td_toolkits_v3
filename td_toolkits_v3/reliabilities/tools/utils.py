@@ -3,9 +3,9 @@ import pandas as pd
 import plotly.express as px
 from plotly.offline import plot
 import re
-from sympy import construct_domain
+from scipy.interpolate import interp1d
 
-from td_toolkits_v3.opticals.tools.utils import tr2_score
+from td_toolkits_v3.opticals.tools.utils import tr2_score, OptLoader
 from td_toolkits_v3.reliabilities.models import (
     Adhesion,
     DeltaAngle,
@@ -286,6 +286,77 @@ class ReliabilityScore():
             )
             self.__plot = plot(fig, output_type='div')
             return self.__plot
+
+class UShape:
+    def __init__(self, experiment_name):
+        self.opt_raw = OptLoader(experiment_name, None).opt
+        self.__vt_curve = None
+        self.__voltage_setting = None
+
+        # TODO: U-Shape Calculate
+        self.result_raw = None
+
+    @property
+    def vt_curve(self):
+        if self.__vt_curve is None:
+            df = self.opt_raw.groupby(['ID', 'Point']).apply(
+                lambda group: group.iloc[:group['LC%'].argmax()+1]
+            ).reset_index(drop=True)
+            df['T%'] = df.groupby(['ID', 'Point'])['LC%'].apply(
+                lambda group: 100 * group / group.max()
+            )
+            self.__vt_curve = {'data': df}
+            fig = px.scatter(
+                self.__vt_curve['data'],
+                x='Vop', y='T%', color='LC'
+            )
+            self.__vt_curve['plot'] = plot(fig, output_type='div')
+
+        return self.__vt_curve
+
+    @property
+    def voltage_setting(self):
+        if self.__voltage_setting is None:
+            # record all f(T) |-> V functons
+            result = {
+                'ID': [],
+                'Point':[],
+                'Cond': [],
+                'L255': [],
+                'L64': [],
+                'L128': [],
+            }
+            for name, group in self.vt_curve['data'].groupby(['ID', 'Point']):
+                f = interp1d(group['T%'], group['Vop'], fill_value='extrapolate')
+                result['ID'] += [name[0]]
+                result['Point'] += [name[1]]
+                result['L255'] += [f(self.transmittance_from(255))]
+                result['L64'] += [f(self.transmittance_from(64))]
+                result['L128'] += [f(self.transmittance_from(128))]
+                result['Cond'] += [group['LC'].iloc[0]]
+            df = pd.DataFrame(result)
+            df.iloc[:, 3:] = df.iloc[:, 3:].astype(float)
+            self.__voltage_setting = (
+                df.groupby('ID', as_index=False).mean()
+                .merge(
+                    df[['ID', 'Cond']].drop_duplicates(), on='ID', how='left'
+                )
+            )
+
+        return self.__voltage_setting
+
+    @staticmethod
+    def transmittance_from(gray_level: int, gamma: float=2.2) -> float:
+        """
+        Transform gray level to transmittance with specific gamma value. 
+        Parameters
+        formula:(T99 as white state)
+            T% = (gray_level / 255)^gamma * 99
+        ----------
+        gray_level: int
+        gamma: float, default is 2.2
+        """
+        return (gray_level/255)**gamma * 99
 
 # Test main
 # Show the difference ratio and the final table of the table shrink

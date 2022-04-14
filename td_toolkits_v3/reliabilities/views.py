@@ -22,12 +22,13 @@ from td_toolkits_v3.materials.models import (
     Polyimide,
     Seal,
 )
+from td_toolkits_v3.products.models import Experiment
 
 from .forms import (
     ReliabilitiesUploadForm
 )
 from .models import ReliabilitySearchProfile
-from .tools.utils import ReliabilityScore
+from .tools.utils import ReliabilityScore, UShape
 
 class IndexView(TemplateView):
     template_name = 'reliabilities/index.html'
@@ -226,3 +227,45 @@ class ReliabilitySearchResultDownload(View):
                 response['Content-Disposition'] = f'attachment; filename={file_name}'
                 return response
         return redirect(reverse_lazy('reliabilities:search'))
+
+class UShapeView(TemplateView):
+    template_name = 'reliabilities/ushape.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['experiments'] = Experiment.objects.all()
+        if experiment_name := self.request.GET.get('experiment'):
+            ushape = UShape(experiment_name)
+            context['q'] = True
+            context['plot'] = ushape.vt_curve['plot']
+            self.request.session['vt_curve'] = ushape.vt_curve['data'].to_json()
+            self.request.session['voltage_setting'] = (
+                ushape.voltage_setting.to_json()
+            )
+
+        return context
+
+    def get(self, request, *args, **kwargs):
+        if request.GET.get('download'):
+            buffer = BytesIO()
+            with pd.ExcelWriter(buffer) as writer:
+                pd.read_json(
+                    request.session['voltage_setting']
+                ).to_excel(writer, sheet_name='Voltage Setting', index=False)
+                pd.read_json(
+                    request.session['vt_curve']
+                ).to_excel(writer, sheet_name='VT curve', index=False)
+            response = HttpResponse(
+                    buffer.getvalue(),
+                    content_type=(
+                        'application/'
+                        'vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    )
+                )
+            filename = 'ushape_volgate_setting.xlsx'
+            response['Content-Disposition'] = (
+                f'attachment; filename={filename}'
+            )
+            return response
+
+        return super().get(request, *args, **kwargs)
