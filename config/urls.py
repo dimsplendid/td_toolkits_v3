@@ -6,6 +6,8 @@ from django.views.generic import TemplateView
 from django.views import defaults as default_views
 
 urlpatterns = [
+    path('wiki/notifications/', include('django_nyt.urls')),
+    path('wiki/', include('wiki.urls')),
     path(
         "",
         TemplateView.as_view(template_name="pages/home.html"),
