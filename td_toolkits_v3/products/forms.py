@@ -25,7 +25,7 @@ class ChipsUploadForm(forms.Form):
     
     def save(self):
         print(self.cleaned_data['chips'])
-        chip_df = pd.read_excel(self.cleaned_data['chips'], sheet_name='Sheet1')
+        chip_df = pd.read_excel(self.cleaned_data['chips'], sheet_name='upload')
         for row in chip_df.to_dict(orient='records'):
             if not Chip.objects.filter(
                 sub__condition__experiment__project__name=str(row['project']),

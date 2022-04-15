@@ -15,11 +15,12 @@ from ..models import (
     Seal,
 )
 
-def test_material_batch_create_view(client):
+def test_material_batch_create_view(client, user):
     """POST request to MaterialBatchCreateView
     for batch create materials data.
     """
-    
+    # Authenticate the user
+    client.force_login(user)
     with open(MATERIAL_TEST_FILE_DIR, 'rb') as fp:
         form_data = {
             'materials': fp,
@@ -35,7 +36,9 @@ def test_material_batch_create_view(client):
     assert pi_name == 'RB005'
     assert seal_name == '723K1M'
 
-def test_material_batch_create_null_view(client):
+def test_material_batch_create_null_view(client, user):
+    # Authenticate the user
+    client.force_login(user)
     """Test that upload file do not have data
     """
     with open(MATERIAL_TEST_NULL_FILE_DIR, 'rb') as fp:

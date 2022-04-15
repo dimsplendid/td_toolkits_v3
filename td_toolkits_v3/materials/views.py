@@ -118,12 +118,14 @@ class TemplateDownloadView(View):
 
         buffer = BytesIO()
         with pd.ExcelWriter(buffer) as writer:
-            for item in df_map:
-                df_map[item].to_excel(writer, sheet_name=item, index=False)
-
             # add additional registered data for reference
             df = utils.get_registered_name()
             df.to_excel(writer, sheet_name='registerted', index=False)
+            
+            for item in df_map:
+                df_map[item].to_excel(writer, sheet_name=item, index=False)
+
+            
         
         response = HttpResponse(
             buffer.getvalue(),

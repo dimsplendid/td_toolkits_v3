@@ -28,7 +28,9 @@ from ..views import (
     RDLCellGapUploadView,
 )
 
-def test_axo_upload_view(client):
+def test_axo_upload_view(client, user):
+    # Authenticate the user
+    client.force_login(user)
     # create material data first
     with open(MATERIAL_TEST_FILE_DIR, 'rb') as fp:
         form_data = {'materials': fp}
@@ -66,7 +68,9 @@ def test_axo_upload_view(client):
     assert axo_1.cell_gap == pytest.approx(2.939389)
     assert axo_2.cell_gap == pytest.approx(3.005118)
 
-def test_rdl_cell_gap_upload_view(client):
+def test_rdl_cell_gap_upload_view(client, user):
+    # Authenticate the user
+    client.force_login(user)
     # create material data first
     with open(MATERIAL_TEST_FILE_DIR, 'rb') as fp:
         form_data = {'materials': fp}
@@ -94,12 +98,15 @@ def test_rdl_cell_gap_upload_view(client):
     assert rdl_1.cell_gap == pytest.approx(2.914)
     assert rdl_2.cell_gap == pytest.approx(2.719)
 
-def test_rdl_cell_gap_upload_view_content(rf, experiment):
+def test_rdl_cell_gap_upload_view_content(rf, experiment, client, user):
+    # Authenticate the user
+    client.force_login(user)
     # Determine the url
     url = reverse('opticals:rdl_cell_gap_upload')
     # Generate a request using the pytest short cut: rf
     # rf: short cut to django.test.RequestFactory
     request = rf.get(url)
+    request.user = user
     # Pass in the request into the view to get an
     # HTTP response served up by Django
     response = RDLCellGapUploadView.as_view()(request)
@@ -107,7 +114,9 @@ def test_rdl_cell_gap_upload_view_content(rf, experiment):
     assertContains(response, experiment.name)
     assertContains(response, 'RDL Cell Gap Upload')
 
-def test_toc_opt_upload_view(client):
+def test_toc_opt_upload_view(client, user):
+    # Authenticate the user
+    client.force_login(user)
     # create material data first
     with open(MATERIAL_TEST_FILE_DIR, 'rb') as fp:
         form_data = {'materials': fp}

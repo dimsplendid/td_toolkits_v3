@@ -145,7 +145,10 @@ class RDLCellGapUploadForm(forms.Form):
             self.fields["exp_id"].initial = (last_exp_id, last_exp_id)
 
     def save(self):
-        rdl_cell_gap = pd.read_excel(self.cleaned_data["rdl_cell_gap"])
+        rdl_cell_gap = pd.read_excel(
+            self.cleaned_data["rdl_cell_gap"],
+            sheet_name='upload',
+        )
         experiment = Experiment.objects.get(
             name=str(self.cleaned_data["exp_id"]))
 

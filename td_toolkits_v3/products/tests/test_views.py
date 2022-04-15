@@ -13,7 +13,9 @@ from ..models import (
     Chip
 )
 
-def test_chip_batch_create_view(client):
+def test_chip_batch_create_view(client, user):
+    # Authenticate the user
+    client.force_login(user)
     # create material data first
     with open(MATERIAL_TEST_FILE_DIR, 'rb') as fp:
         form_data = {'materials': fp}
