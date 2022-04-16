@@ -66,29 +66,7 @@ SHELL_PLUS_PRINT_SQL = True
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true" # only use in development 
 
 
-# wiki
-# ------------------------------------------------------------------------------
-# https://django-wiki.readthedocs.io/en/latest/installation.html
 
 
 # Your stuff...
 # ------------------------------------------------------------------------------
-INSTALLED_APPS += [ # noqa: F405
-    # 'django.contrib.sites.apps.SitesConfig',
-    'django.contrib.humanize.apps.HumanizeConfig',
-    'django_nyt.apps.DjangoNytConfig',
-    'mptt',
-    'sekizai',
-    'sorl.thumbnail',
-    'wiki.apps.WikiConfig',
-    'wiki.plugins.attachments.apps.AttachmentsConfig',
-    'wiki.plugins.notifications.apps.NotificationsConfig',
-    'wiki.plugins.images.apps.ImagesConfig',
-    'wiki.plugins.macros.apps.MacrosConfig',
-] 
-TEMPLATES[-1]["OPTIONS"]["context_processors"] += [  # type: ignore[index] # noqa: F405
-    'sekizai.context_processors.sekizai'
-]
-WIKI_ACCOUNT_HANDLING = True
-WIKI_ACCOUNT_SIGNUP_ALLOWED = True
-LOGIN_REDIRECT_URL = reverse_lazy('wiki:get', kwargs={'path': ''})

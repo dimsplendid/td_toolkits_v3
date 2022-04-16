@@ -5,6 +5,7 @@ Base settings to build other settings files upon.
 from pathlib import Path
 
 import environ
+from django.urls import reverse_lazy
 
 # td_toolkits_v3/
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
@@ -79,10 +80,10 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     "td_toolkits_v3.users.apps.UsersConfig",
-    "td_toolkits_v3.materials.apps.MaterialsConfig", # record all materials
-    "td_toolkits_v3.opticals.apps.OpticalsConfig", # record all opticals
-    "td_toolkits_v3.reliabilities.apps.ReliabilitiesConfig", # record all reliabilities
-    "td_toolkits_v3.products.apps.ProductsConfig", # record all products
+    "td_toolkits_v3.materials.apps.MaterialsConfig",  # record all materials
+    "td_toolkits_v3.opticals.apps.OpticalsConfig",  # record all opticals
+    "td_toolkits_v3.reliabilities.apps.ReliabilitiesConfig",  # record all reliabilities
+    "td_toolkits_v3.products.apps.ProductsConfig",  # record all products
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -90,9 +91,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 # MIGRATIONS
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#migration-modules
-MIGRATION_MODULES = {
-    "sites": "td_toolkits_v3.contrib.sites.migrations"
-}
+MIGRATION_MODULES = {"sites": "td_toolkits_v3.contrib.sites.migrations"}
 
 # AUTHENTICATION
 # ------------------------------------------------------------------------------
@@ -121,15 +120,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
     },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"
-    },
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
 # MIDDLEWARE
@@ -268,9 +261,7 @@ LOGGING = {
 
 # django-allauth
 # ------------------------------------------------------------------------------
-ACCOUNT_ALLOW_REGISTRATION = env.bool(
-    "DJANGO_ACCOUNT_ALLOW_REGISTRATION", True
-)
+ACCOUNT_ALLOW_REGISTRATION = env.bool("DJANGO_ACCOUNT_ALLOW_REGISTRATION", True)
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_AUTHENTICATION_METHOD = "username"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
@@ -280,11 +271,33 @@ ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_ADAPTER = "td_toolkits_v3.users.adapters.AccountAdapter"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
-SOCIALACCOUNT_ADAPTER = (
-    "td_toolkits_v3.users.adapters.SocialAccountAdapter"
-)
+SOCIALACCOUNT_ADAPTER = "td_toolkits_v3.users.adapters.SocialAccountAdapter"
 
 # Your stuff...
 # ------------------------------------------------------------------------------
 # upload template directory
-UPLOAD_TEMPLATE_DIR = APPS_DIR / 'static' / 'sheets'
+UPLOAD_TEMPLATE_DIR = APPS_DIR / "static" / "sheets"
+
+# wiki
+# ------------------------------------------------------------------------------
+# https://django-wiki.readthedocs.io/en/latest/installation.html
+
+INSTALLED_APPS += [  # noqa: F405
+    # 'django.contrib.sites.apps.SitesConfig',
+    "django.contrib.humanize.apps.HumanizeConfig",
+    "django_nyt.apps.DjangoNytConfig",
+    "mptt",
+    "sekizai",
+    "sorl.thumbnail",
+    "wiki.apps.WikiConfig",
+    "wiki.plugins.attachments.apps.AttachmentsConfig",
+    "wiki.plugins.notifications.apps.NotificationsConfig",
+    "wiki.plugins.images.apps.ImagesConfig",
+    "wiki.plugins.macros.apps.MacrosConfig",
+]
+TEMPLATES[-1]["OPTIONS"]["context_processors"] += [  # type: ignore[index] # noqa: F405
+    "sekizai.context_processors.sekizai"
+]
+WIKI_ACCOUNT_HANDLING = True
+WIKI_ACCOUNT_SIGNUP_ALLOWED = True
+LOGIN_REDIRECT_URL = reverse_lazy("wiki:get", kwargs={"path": ""})
