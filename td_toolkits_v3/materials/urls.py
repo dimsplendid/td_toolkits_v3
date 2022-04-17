@@ -39,6 +39,12 @@ urlpatterns = [
         name='upload'
     ),
     path(
+        route='update/',
+        view=views.MaterialsUpdateView.as_view(),
+        name='update'
+    )
+    ,
+    path(
         route='pi/list',
         view=views.PolyimideListView.as_view(),
         name='pi_list'

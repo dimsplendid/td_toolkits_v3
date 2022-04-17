@@ -24,7 +24,7 @@ from .models import (
     Polyimide,
     Seal
 )
-from .forms import MaterialsUploadForm
+from .forms import MaterialsUploadForm, MaterialsUpdateForm
 from td_toolkits_v3.materials.tools import utils
 
 class VenderListView(ListView):
@@ -84,6 +84,22 @@ class MaterialsUploadView(LoginRequiredMixin, FormView):
         context['file_path'] = reverse_lazy('materials:template') \
                              + '?download=material_upload_template'
 
+        return context
+
+    def form_valid(self, form):
+        form.save()
+        return super().form_valid(form)
+
+class MaterialsUpdateView(LoginRequiredMixin, FormView):
+    template_name = 'form_generic.html'
+    form_class = MaterialsUpdateForm
+    success_url = reverse_lazy('materials:lc_list')
+
+    def get_context_data(self, **kwargs) -> dict[str, ]:
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Materials Update'
+        context['file_path'] = reverse_lazy('materials:template') \
+                             + '?download=material_upload_template'
         return context
 
     def form_valid(self, form):
