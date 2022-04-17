@@ -330,6 +330,7 @@ td_toolkits_v3/media/
 
 # ignore excel tmp file
 .~*
+~*
 
 # ignore jupyter notebook(just for testing)
 .ipynb_checkpoints*
