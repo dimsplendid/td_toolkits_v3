@@ -313,8 +313,17 @@ WIKI_MARKDOWN_KWARGS = {
         "markdown.extensions.abbr",
         "markdown.extensions.sane_lists",
         "markdown.extensions.admonition",
-        "md4mathjax",
+        # "md4mathjax",
+        "markdown_katex"
     ],
+    'extension_configs': {
+        'markdown_katex': {
+            'no_inline_svg': True,      # fix for WeasyPrint
+            'insert_fonts_css': True,
+        },
+    }
+
 }
+# For latex in markdown setting
 # WIKI_MARKDOWN_SANITIZE_HTML= True
 WIKI_MARKDOWN_SANITIZE_HTML= False
