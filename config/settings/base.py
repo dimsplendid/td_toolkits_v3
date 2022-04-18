@@ -302,10 +302,7 @@ WIKI_ACCOUNT_HANDLING = True
 WIKI_ACCOUNT_SIGNUP_ALLOWED = True
 LOGIN_REDIRECT_URL = reverse_lazy("home")
 WIKI_MARKDOWN_KWARGS = {
-    "extension_configs": {"wiki.plugins.macros.mdx.toc": {"title": "Contents"}},
     "extensions": [
-        "markdown.extensions.footnotes",
-        "markdown.extensions.attr_list",
         "markdown.extensions.footnotes",
         "markdown.extensions.attr_list",
         "markdown.extensions.def_list",
@@ -314,15 +311,10 @@ WIKI_MARKDOWN_KWARGS = {
         "markdown.extensions.sane_lists",
         "markdown.extensions.admonition",
         "md4mathjax",
-        # "markdown_katex"
     ],
-    # 'extension_configs': {
-    #     'markdown_katex': {
-    #         'no_inline_svg': True,      # fix for WeasyPrint
-    #         'insert_fonts_css': True,
-    #     },
-    # }
-
+    "extension_configs": {
+        "wiki.plugins.macros.mdx.toc": {"title": "Contents"},
+    },
 }
 # For latex in markdown setting
 # WIKI_MARKDOWN_SANITIZE_HTML= True
