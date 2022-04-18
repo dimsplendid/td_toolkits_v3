@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+
+{% block title %}PI: {{ polyimide.name }}{% endblock title %}
+
+
+{% block content %}
+<h2>{{ polyimide.name }}</h2>
+<p>Vender: {{ polyimide.vender.name }}</p>
+<a href="{% url 'materials:pi_update' polyimide.slug %}" 
+    class="btn btn-info">
+    Update
+</a>
+{% endblock content %}

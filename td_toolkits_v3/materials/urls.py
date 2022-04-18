@@ -45,14 +45,44 @@ urlpatterns = [
     )
     ,
     path(
-        route='pi/list',
+        route='pi/list/',
         view=views.PolyimideListView.as_view(),
         name='pi_list'
     ),
     path(
-        route='seal/list',
+        route='pi/add/',
+        view=views.PolyimideCreateView.as_view(),
+        name='pi_add'
+    ),
+    path(
+        route='pi/<slug:slug>/',
+        view=views.PolyimideDetailView.as_view(),
+        name='pi_detail'
+    ),
+    path(
+        route='pi/<slug:slug>/update/',
+        view=views.PolyimideUpdateView.as_view(),
+        name='pi_update'
+    ),
+    path(
+        route='seal/list/',
         view=views.SealListView.as_view(),
         name='seal_list'
+    ),
+    path(
+        route='seal/add/',
+        view=views.SealCreateView.as_view(),
+        name='seal_add'
+    ),
+    path(
+        route='seal/<slug:slug>/',
+        view=views.SealDetailView.as_view(),
+        name='seal_detail'
+    ),
+    path(
+        route='seal/<slug:slug>/update/',
+        view=views.SealUpdateView.as_view(),
+        name='seal_update'
     ),
     path(
         'template/',

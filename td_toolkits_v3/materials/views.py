@@ -110,10 +110,60 @@ class IndexView(TemplateView):
     template_name = 'materials/index.html'
 
 class PolyimideListView(ListView):
+    template_name = 'list_generic.html'
+    model = Polyimide
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['object_name'] = 'PI'
+        # context['add_url'] = reverse_lazy('materials:pi_add')
+        return context
+
+class PolyimideDetailView(DetailView):
     model = Polyimide
 
+class PolyimideCreateView(LoginRequiredMixin, CreateView):
+    template_name = 'form_generic.html'
+    model = Polyimide
+    fields = [
+        'name',
+        'vender',
+    ]
+
+class PolyimideUpdateView(LoginRequiredMixin, UpdateView):
+    template_name = 'form_generic.html'
+    model = Polyimide
+    fields = [
+        'name',
+        'vender',
+    ]
+
 class SealListView(ListView):
+    template_name = 'list_generic.html'
     model = Seal
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['object_name'] = 'Seal'
+        # context['add_url'] = reverse_lazy('materials:seal_add')
+        return context
+
+class SealDetailView(DetailView):
+    model = Seal
+
+class SealCreateView(LoginRequiredMixin, CreateView):
+    template_name = 'form_generic.html'
+    model = Seal
+    fields = [
+        'name',
+        'vender',
+    ]
+
+class SealUpdateView(LoginRequiredMixin, UpdateView):
+    template_name = 'form_generic.html'
+    model = Seal
+    fields = [
+        'name',
+        'vender',
+    ]
 
 class TemplateDownloadView(View):
     def get(self, request:HttpRequest, *args, **kwargs) -> HttpResponse:

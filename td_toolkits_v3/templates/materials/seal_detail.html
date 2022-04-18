@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+
+{% block title %}Seal: {{ seal.name }}{% endblock title %}
+
+
+{% block content %}
+<h2>{{ seal.name }}</h2>
+<p>Vender: {{ seal.vender.name }}</p>
+<a href="{% url 'materials:seal_update' seal.slug %}" 
+    class="btn btn-info">
+    Update
+</a>
+{% endblock content %}

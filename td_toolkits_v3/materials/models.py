@@ -126,11 +126,11 @@ class Polyimide(TimeStampedModel):
     def __str__(self):
         return self.name
 
-    # def get_absolute_url(self):
-    #     """Return absolute URL to the LC Detail page."""
-    #     return reverse(
-    #         'materials:pi_detail', kwargs={"slug": self.slug}
-    #     )
+    def get_absolute_url(self):
+        """Return absolute URL to the PI Detail page."""
+        return reverse(
+            'materials:pi_detail', kwargs={"slug": self.slug}
+        )
 
 
 class Seal(TimeStampedModel):
@@ -147,8 +147,8 @@ class Seal(TimeStampedModel):
     def __str__(self):
         return self.name
 
-    # def get_absolute_url(self):
-    #     """Return absolute URL to the LC Detail page."""
-    #     return reverse(
-    #         'materials:pi_detail', kwargs={"slug": self.slug}
-    #     )
+    def get_absolute_url(self):
+        """Return absolute URL to the Seal Detail page."""
+        return reverse(
+            'materials:seal_detail', kwargs={"slug": self.slug}
+        )
