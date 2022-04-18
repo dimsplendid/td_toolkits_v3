@@ -301,3 +301,20 @@ TEMPLATES[-1]["OPTIONS"]["context_processors"] += [  # type: ignore[index] # noq
 WIKI_ACCOUNT_HANDLING = True
 WIKI_ACCOUNT_SIGNUP_ALLOWED = True
 LOGIN_REDIRECT_URL = reverse_lazy("wiki:get", kwargs={"path": ""})
+WIKI_MARKDOWN_KWARGS = {
+    "extension_configs": {"wiki.plugins.macros.mdx.toc": {"title": "Contents"}},
+    "extensions": [
+        "markdown.extensions.footnotes",
+        "markdown.extensions.attr_list",
+        "markdown.extensions.footnotes",
+        "markdown.extensions.attr_list",
+        "markdown.extensions.def_list",
+        "markdown.extensions.tables",
+        "markdown.extensions.abbr",
+        "markdown.extensions.sane_lists",
+        "markdown.extensions.admonition",
+        "md4mathjax",
+    ],
+}
+# WIKI_MARKDOWN_SANITIZE_HTML= True
+WIKI_MARKDOWN_SANITIZE_HTML= False
