@@ -132,6 +132,7 @@ class OpticalReferenceUpdateView(LoginRequiredMixin, UpdateView):
         'w_y',
         'contrast_ratio',
     ]
+    
 
 class OpticalReferenceListView(ListView):
     model = OpticalReference
@@ -229,6 +230,15 @@ class OpticalSearchProfileUpdateView(LoginRequiredMixin, UpdateView):
         'contrast_ratio_weight',
         'remark',
     ]
+    def get(self, request, *args, **kwargs):
+        request.session['next'] = request.GET.get('next')
+
+        return super().get(request, *args, **kwargs)
+
+    def get_success_url(self) -> str:
+        if self.request.session['next']:
+            return self.request.session['next']
+        return super().get_success_url()
 
 class OpticalSearchView(TemplateView):
     template_name = 'opticals/search.html'

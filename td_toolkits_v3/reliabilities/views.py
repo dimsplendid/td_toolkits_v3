@@ -94,6 +94,15 @@ class ReliabilitySearchProfileUpdateView(LoginRequiredMixin, UpdateView):
         'u_shape_ac_venders',
         'u_shape_ac_weight',
     ]
+    def get(self, request, *args, **kwargs):
+        request.session['next'] = request.GET.get('next')
+
+        return super().get(request, *args, **kwargs)
+
+    def get_success_url(self) -> str:
+        if self.request.session['next']:
+            return self.request.session['next']
+        return super().get_success_url()
 
 class ReliabilitiesUploadView(LoginRequiredMixin, FormView):
     template_name = 'form_generic.html'
