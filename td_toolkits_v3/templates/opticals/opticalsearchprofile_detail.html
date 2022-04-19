@@ -4,6 +4,7 @@ Optical Search Profile: {{ opticalsearchprofile }}
 {% endblock title %}
 {% block content %}
 <h2>Optical Search Profile: {{ opticalsearchprofile }}</h2>
+<p>This profile is to constrain the search result.</p> 
 <div class='table'>
 <table class='table table-hover text-center table-striped'>
     <thead>
@@ -20,27 +21,27 @@ Optical Search Profile: {{ opticalsearchprofile }}
             <td></td>
         </tr>
         <tr>
-            <th>LC% (larger than)</th>
+            <th>LC% minimum</th>
             <td>{{ opticalsearchprofile.lc_percent }}</td>
             <td>{{ opticalsearchprofile.lc_percent_weight }}</td>
         </tr>
         <tr>
-            <th>RT (less than)</th>
+            <th>RT(ms) maximum</th>
             <td>{{ opticalsearchprofile.response_time }}</td>
             <td>{{ opticalsearchprofile.response_time_weight }}</td>
         </tr>
         <tr>
-            <th>ΔEab* (less than)</th>
+            <th>ΔEab* maximum</th>
             <td>{{ opticalsearchprofile.delta_e_ab }}</td>
             <td>{{ opticalsearchprofile.delta_e_ab_weight }}</td>
         </tr>
         <tr>
-            <th>CR (larger than)</th>
+            <th>CR minimum</th>
             <td>{{ opticalsearchprofile.contrast_ratio }}</td>
             <td>{{ opticalsearchprofile.contrast_ratio_weight }}</td>
         </tr>
         <tr>
-            <th>Remark</th>
+            <th>Remark(Is data fitting out of range of raw?)</th>
             <td>{{ opticalsearchprofile.remark }}</td>
             <td></td>
         </tr>

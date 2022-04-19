@@ -283,6 +283,7 @@ class OpticalSearchView(TemplateView):
             "ref_product__product_model_type__factory__name": "Factory",
             "ref_product__lc__name": "LC",
             "ref_product__cell_gap": "Cell Gap",
+            'ref_product__voltage': 'Voltage',
             'response_time': 'RT',
             'response_time_weight': 'w(RT)',
             "lc_percent": "LC%",

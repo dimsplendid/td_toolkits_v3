@@ -178,9 +178,9 @@ class OpticalReference(TimeStampedModel):
         verbose_name="Seal",
     )
 
-    cell_gap = models.FloatField("Cell Gap")
+    cell_gap = models.FloatField("Cell Gap(um)")
     voltage = models.FloatField(default=5.0)
-    ito_slit = models.FloatField("ITO Slit", null=True, blank=True)
+    ito_slit = models.FloatField("ITO Slit(°)", null=True, blank=True)
 
     class TFTTech(models.TextChoices):
         AMORPHOUS = "a_Si", "a-Si"
@@ -191,9 +191,9 @@ class OpticalReference(TimeStampedModel):
     tft_tech = models.CharField(
         "TFT Tech", choices=TFTTech.choices, max_length=20)
     transmittance = models.FloatField("T%")
-    time_rise = models.FloatField("Tr")
-    time_fall = models.FloatField("Tf")
-    gray_to_gray = models.FloatField("G2G")
+    time_rise = models.FloatField("Tr(ms)")
+    time_fall = models.FloatField("Tf(ms)")
+    gray_to_gray = models.FloatField("G2G(ms)")
     w_x = models.FloatField("Wx")
     w_y = models.FloatField("Wy")
     contrast_ratio = models.FloatField("CR")
