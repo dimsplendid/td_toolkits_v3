@@ -93,4 +93,9 @@ urlpatterns = [
         views.OpticalSearchProfileUpdateView.as_view(),
         name='search_profile_update'
     ),
+    path(
+        'search/profile/<slug:slug>/copy/',
+        views.OpticalSearchProfileCopyView.as_view(),
+        name='search_profile_copy'
+    ),
 ]

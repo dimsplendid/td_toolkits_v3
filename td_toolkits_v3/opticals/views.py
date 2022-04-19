@@ -240,6 +240,13 @@ class OpticalSearchProfileUpdateView(LoginRequiredMixin, UpdateView):
             return self.request.session['next']
         return super().get_success_url()
 
+class OpticalSearchProfileCopyView(OpticalSearchProfileUpdateView):
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+        obj.pk = None
+        obj.name = obj.name + '-copy'
+        return obj
+
 class OpticalSearchView(TemplateView):
     template_name = 'opticals/search.html'
     def get(self, request, *args, **kwargs):
