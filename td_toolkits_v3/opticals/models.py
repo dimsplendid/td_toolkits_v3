@@ -270,13 +270,13 @@ class OpticalSearchProfile(TimeStampedModel):
         on_delete=models.CASCADE
     )
 
-    lc_percent = models.FloatField('LC%', default=0.)
+    lc_percent = models.FloatField('LC% minimum', default=0.)
     lc_percent_weight = models.FloatField('LC% Weight', default=1.)
-    response_time = models.FloatField('RT', default=30.)
+    response_time = models.FloatField('RT maximum', default=100.)
     response_time_weight = models.FloatField('RT Weight', default=1.)
-    delta_e_ab = models.FloatField('ΔEab*', default=0.)
+    delta_e_ab = models.FloatField('ΔEab* minimum', default=100.)
     delta_e_ab_weight = models.FloatField('ΔEab* Weight', default=1.)
-    contrast_ratio = models.FloatField('CR', default=1500.)
+    contrast_ratio = models.FloatField('CR minimum', default=0.)
     contrast_ratio_weight = models.FloatField('CR Weight', default=1.)
     class RemarkChoice(models.TextChoices):
         ALL = 'All', 'All'
