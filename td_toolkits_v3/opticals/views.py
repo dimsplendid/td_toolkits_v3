@@ -245,6 +245,8 @@ class OpticalSearchProfileCopyView(OpticalSearchProfileUpdateView):
         obj = super().get_object(queryset)
         obj.pk = None
         obj.name = obj.name + '-copy'
+        obj.slug = None
+        
         return obj
 
 class OpticalSearchView(TemplateView):

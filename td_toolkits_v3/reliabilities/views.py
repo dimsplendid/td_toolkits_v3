@@ -104,6 +104,20 @@ class ReliabilitySearchProfileUpdateView(LoginRequiredMixin, UpdateView):
             return self.request.session['next']
         return super().get_success_url()
 
+class ReliabilitySearchProfileCopyView(ReliabilitySearchProfileUpdateView):
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+        self.origin = super().get_object(queryset)
+        obj.pk = None
+        obj.name = obj.name + '-copy'
+        obj.slug = None
+        # TODO:
+        # The many-to-many fields need add after pk is generate
+        # Still don't know how to copy the values in this kind of 
+        # situation
+        
+        return obj
+
 class ReliabilitiesUploadView(LoginRequiredMixin, FormView):
     template_name = 'form_generic.html'
     form_class = ReliabilitiesUploadForm
@@ -201,7 +215,7 @@ class ReliabilitySearchView(TemplateView):
             return None
 
         def qeury(model, qlist):
-            print(qlist)
+            # print(qlist)
             if (not qlist) or ('ALL' in qlist):
                 return model.objects.all()
             else:

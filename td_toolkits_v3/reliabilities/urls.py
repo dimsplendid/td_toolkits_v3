@@ -42,6 +42,11 @@ urlpatterns = [
         name='search_profile_update',
     ),
     path(
+        'search/profile/<slug:slug>/copy/',
+        views.ReliabilitySearchProfileCopyView.as_view(),
+        name='search_profile_copy',
+    ),
+    path(
         'ushape/',
         views.UShapeView.as_view(),
         name='ushape',
