@@ -267,15 +267,11 @@ class OpticalSearchView(TemplateView):
             .order_by('modified')
             .distinct()
         ]
-        context['profile_list'] = [
-            i[0] for i in
-            OpticalSearchProfile.objects.all()
-            .values_list('name')
-            .order_by('modified')
-        ]
+        context['profile_list'] = OpticalSearchProfile.objects.all()
+            
         context['profile'] = get_object_or_404(
             OpticalSearchProfile,
-            name=self.request.session['profile']
+            slug=self.request.session['profile']
         )
 
         header = {
@@ -296,7 +292,7 @@ class OpticalSearchView(TemplateView):
         }
         profile_df = pd.DataFrame.from_records(
             OpticalSearchProfile.objects
-            .filter(name=self.request.session['profile'])
+            .filter(slug=self.request.session['profile'])
             .values(*header)
         ).rename(
             columns=header

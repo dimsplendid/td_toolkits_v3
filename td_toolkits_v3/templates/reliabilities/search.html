@@ -49,7 +49,7 @@ Reliability Search
         {% endfor %}
     </select>
     <button class='btn btn-primary' type='submit'>Change</button>
-    <a href="{% url 'reliabilities:search_profile_update' profile.slug %}?next={{request.path}}"
+    <a href="{% url 'reliabilities:search_profile_update' profile.slug %}?next={{request.get_full_path}}"
         class='btn btn-info'
     >
         Update
@@ -65,7 +65,7 @@ Reliability Search
         </thead>
         <tbody>
             <tr>
-                <th>VHR</th>
+                <th>VHR(%) min</th>
                 <td>{{ profile.voltage_holding_ratio }}</td>
                 <td>{{ profile.voltage_holding_ratio_weight }}</td>
                 <td>
@@ -75,7 +75,7 @@ Reliability Search
                 </td>
             </tr>
             <tr>
-                <th>Δ angle</th>
+                <th>Δ angle(°) max</th>
                 <td>{{ profile.delta_angle }}</td>
                 <td>{{ profile.delta_angle_weight }}</td>
                 <td>
@@ -85,7 +85,7 @@ Reliability Search
                 </td>
             </tr>
             <tr>
-                <th>Adhesion</th>
+                <th>Adhesion(kgw) min</th>
                 <td>{{ profile.adhesion }}</td>
                 <td>{{ profile.adhesion_weight }}</td>
                 <td>
@@ -95,7 +95,7 @@ Reliability Search
                 </td>
             </tr>
             <tr>
-                <th>LTS</th>
+                <th>LTS(days) min</th>
                 <td>{{ profile.low_temperature_storage }}</td>
                 <td>{{ profile.low_temperature_storage_weight }}</td>
                 <td>
@@ -105,7 +105,7 @@ Reliability Search
                 </td>
             </tr>
             <tr>
-                <th>PCT</th>
+                <th>PCT(hours) min</th>
                 <td>{{ profile.pressure_cooking_test }}</td>
                 <td>{{ profile.pressure_cooking_test_weight }}</td>
                 <td>
@@ -115,7 +115,7 @@ Reliability Search
                 </td>
             </tr>
             <tr>
-                <th>Seal WVTR</th>
+                <th>Seal WVTR(%) max</th>
                 <td>{{ profile.seal_wvtr }}</td>
                 <td>{{ profile.seal_wvtr_weight }}</td>
                 <td>
@@ -125,7 +125,7 @@ Reliability Search
                 </td>
             </tr>
             <tr>
-                <th>U-Shape AC</th>
+                <th>U-Shape AC(%) max</th>
                 <td>{{ profile.u_shape_ac }}</td>
                 <td>{{ profile.u_shape_ac_weight }}</td>
                 <td>
