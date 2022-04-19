@@ -150,7 +150,10 @@ class OpticalReference(TimeStampedModel):
 
     slug = AutoSlugField(
         "opt ref addr", unique=True, always_update=False, 
-        populate_from=slug_gen
+        populate_from=[
+            'product_model_type__name',
+            'product_model_type__factory__name'
+        ]
     )
 
     lc = models.ForeignKey(
@@ -176,6 +179,7 @@ class OpticalReference(TimeStampedModel):
     )
 
     cell_gap = models.FloatField("Cell Gap")
+    voltage = models.FloatField(default=5.0)
     ito_slit = models.FloatField("ITO Slit", null=True, blank=True)
 
     class TFTTech(models.TextChoices):
@@ -199,7 +203,11 @@ class OpticalReference(TimeStampedModel):
         return self.time_fall + self.time_rise
 
     def __str__(self):
-        return self.product_model_type.name + "@" + self.product_model_type.factory.name
+        return (
+            self.product_model_type.name 
+            + "@" + self.product_model_type.factory.name
+            # + " Vop:" + self.voltage
+        )
 
     def get_absolute_url(self):
         return reverse("opticals:ref_detail", kwargs={"slug": self.slug})

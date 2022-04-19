@@ -493,6 +493,7 @@ class OpticalReferenceForm(forms.ModelForm):
         'pi',
         'seal',
         'cell_gap',
+        'voltage',
         'ito_slit',
         'tft_tech',
         'transmittance',
