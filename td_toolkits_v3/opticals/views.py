@@ -14,10 +14,12 @@ from django.views.generic import (
 from django.views.generic.edit import FormView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from td_toolkits_v3.materials.models import LiquidCrystal
+from td_toolkits_v3.products.models import Experiment
 
 from td_toolkits_v3.opticals.tools.utils import (
     OptResultGenerator, 
     OptictalsScore,
+    OptLoader,
 )
 
 from .forms import (
@@ -411,3 +413,45 @@ class ProductModelTypeCreateView(CreateView):
                 formset=formset,
             )
         )
+
+class OpticalDataDumpView(TemplateView):
+    template_name = 'opticals/data_dump.html'
+
+    def get(self, request, *args, **kwargs):
+        if exp_name := request.GET.get('exp'):
+            cell_gap = request.GET.get('cell_gap')
+            if cell_gap == 'None':
+                cell_gap = None
+
+            data_loader = OptLoader(exp_name, cell_gap)
+            opt_df = data_loader.opt
+            # if there is rt data, export either
+            try:
+                rt_df = data_loader.rt
+            except:
+                rt_df = None
+
+            file_name = exp_name + '.xlsx'
+
+            buffer = BytesIO()
+            with pd.ExcelWriter(buffer) as writter:
+                opt_df.to_excel(writter,sheet_name='OPT', index=False)
+                if rt_df is not None:
+                    rt_df.to_excel(writter,sheet_name='RT', index=False)
+            
+            response = HttpResponse(
+                buffer.getvalue(),
+                content_type=(
+                    'application/'
+                    'vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                )
+            )
+            response['Content-Disposition'] = f'attachment; filename={file_name}'
+            return response
+
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['exps'] = Experiment.objects.all()
+        return context

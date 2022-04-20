@@ -98,4 +98,9 @@ urlpatterns = [
         views.OpticalSearchProfileCopyView.as_view(),
         name='search_profile_copy'
     ),
+    path(
+        'data/dump/',
+        views.OpticalDataDumpView.as_view(),
+        name='data_dump'
+    )
 ]

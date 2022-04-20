@@ -38,6 +38,7 @@ class OptLoader():
         cell_gap: str, optional, default is 'axo'
             The cell gap method for the opt and rt data.
             There are 'rdl' and 'axo' now.
+            And if there are no cell gap data, using None.
         """
         self.experiment_name = experiment_name
         self.cell_gap = cell_gap
@@ -138,7 +139,7 @@ class OptLoader():
         worry about that later.
         """
         # check parameter
-        if self.cell_gap not in ['axo', 'rdl']:
+        if self.cell_gap not in ['axo', 'rdl', None]:
             return f'The {self.cell_gap} method is not implement now.'
 
         # Setting the needed data, and the proper columns name for later use.
@@ -154,6 +155,10 @@ class OptLoader():
         df = self.load_by_experiment(header, ResponseTimeLog)
         # check is there opt data
         if type(df) == str:
+            return df
+
+        # no cell gap assignment, return raw directly
+        if self.cell_gap is None:
             return df
 
         if self.cell_gap == 'axo':

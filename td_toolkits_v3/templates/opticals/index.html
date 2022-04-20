@@ -12,7 +12,7 @@
 </div>
 <hr>
 <div>
-    <h2>Optical Fitting</h2>
+    <h2>Management</h2>
     <ol>
         <li> <a href="{% url 'materials:upload' %}">Material Properties Upload</a> </li>
         <li> <a href="{% url 'products:chip_upload' %}">Chip Conditions Upload</a> </li>
@@ -25,5 +25,11 @@
         <li> <a href="{% url 'opticals:search_profile_list' %}">Optical Search Profile</a></li>
     </ol>
 </div>
-
+<hr>
+<div>
+    <h2>Other Funcitons</h2>
+    <ol>
+        <li><a href="{% url 'opticals:data_dump' %}">OPT Data Dump</a></li>
+    </ol>
+</div>
 {% endblock content %}

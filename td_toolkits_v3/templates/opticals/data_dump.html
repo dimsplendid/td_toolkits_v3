@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Optical Data Dump{% endblock title %}
+{% block content %}
+<h2>Optical Data Dump</h2>
+Tools for dumping the origin fitting data.
+<hr>
+<form action='' method='GET'>
+    <label>Experiment</label>
+    <select class='form-select' name='exp'>
+        {% for exp in exps %}
+        <option>
+            {{ exp.name }}
+        </option>
+        {% endfor %}
+    </select>
+    <label>Cell Gap</label>
+    <select class='form-select' name='cell_gap'>
+        <option selected value='axo'>AXO</option>
+        <option value='rdl'>RD-Line</option>
+        <option value='None'>None</option>
+    </select>
+    <button type='submit' class='btn btn-primary'>
+        Download
+    </button>
+</form>
+
+<div class='alert alert-info'>
+    This is not downloading the raw data, on the other hand, 
+    it's a re-order table with LC conditions and cell gaps, 
+    though you should upload the conditions and AXO/RDL cell gaps data.
+</div>
+
+<div class='alert alert-warning'>
+    <strong>Warning:</strong>
+    This would download the data with thousands of rows.
+</div>
+
+
+
+{% endblock content %}
