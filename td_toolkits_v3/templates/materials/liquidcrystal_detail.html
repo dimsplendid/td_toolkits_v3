@@ -37,7 +37,7 @@
         </tr>
         <tr>
             <th>γ1(mPa·s)</th>
-            <td>{{ liquidcrystal.rotational_viscosity|floatformat:4 }}</td>
+            <td>{{ liquidcrystal.rotational_viscosity|floatformat:0 }}</td>
         </tr>
         <tr>
             <th>n<sub>e</sub></th>
@@ -53,27 +53,27 @@
         </tr>
         <tr>
             <th>Δnd</th>
-            <td>{{ liquidcrystal.retardation|floatformat:4 }}</td>
+            <td>{{ liquidcrystal.retardation|floatformat:0 }}</td>
         </tr>
         <tr>
             <th>ε<sub>∥</sub></th>
-            <td>{{ liquidcrystal.e_para|floatformat:4 }}</td>
+            <td>{{ liquidcrystal.e_para|floatformat:2 }}</td>
         </tr>
         <tr>
             <th>ε<sub>⟂</sub></th>
-            <td>{{ liquidcrystal.e_perp|floatformat:4 }}</td>
+            <td>{{ liquidcrystal.e_perp|floatformat:2 }}</td>
         </tr>
         <tr>
             <th>k<sub>11</sub></th>
-            <td>{{ liquidcrystal.k_11|floatformat:2 }}</td>
+            <td>{{ liquidcrystal.k_11|floatformat:1 }}</td>
         </tr>
         <tr>
             <th>k<sub>22</sub></th>
-            <td>{{ liquidcrystal.k_22|floatformat:2 }}</td>
+            <td>{{ liquidcrystal.k_22|floatformat:1 }}</td>
         </tr>
         <tr>
             <th>k<sub>33</sub></th>
-            <td>{{ liquidcrystal.k_33|floatformat:2 }}</td>
+            <td>{{ liquidcrystal.k_33|floatformat:1 }}</td>
         </tr>
         <tr>
             <th>density(g/cm<sup>3</sup>)</th>
