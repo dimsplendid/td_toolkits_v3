@@ -34,42 +34,44 @@ Optical Search
     >
         Copy
     </a>
-    <table class='table table-hover text-center table-striped'>
-        <thead>
-            <tr>
-                <th>Item</th>
-                <th>Value</th>
-                <th>Weight</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <th>LC% min</th>
-                <td>{{ profile.lc_percent }}</td>
-                <td>{{ profile.lc_percent_weight }}</td>
-            </tr>
-            <tr>
-                <th>RT(ms) max</th>
-                <td>{{ profile.response_time }}</td>
-                <td>{{ profile.response_time_weight }}</td>
-            </tr>
-            <tr>
-                <th>ΔEab* min</th>
-                <td>{{ profile.delta_e_ab }}</td>
-                <td>{{ profile.delta_e_ab_weight }}</td>
-            </tr>
-            <tr>
-                <th>CR min</th>
-                <td>{{ profile.contrast_ratio }}</td>
-                <td>{{ profile.contrast_ratio_weight }}</td>
-            </tr>
-            <tr>
-                <th>Remark</th>
-                <td>{{ profile.remark }}</td>
-                <td></td>
-            </tr>
-        </tbody>
-    </table>
+    <div class='mt-1'>
+        <table class='table table-hover text-center table-striped'>
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Value</th>
+                    <th>Weight</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>LC% min</th>
+                    <td>{{ profile.lc_percent }}</td>
+                    <td>{{ profile.lc_percent_weight }}</td>
+                </tr>
+                <tr>
+                    <th>RT(ms) max</th>
+                    <td>{{ profile.response_time }}</td>
+                    <td>{{ profile.response_time_weight }}</td>
+                </tr>
+                <tr>
+                    <th>ΔEab* min</th>
+                    <td>{{ profile.delta_e_ab }}</td>
+                    <td>{{ profile.delta_e_ab_weight }}</td>
+                </tr>
+                <tr>
+                    <th>CR min</th>
+                    <td>{{ profile.contrast_ratio }}</td>
+                    <td>{{ profile.contrast_ratio_weight }}</td>
+                </tr>
+                <tr>
+                    <th>Remark</th>
+                    <td>{{ profile.remark }}</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
     <button class='btn btn-primary' type='submit'>Search</button>
 </form>
 

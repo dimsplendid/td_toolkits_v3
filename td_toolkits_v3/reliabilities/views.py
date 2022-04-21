@@ -2,7 +2,7 @@ from io import BytesIO
 import pandas as pd
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpRequest
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import View
@@ -211,6 +211,33 @@ class ReliabilitySearchView(TemplateView):
                 to_json()
             self.request.session['ra_score_raw'] = ra_score.result['raw'].\
                 to_json()
+            # The calculate raws
+            for attr in dir(ra_score):
+                if attr.startswith('table'):
+                    if (table := getattr(ra_score, attr)['raw']) is None:
+                        # TODO: There should be more eligant methods...
+                        if attr[6:] == 'u_shape_ac':
+                            self.request.session[attr] = pd.DataFrame({
+                                'msg': ['no value'],
+                                'Time(h)': [1],
+                                'Temperature(°C)': [25]
+                            }).to_json()
+                        elif attr[6:] == 'voltage_holding_ratio':
+                            self.request.session[attr] = pd.DataFrame({
+                                'msg': ['no value'],
+                                'Measure Voltage': [1],
+                                'Measure Frequency': [0.6]
+                            }).to_json()
+                        elif attr[6:] == 'low_temperature_storage':
+                            self.request.session[attr] = pd.DataFrame({
+                                'msg': ['no value'],
+                                'Storage Cond.': 'Bulk',
+                                'Measure Temp.(°C)': [-30]
+                            }).to_json()
+                        else:
+                            self.request.session[attr] = None
+                    else:
+                        self.request.session[attr] = table.to_json()
 
         return context
 
@@ -242,26 +269,43 @@ class ReliabilitySearchView(TemplateView):
     
 
 class ReliabilitySearchResultDownload(View):
-    def get(self, request, *args, **kwargs):
+    def get(self, request: HttpRequest, *args, **kwargs):
         if 'ra_all' in request.session:
             ra_result = pd.read_json(request.session['ra_all'])
             ra_score_raw = pd.read_json(request.session['ra_score_raw'])
             ra_score = pd.read_json(request.session['ra_score'])
 
-            with BytesIO() as b:
-                writer = pd.ExcelWriter(b, engine='openpyxl')
+            buffer = BytesIO()
+            with pd.ExcelWriter(buffer) as writer:
                 ra_result.to_excel(writer, sheet_name='RA Result', index=False)
                 ra_score_raw.to_excel(
                     writer, sheet_name='RA Score Raw', index=False)
                 ra_score.to_excel(writer, sheet_name='RA Score', index=False)
-                writer.save()
-                file_name = 'RA Result.xlsx'
-                response = HttpResponse(
-                    b.getvalue(),
-                    content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                )
-                response['Content-Disposition'] = f'attachment; filename={file_name}'
-                return response
+                # raw data
+                for k, v in request.session.items():
+                    if k.startswith('table'):
+                        if v is None:
+                            pd.DataFrame({
+                                'msg': ['no value']
+                            }).to_excel(
+                                writer, 
+                                sheet_name=k[6:].title().replace("_", " ")
+                            )
+                        else:
+                            pd.read_json(v).to_excel(
+                                writer, 
+                                sheet_name=k[6:].title().replace("_", " ")
+                            )
+
+            file_name = 'RA Result.xlsx'
+            response = HttpResponse(
+                buffer.getvalue(),
+                content_type=(
+                    'application/'
+                    'vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            )
+            response['Content-Disposition'] = f'attachment; filename={file_name}'
+            return response
         return redirect(reverse_lazy('reliabilities:search'))
 
 class UShapeView(TemplateView):
@@ -291,6 +335,7 @@ class UShapeView(TemplateView):
                 pd.read_json(
                     request.session['vt_curve']
                 ).to_excel(writer, sheet_name='VT curve', index=False)
+
             response = HttpResponse(
                     buffer.getvalue(),
                     content_type=(

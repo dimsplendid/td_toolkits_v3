@@ -59,93 +59,95 @@ Reliability Search
     >
         Copy
     </a>
-    <table class='table table-hover text-center table-striped'>
-        <thead>
-            <tr>
-                <th>Item</th>
-                <th>Value</th>
-                <th>Weight</th>
-                <th>Vender</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <th>Material Type</th>
-                <td>{{ profile.material_type }}</td>
-                <td></td>
-                <td></td>
-            <tr>
-                <th>VHR(%) min</th>
-                <td>{{ profile.voltage_holding_ratio }}</td>
-                <td>{{ profile.voltage_holding_ratio_weight }}</td>
-                <td>
-                    {% for vender in profile.voltage_holding_ratio_venders.values %}
-                    {{ vender.name }}
-                    {% endfor %}
-                </td>
-            </tr>
-            <tr>
-                <th>Δ angle(°) max</th>
-                <td>{{ profile.delta_angle }}</td>
-                <td>{{ profile.delta_angle_weight }}</td>
-                <td>
-                    {% for vender in profile.delta_angle_venders.values %}
-                    {{ vender.name }}
-                    {% endfor %}
-                </td>
-            </tr>
-            <tr>
-                <th>Adhesion(kgw) min</th>
-                <td>{{ profile.adhesion }}</td>
-                <td>{{ profile.adhesion_weight }}</td>
-                <td>
-                    {% for vender in profile.adhesion_venders.values %}
-                    {{ vender.name }}
-                    {% endfor %}
-                </td>
-            </tr>
-            <tr>
-                <th>LTS(days) min</th>
-                <td>{{ profile.low_temperature_storage }}</td>
-                <td>{{ profile.low_temperature_storage_weight }}</td>
-                <td>
-                    {% for vender in profile.low_temperature_storage_venders.values %}
-                    {{ vender.name }}
-                    {% endfor %}
-                </td>
-            </tr>
-            <tr>
-                <th>PCT(hours) min</th>
-                <td>{{ profile.pressure_cooking_test }}</td>
-                <td>{{ profile.pressure_cooking_test_weight }}</td>
-                <td>
-                    {% for vender in profile.pressure_cooking_test_venders.values %}
-                    {{ vender.name }}
-                    {% endfor %}
-                </td>
-            </tr>
-            <tr>
-                <th>Seal WVTR(%) max</th>
-                <td>{{ profile.seal_wvtr }}</td>
-                <td>{{ profile.seal_wvtr_weight }}</td>
-                <td>
-                    {% for vender in profile.seal_wvtr_venders.values %}
-                    {{ vender.name }}
-                    {% endfor %}
-                </td>
-            </tr>
-            <tr>
-                <th>U-Shape AC(%) max</th>
-                <td>{{ profile.u_shape_ac }}</td>
-                <td>{{ profile.u_shape_ac_weight }}</td>
-                <td>
-                    {% for vender in profile.u_shape_ac_venders.values %}
-                    {{ vender.name }}
-                    {% endfor %}
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    <div class='mt-1'>
+        <table class='table table-hover text-center table-striped'>
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Value</th>
+                    <th>Weight</th>
+                    <th>Vender</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>Material Type</th>
+                    <td>{{ profile.material_type }}</td>
+                    <td></td>
+                    <td></td>
+                <tr>
+                    <th>VHR(%) min</th>
+                    <td>{{ profile.voltage_holding_ratio }}</td>
+                    <td>{{ profile.voltage_holding_ratio_weight }}</td>
+                    <td>
+                        {% for vender in profile.voltage_holding_ratio_venders.values %}
+                        {{ vender.name }}
+                        {% endfor %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>Δ angle(°) max</th>
+                    <td>{{ profile.delta_angle }}</td>
+                    <td>{{ profile.delta_angle_weight }}</td>
+                    <td>
+                        {% for vender in profile.delta_angle_venders.values %}
+                        {{ vender.name }}
+                        {% endfor %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>Adhesion(kgw) min</th>
+                    <td>{{ profile.adhesion }}</td>
+                    <td>{{ profile.adhesion_weight }}</td>
+                    <td>
+                        {% for vender in profile.adhesion_venders.values %}
+                        {{ vender.name }}
+                        {% endfor %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>LTS(days) min</th>
+                    <td>{{ profile.low_temperature_storage }}</td>
+                    <td>{{ profile.low_temperature_storage_weight }}</td>
+                    <td>
+                        {% for vender in profile.low_temperature_storage_venders.values %}
+                        {{ vender.name }}
+                        {% endfor %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>PCT(hours) min</th>
+                    <td>{{ profile.pressure_cooking_test }}</td>
+                    <td>{{ profile.pressure_cooking_test_weight }}</td>
+                    <td>
+                        {% for vender in profile.pressure_cooking_test_venders.values %}
+                        {{ vender.name }}
+                        {% endfor %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>Seal WVTR(%) max</th>
+                    <td>{{ profile.seal_wvtr }}</td>
+                    <td>{{ profile.seal_wvtr_weight }}</td>
+                    <td>
+                        {% for vender in profile.seal_wvtr_venders.values %}
+                        {{ vender.name }}
+                        {% endfor %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>U-Shape AC(%) max</th>
+                    <td>{{ profile.u_shape_ac }}</td>
+                    <td>{{ profile.u_shape_ac_weight }}</td>
+                    <td>
+                        {% for vender in profile.u_shape_ac_venders.values %}
+                        {{ vender.name }}
+                        {% endfor %}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
     <button class='btn btn-primary' type='submit'>Search</button>
 </form>
 {% if q %}

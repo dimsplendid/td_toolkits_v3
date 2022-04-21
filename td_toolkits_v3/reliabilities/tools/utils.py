@@ -61,7 +61,7 @@ def table_shrink(df, step=0.1, ratio=1.5):
 
 class ReliabilityScore():
 
-    def __init__(self, query, profile) -> None:
+    def __init__(self, query, profile: ReliabilitySearchProfile) -> None:
         self.lc, self.pi, self.seal = query
         self.constraint = profile
         # pattern using for tranform the model name
@@ -80,7 +80,19 @@ class ReliabilityScore():
         # generate all tables
         _ = self.__table(Adhesion, opt=3)
         _ = self.__table(DeltaAngle, opt=6)
-        _ = self.__table(UShapeAC, 'u_shape_ac', opt=6, f=np.abs)
+
+        ushape_add = {
+            'add_q': {
+                'time': 1,
+                'temperature': 25
+            },
+            'add_header': {
+                'time': 'Time',
+                'temperature': 'Temperature'
+            }
+        }
+
+        _ = self.__table(UShapeAC, 'u_shape_ac', opt=6, f=np.abs, **ushape_add)
 
         vhr_add ={
             'add_q': {
@@ -93,7 +105,18 @@ class ReliabilityScore():
             }
         }
         _ = self.__table(VoltageHoldingRatio, **vhr_add)
-        _ = self.__table(LowTemperatureStorage, opt=4)
+
+        lts_add = {
+            'add_q': {
+                'storage_condition': 'Bulk',
+                'measure_temperature': -30,
+            },
+            'add_header': {
+                'storage_condition': 'Storage Cond.',
+                'measure_temperature': 'Measure Temp.(°C)',
+            }
+        }
+        _ = self.__table(LowTemperatureStorage, opt=4, **lts_add)
         _ = self.__table(PressureCookingTest)
         _ = self.__table(SealWVTR, 'seal_wvtr', opt=1)
 
@@ -142,12 +165,15 @@ class ReliabilityScore():
             # dictionary union(`{**a, **b}`) to q.
             q = {
                 'lc__in': self.lc,
+                'lc__material_type': self.constraint.material_type,
                 'pi__in': self.pi,
+                'pi__material_type': self.constraint.material_type,
                 'seal__in': self.seal,
+                'seal__material_type': self.constraint.material_type,
                 'vender__in': getattr(self.constraint, f'{name}_venders').all(),
                 f'value__{cmp}': getattr(self.constraint, name)
             }
-            if add_q:
+            if add_q is not None:
                 q = {**q, **add_q}
 
             # parse option
@@ -155,15 +181,18 @@ class ReliabilityScore():
             groupby = []
             if opt[0] == '0':
                 del q['lc__in']
+                del q['lc__material_type']
             else:
                 groupby.append('LC')
 
             if opt[1] == '0':
                 del q['pi__in']
+                del q['pi__material_type']
             else:
                 groupby.append('PI')
             if opt[2] == '0':
                 del q['seal__in']
+                del q['seal__material_type']
             else:
                 groupby.append('Seal')
             
