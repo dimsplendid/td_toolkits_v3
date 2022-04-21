@@ -19,6 +19,9 @@ class Vender(TimeStampedModel):
 def get_default_vender():
     return Vender.objects.get_or_create(name="INX")[0]
 
+class MaterialType(models.TextChoices):
+    AAS = 'AAS', 'AAS'
+    TN = 'TN', 'TN'
 
 class LiquidCrystal(TimeStampedModel):
     name = models.CharField(
@@ -47,6 +50,12 @@ class LiquidCrystal(TimeStampedModel):
     k_22 = models.FloatField('K22(pN)', null=True, blank=True)
     k_33 = models.FloatField('K33(pN)', null=True, blank=True)
     density = models.FloatField('d(g/cm^3)', null=True, blank=True)
+
+    material_type = models.CharField(
+        choices=MaterialType.choices,
+        default=MaterialType.AAS,
+        max_length=10
+    )
 
     # Some property extend from others.
     @property
@@ -123,6 +132,12 @@ class Polyimide(TimeStampedModel):
         Vender,
         default=get_default_vender, on_delete=models.CASCADE)
 
+    material_type = models.CharField(
+        choices=MaterialType.choices,
+        default=MaterialType.AAS,
+        max_length=10
+    )
+
     def __str__(self):
         return self.name
 
@@ -137,12 +152,17 @@ class Seal(TimeStampedModel):
     name = models.CharField(
         "Name of Seal", 
         max_length=255, unique=True)
-    slug = AutoSlugField(
+    slug = AutoSlugField(   
         "LC Address",
         unique=True, always_update=False, populate_from="name")
     vender = models.ForeignKey(
         Vender,
         default=get_default_vender, on_delete=models.CASCADE)
+    material_type = models.CharField(
+        choices=MaterialType.choices,
+        default=MaterialType.AAS,
+        max_length=10
+    )
 
     def __str__(self):
         return self.name

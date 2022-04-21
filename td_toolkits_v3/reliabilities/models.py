@@ -5,6 +5,8 @@ from django.urls import reverse
 from autoslug import AutoSlugField
 from model_utils.models import TimeStampedModel
 
+from td_toolkits_v3.materials.models import MaterialType
+
 
 class File(TimeStampedModel):
     name = models.CharField(max_length=255, unique=True,
@@ -258,6 +260,11 @@ class ReliabilitySearchProfile(TimeStampedModel):
     slug = AutoSlugField(
         'Reliability Search Profile Address', unique=True, always_update=False,
         populate_from='name'
+    )
+    material_type = models.CharField(
+        choices=MaterialType.choices,
+        default=MaterialType.AAS,
+        max_length=10,
     )
 
     voltage_holding_ratio = models.FloatField('VHR minimum', default=0.)

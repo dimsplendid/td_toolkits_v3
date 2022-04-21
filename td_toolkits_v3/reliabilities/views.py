@@ -44,6 +44,7 @@ class ReliabilitySearchProfileCreateView(LoginRequiredMixin, CreateView):
     model = ReliabilitySearchProfile
     fields = [
         'name',
+        'material_type',
         'voltage_holding_ratio',
         'voltage_holding_ratio_venders',
         'voltage_holding_ratio_weight',
@@ -72,6 +73,7 @@ class ReliabilitySearchProfileUpdateView(LoginRequiredMixin, UpdateView):
     model = ReliabilitySearchProfile
     fields = [
         'name',
+        'material_type',
         'voltage_holding_ratio',
         'voltage_holding_ratio_venders',
         'voltage_holding_ratio_weight',
@@ -144,6 +146,13 @@ class ReliabilitySearchView(TemplateView):
         if profile is None:
             profile = 'default'
 
+        context['profile_list'] = ReliabilitySearchProfile.objects.all()
+        self.profile = get_object_or_404(
+            ReliabilitySearchProfile,
+            slug=profile
+        )
+        context['profile'] = self.profile
+
         if self.request.GET.get('pure'):
             self.request.session['opt_lc_list'] = None
         
@@ -154,18 +163,20 @@ class ReliabilitySearchView(TemplateView):
             )
             context['q_opt'] = True
         else:
-            context['lc_list'] = LiquidCrystal.objects.all()
+            context['lc_list'] = LiquidCrystal.objects.filter(
+                material_type=context['profile'].material_type
+            )
 
         
         # ra part
-        context['pi_list'] = Polyimide.objects.all()
-        context['seal_list'] = Seal.objects.all()
-
-        context['profile_list'] = ReliabilitySearchProfile.objects.all()
-        context['profile'] = get_object_or_404(
-            ReliabilitySearchProfile,
-            slug=profile
+        context['pi_list'] = Polyimide.objects.filter(
+            material_type=context['profile'].material_type
         )
+        context['seal_list'] = Seal.objects.filter(
+            material_type=context['profile'].material_type
+        )
+
+        
         query = self.configuration_query()
         if query is not None:
             context['q'] = True
@@ -217,7 +228,9 @@ class ReliabilitySearchView(TemplateView):
         def qeury(model, qlist):
             # print(qlist)
             if (not qlist) or ('ALL' in qlist):
-                return model.objects.all()
+                return model.objects.filter(
+                    material_type=self.profile.material_type
+                )
             else:
                 return model.objects.filter(name__in=qlist)
 

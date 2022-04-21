@@ -7,6 +7,10 @@
 {% block content %}
 <h2>{{ polyimide.name }}</h2>
 <p>Vender: {{ polyimide.vender.name }}</p>
+<tr>
+    <th>Material Type</th>
+    <td>{{ polyimide.material_type }}</td>
+</tr>
 <a href="{% url 'materials:pi_update' polyimide.slug %}" 
     class="btn btn-info">
     Update

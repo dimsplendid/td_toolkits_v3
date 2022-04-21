@@ -7,6 +7,10 @@
 {% block content %}
 <h2>{{ seal.name }}</h2>
 <p>Vender: {{ seal.vender.name }}</p>
+<tr>
+    <th>Material Type</th>
+    <td>{{ seal.material_type }}</td>
+</tr>
 <a href="{% url 'materials:seal_update' seal.slug %}" 
     class="btn btn-info">
     Update

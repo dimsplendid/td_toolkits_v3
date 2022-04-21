@@ -42,6 +42,7 @@ class LiquidCrystalCreateView(LoginRequiredMixin, CreateView):
     fields = [
         'name',
         'vender',
+        'material_type',
         'designed_cell_gap',
         't_ni',
         't_cn',
@@ -59,7 +60,7 @@ class LiquidCrystalCreateView(LoginRequiredMixin, CreateView):
 
 class LiquidCrystalUpdateView(LoginRequiredMixin, UpdateView):
     model = LiquidCrystal
-    fields = ['designed_cell_gap']
+    fields = ['material_type', 'designed_cell_gap']
     template_name = 'form_generic.html'
 
     def get(self, request, *args, **kwargs):
@@ -126,6 +127,7 @@ class PolyimideCreateView(LoginRequiredMixin, CreateView):
     model = Polyimide
     fields = [
         'name',
+        'material_type',
         'vender',
     ]
 
@@ -134,6 +136,7 @@ class PolyimideUpdateView(LoginRequiredMixin, UpdateView):
     model = Polyimide
     fields = [
         'name',
+        'material_type',
         'vender',
     ]
 
@@ -154,6 +157,7 @@ class SealCreateView(LoginRequiredMixin, CreateView):
     model = Seal
     fields = [
         'name',
+        'material_type',
         'vender',
     ]
 
@@ -162,6 +166,7 @@ class SealUpdateView(LoginRequiredMixin, UpdateView):
     model = Seal
     fields = [
         'name',
+        'material_type',
         'vender',
     ]
 

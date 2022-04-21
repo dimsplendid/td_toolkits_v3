@@ -20,6 +20,10 @@
             <td>{{ liquidcrystal.vender.name }}</td>
         </tr>
         <tr>
+            <th>Material Type</th>
+            <td>{{ liquidcrystal.material_type }}</td>
+        </tr>
+        <tr>
             <th>Cell Gap(um)</th>
             <td>{{ liquidcrystal.designed_cell_gap|floatformat:1 }}</td>
         </tr>
@@ -33,11 +37,11 @@
         </tr>
         <tr>
             <th>ν(mm<sup>2</sup>/s)</th>
-            <td>{{ liquidcrystal.flow_viscosity|floatformat:4 }}</td>
+            <td>{{ liquidcrystal.flow_viscosity|floatformat:1 }}</td>
         </tr>
         <tr>
             <th>γ1(mPa·s)</th>
-            <td>{{ liquidcrystal.rotational_viscosity|floatformat:0 }}</td>
+            <td>{{ liquidcrystal.rotational_viscosity|floatformat:1 }}</td>
         </tr>
         <tr>
             <th>n<sub>e</sub></th>
@@ -65,19 +69,19 @@
         </tr>
         <tr>
             <th>k<sub>11</sub></th>
-            <td>{{ liquidcrystal.k_11|floatformat:1 }}</td>
+            <td>{{ liquidcrystal.k_11|floatformat:2 }}</td>
         </tr>
         <tr>
             <th>k<sub>22</sub></th>
-            <td>{{ liquidcrystal.k_22|floatformat:1 }}</td>
+            <td>{{ liquidcrystal.k_22|floatformat:2 }}</td>
         </tr>
         <tr>
             <th>k<sub>33</sub></th>
-            <td>{{ liquidcrystal.k_33|floatformat:1 }}</td>
+            <td>{{ liquidcrystal.k_33|floatformat:2 }}</td>
         </tr>
         <tr>
             <th>density(g/cm<sup>3</sup>)</th>
-            <td>{{ liquidcrystal.density|floatformat:4 }}</td>
+            <td>{{ liquidcrystal.density|floatformat:3 }}</td>
         </tr>
         <tr>
             <th>Scatter Index</th>
