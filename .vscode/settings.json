@@ -15,4 +15,5 @@
     "python.formatting.autopep8Args": [
         "--line-length 79"
     ],
+    "restructuredtext.preview.docutils.disabled": true,
 }

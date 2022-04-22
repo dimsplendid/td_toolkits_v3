@@ -50,7 +50,7 @@ DATABASES = {
     )
 }
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
-
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 # URLS
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#root-urlconf
@@ -294,6 +294,10 @@ INSTALLED_APPS += [  # noqa: F405
     "wiki.plugins.notifications.apps.NotificationsConfig",
     "wiki.plugins.images.apps.ImagesConfig",
     "wiki.plugins.macros.apps.MacrosConfig",
+    "wiki.plugins.help.apps.HelpConfig",
+    "wiki.plugins.links.apps.LinksConfig",
+    "wiki.plugins.editsection.apps.EditSectionConfig",
+    "wiki.plugins.globalhistory.apps.GlobalHistoryConfig",
 ]
 TEMPLATES[-1]["OPTIONS"]["context_processors"] += [  # type: ignore[index] # noqa: F405
     "sekizai.context_processors.sekizai"
@@ -319,3 +323,5 @@ WIKI_MARKDOWN_KWARGS = {
 # For latex in markdown setting
 # WIKI_MARKDOWN_SANITIZE_HTML= True
 WIKI_MARKDOWN_SANITIZE_HTML= False
+# WIKI_EDITSECTION_LINK_TEXT='[edit]'
+# WIKI_EDITSECTION_MAX_LEVEL= 3
