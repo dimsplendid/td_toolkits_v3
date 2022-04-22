@@ -32,7 +32,10 @@ Reliability Search
     </select>
 
     <h3>
-        <a href="{% url 'reliabilities:search_profile_list' %}">
+        <a href="{% url 'reliabilities:search_profile_list' %}"
+            data-toggle="tooltip" data-placement="top" 
+            title="Set the constraint of search result"
+        >
             Search Profile
         </a>
     </h3>
@@ -48,14 +51,23 @@ Reliability Search
         </option>
         {% endfor %}
     </select>
-    <button class='btn btn-primary' type='submit'>Change</button>
+    <button class='btn btn-primary' type='submit'
+        data-toggle="tooltip" data-placement="top" 
+        title="Change the Search Profile from list"
+    >
+        Change
+    </button>
     <a href="{% url 'reliabilities:search_profile_update' profile.slug %}?next={{request.get_full_path}}"
         class='btn btn-info'
+        data-toggle="tooltip" data-placement="top" 
+        title="Update the current Search Profile"
     >
         Update
     </a>
     <a href="{% url 'reliabilities:search_profile_copy' profile.slug %}?next={{request.get_full_path}}"
         class='btn btn-info'
+        data-toggle="tooltip" data-placement="top" 
+        title="Copy the current Search Profile to a new one"
     >
         Copy
     </a>

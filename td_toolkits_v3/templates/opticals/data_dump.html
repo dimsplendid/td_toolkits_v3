@@ -2,7 +2,7 @@
 {% block title %}Optical Data Dump{% endblock title %}
 {% block content %}
 <h2>Optical Data Dump</h2>
-Tools for dumping the origin fitting data.
+Tools for dumping the origin fitting data.(Preprocessed Data)
 <hr>
 <form action='' method='GET'>
     <label>Experiment</label>
@@ -25,19 +25,18 @@ Tools for dumping the origin fitting data.
 </form>
 
 <div class='alert alert-info mt-5'>
+    <h5 class="alert-heading">Note:</h5>
     This is not downloading the raw data, on the other hand, 
     it's a re-order table with LC conditions and cell gaps, 
     though you should upload the conditions and AXO/RDL cell gaps data.
-</div>
-
-<div class='alert alert-info'>
-    If there are no cell gap data and you still want to download, 
-    please choose cell gap <strong>None</strong>
+    If there is no cell gap data, select <strong>None</strong>
 </div>
 
 <div class='alert alert-warning'>
-    <strong>Warning:</strong>
+    <h5 class="alert-heading">Warning:</h5>
     This would download the data with thousands of rows.
+    If you just want to compare TR 2 result, using
+    <a href="{% url 'opticals:search' %}">Optical Search</a>
 </div>
 
 
