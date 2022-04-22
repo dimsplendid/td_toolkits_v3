@@ -313,8 +313,9 @@ WIKI_MARKDOWN_KWARGS = {
         "markdown.extensions.tables",
         "markdown.extensions.abbr",
         "markdown.extensions.sane_lists",
-        "markdown.extensions.admonition",
+        "admonition",
         "md4mathjax",
+        "full_yaml_metadata",
     ],
     "extension_configs": {
         "wiki.plugins.macros.mdx.toc": {"title": "Contents"},
@@ -325,3 +326,9 @@ WIKI_MARKDOWN_KWARGS = {
 WIKI_MARKDOWN_SANITIZE_HTML= False
 # WIKI_EDITSECTION_LINK_TEXT='[edit]'
 # WIKI_EDITSECTION_MAX_LEVEL= 3
+
+# django-import-export
+# ------------------------------------------------------------------------------
+# https://django-import-export.readthedocs.io/en/stable/installation.html
+
+# INSTALLED_APPS += ['import_export']
