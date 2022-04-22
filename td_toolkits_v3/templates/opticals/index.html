@@ -6,13 +6,14 @@
 {% block content %}
 <h1>Opticals</h1>
 <div>
-    <a href="{% url 'opticals:search' %}?profile=default" class='btn btn-info'>
+    <a href="{% url 'opticals:search' %}?profile=default" class='btn btn-primary'>
         TR2 Optical Search
     </a>
 </div>
 <hr>
 <div>
     <h2>TR2 Standard Process</h2>
+    <a class='btn btn-info' href='/wiki/optical-user-guide' target="_blank">User Guide</a>
     <ol>
         <li> <a href="{% url 'materials:upload' %}">Material Properties Upload</a> </li>
         <li> <a href="{% url 'products:chip_upload' %}">Chip Conditions Upload</a> </li>

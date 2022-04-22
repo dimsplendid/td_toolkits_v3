@@ -6,11 +6,12 @@
 {% block content %}
 <h1>Reliabilities</h1>
 <a href="{% url 'reliabilities:search' %}?pure=1&profile=default" 
-    class='btn btn-info'>
+    class='btn btn-primary'>
     RA Search
 </a>
 <hr>
 <h2>Management</h2>
+<a class='btn btn-info' href='/wiki/reliability-user-guide' target="_blank">User Guide</a>
 <ol>
     <li> <a href="{% url 'reliabilities:upload' %}">Supplier RA data upload</a> </li>
     <li> <a href="{% url 'reliabilities:search_profile_list' %}">RA Search Profile</a> </li>
