@@ -303,6 +303,10 @@ class OptUploadForm(forms.Form):
 class ResponseTimeUploadForm(forms.Form):
     exp_id = forms.ChoiceField(choices=("", ""), initial=None)
     factory = forms.ChoiceField(choices=("", ""), initial=None)
+    data_type = forms.ChoiceField(choices=(
+            ('txt', 'Raw(.txt)'),
+            ('excel', 'Excel(.xslx)'),
+        ))
 
     rts = forms.FileField(
         widget=forms.FileInput(
@@ -336,11 +340,17 @@ class ResponseTimeUploadForm(forms.Form):
             name=str(self.cleaned_data["exp_id"]))
         # print(files)
         factory = Factory.default(self.cleaned_data["factory"])
+        data_type = self.cleaned_data['data_type']
 
         rt_df = []
         for file in files:
-            tmp_df = pd.read_table(
-                file, encoding="utf-8", encoding_errors="ignore")
+            if data_type == 'txt':
+                tmp_df = pd.read_table(
+                    file, encoding="utf-8", encoding_errors="ignore")
+            elif data_type == 'xlsx':
+                tmp_df = pd.read_excel(file)
+            else:
+                raise ValueError
             rt_df.append(tmp_df)
         rt_df = pd.concat(rt_df)
 
