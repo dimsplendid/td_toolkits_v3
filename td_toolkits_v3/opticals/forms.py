@@ -1,6 +1,6 @@
 import io
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import pytz
 import pandas as pd
 
@@ -305,8 +305,10 @@ class ResponseTimeUploadForm(forms.Form):
     factory = forms.ChoiceField(choices=("", ""), initial=None)
     data_type = forms.ChoiceField(choices=(
             ('txt', 'Raw(.txt)'),
-            ('excel', 'Excel(.xslx)'),
-        ))
+            ('xlsx', 'Excel(.xlsx)'),
+        ),
+        initial='txt'
+    )
 
     rts = forms.FileField(
         widget=forms.FileInput(
@@ -338,20 +340,29 @@ class ResponseTimeUploadForm(forms.Form):
         files = request.FILES.getlist("rts")
         experiment = Experiment.objects.get(
             name=str(self.cleaned_data["exp_id"]))
-        # print(files)
+        print(files)
         factory = Factory.default(self.cleaned_data["factory"])
         data_type = self.cleaned_data['data_type']
 
         rt_df = []
         for file in files:
+            print(file.name)
             if data_type == 'txt':
+                if not file.name.endswith('txt'):
+                    print(f'skip {file}')
+                    continue
                 tmp_df = pd.read_table(
                     file, encoding="utf-8", encoding_errors="ignore")
+                rt_df.append(tmp_df)
             elif data_type == 'xlsx':
+                if not file.name.endswith('xlsx'):
+                    print(f'skip {file}')
+                    continue
                 tmp_df = pd.read_excel(file)
+                rt_df.append(tmp_df)
             else:
-                raise ValueError
-            rt_df.append(tmp_df)
+                # raise ValueError('wrong data type')
+                print('Something wrong, I should never touch this place.')
         rt_df = pd.concat(rt_df)
 
         # There are some row are the header, cause they just
@@ -380,14 +391,23 @@ class ResponseTimeUploadForm(forms.Form):
             ]
         )
         # 1. trasform datetime
-        rt_df["datetime"] = [
-            datetime.strptime(
-                f"{rt_df.iloc[i, 0]} {rt_df.iloc[i, 1]} +0800", 
-                r"%Y/%m/%d %H:%M:%S %z"
-            )
-            for i in range(len(rt_df))
-        ]
-
+        if data_type == 'txt':
+            rt_df["datetime"] = [
+                datetime.strptime(
+                    f"{rt_df.iloc[i, 0]} {rt_df.iloc[i, 1]} +0800", 
+                    r"%Y/%m/%d %H:%M:%S %z"
+                )
+                for i in range(len(rt_df))
+            ]
+        elif data_type == 'xlsx':
+            rt_df["datetime"] = [
+                datetime.combine(
+                    rt_df.iloc[i, 0], 
+                    rt_df.iloc[i, 1], 
+                    tzinfo=timezone(timedelta(hours=8))
+                )
+                for i in range(len(rt_df))
+            ]
         # 2. drop duplicate(keep newer)
         rt_df = rt_df.sort_values("datetime").drop_duplicates(
             subset=[

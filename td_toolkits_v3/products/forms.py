@@ -7,6 +7,7 @@ from td_toolkits_v3.materials.models import(
     Polyimide,
     Seal
 )
+from td_toolkits_v3.products.models import Factory
 
 from .models import (
     Project,
@@ -22,6 +23,11 @@ class ChipsUploadForm(forms.Form):
 
     chips = forms.FileField(widget=forms.FileInput(
         attrs={'accept': '.xlsx'}))
+
+    fab = forms.ChoiceField(
+        choices=[('rdl', 'RDL')],
+        initial='rdl'
+    )
     
     def save(self):
         print(self.cleaned_data['chips'])
@@ -47,14 +53,14 @@ class ChipsUploadForm(forms.Form):
                     experiment=experiment
                 )[0]
                 sub = Sub.objects.get_or_create(
-                    name=str(row['sub']),
+                    name=f"{str(row['exp id'])}-{str(row['condition'])}",
                     condition=condition
                 )[0]
                 # TODO: error handling
                 lc = LiquidCrystal.objects.get(name=row['LC'])
                 pi = Polyimide.objects.get(name=row['PI'])
                 seal = Seal.objects.get(name=row['Seal'])
-                chip = Chip.objects.create(
+                Chip.objects.create(
                     name=str(row['id']),
                     short_name=str(row['short id']),
                     sub=sub,
