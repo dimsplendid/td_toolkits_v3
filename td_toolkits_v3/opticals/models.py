@@ -150,10 +150,12 @@ class OpticalReference(TimeStampedModel):
 
     slug = AutoSlugField(
         "opt ref addr", unique=True, always_update=False, 
-        populate_from=[
-            'product_model_type__name',
-            'product_model_type__factory__name'
-        ]
+        # # This is the django-extension parameters 
+        # populate_from=[
+        #     'product_model_type__name',
+        #     'product_model_type__factory__name'
+        # ]
+        populate_from=slug_gen
     )
 
     lc = models.ForeignKey(
