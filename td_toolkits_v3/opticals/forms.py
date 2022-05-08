@@ -481,21 +481,17 @@ class CalculateOpticalForm(forms.Form):
             self.cleaned_data['exp_id'],
             self.cleaned_data['cell_gap'],
         )
-        # Check data loading correctly
+
         opt_df = data_loader.opt
-        if type(opt_df) == str:
-            request.session["message"] += opt_df
-            return
         rt_df = data_loader.rt
-        if type(rt_df) == str:
-            request.session["message"] += rt_df
-            return
 
         # Check both data have the same kinds of LC
-        if not list(opt_df['LC'].unique()) == list(rt_df['LC'].unique()):
-            request.session["message"] += 'The opt and rt has different kinds lc'
-            return
-
+        if not (list(opt_df['LC'].unique()) == list(rt_df['LC'].unique())):
+            raise ValueError(
+                'The opt and rt has different kinds lc.'
+                f"opt_df: {opt_df['LC'].unique()}"
+                f"rt_df: {rt_df['LC'].unique()}"
+            )
         for lc in opt_df['LC'].unique():
             tmp_rt_df = rt_df[rt_df['LC'] == lc]
             tmp_opt_df = opt_df[opt_df['LC'] == lc]
@@ -505,9 +501,9 @@ class CalculateOpticalForm(forms.Form):
         if type(msg) == str:
             request.session["message"] = msg
         else:
-            request.session["message"] = 'Calculate ' \
-                + self.cleaned_data["exp_id"] \
-                + ' success.'
+            request.session["message"] =( 'Calculate '
+                f'{self.cleaned_data["exp_id"]}'
+                ' success.')
         request.session["exp_id"] = self.cleaned_data['exp_id']
 
 class ProductModelTypeForm(forms.ModelForm):
