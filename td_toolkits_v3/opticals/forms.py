@@ -486,7 +486,7 @@ class CalculateOpticalForm(forms.Form):
         rt_df = data_loader.rt
 
         # Check both data have the same kinds of LC
-        if not (list(opt_df['LC'].unique()) == list(rt_df['LC'].unique())):
+        if not (set(opt_df['LC'].unique()) == set(rt_df['LC'].unique())):
             raise ValueError(
                 'The opt and rt has different kinds lc.'
                 f"opt_df: {opt_df['LC'].unique()}"
