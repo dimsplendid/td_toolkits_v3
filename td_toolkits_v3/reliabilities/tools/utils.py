@@ -351,17 +351,17 @@ class UShape:
                 'ID': [],
                 'Point':[],
                 'Cond': [],
-                'L255': [],
-                'L64': [],
-                'L128': [],
+                'L255(Vpp)': [],
+                'L64(Vpp)': [],
+                'L128(Vpp)': [],
             }
             for name, group in self.vt_curve['data'].groupby(['ID', 'Point']):
-                f = interp1d(group['T%'], group['Vop'], fill_value='extrapolate')
+                f = interp1d(group['T%'], group['Vop'] * 2, fill_value='extrapolate')
                 result['ID'] += [name[0]]
                 result['Point'] += [name[1]]
-                result['L255'] += [f(self.transmittance_from(255))]
-                result['L64'] += [f(self.transmittance_from(64))]
-                result['L128'] += [f(self.transmittance_from(128))]
+                result['L255(Vpp)'] += [f(self.transmittance_from(255))]
+                result['L64(Vpp)'] += [f(self.transmittance_from(64))]
+                result['L128(Vpp)'] += [f(self.transmittance_from(128))]
                 result['Cond'] += [group['LC'].iloc[0]]
             df = pd.DataFrame(result)
             df.iloc[:, 3:] = df.iloc[:, 3:].astype(float)
