@@ -27,4 +27,4 @@ jobs:
         pip install -r requirements/local.txt
     - name: Run Tests
       run: |
-        python coverage run -m pytest
+        coverage run -m pytest
