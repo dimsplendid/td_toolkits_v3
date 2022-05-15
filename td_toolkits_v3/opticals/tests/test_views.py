@@ -11,6 +11,13 @@ from td_toolkits_v3.products.tests.factories import (
     experiment
 )
 
+from td_toolkits_v3.materials.models import (
+    LiquidCrystal,
+    Polyimide,
+    Seal,
+)
+from td_toolkits_v3.products.models import Chip
+
 from .factories import (
     MATERIAL_TEST_FILE_DIR,
     PRODUCT_TEST_FILE_DIR,
@@ -34,12 +41,17 @@ def test_axo_upload_view(client, user):
     # create material data first
     with open(MATERIAL_TEST_FILE_DIR, 'rb') as fp:
         form_data = {'materials': fp}
-        client.post(reverse('materials:upload'),form_data)
+        client.post(reverse('materials:upload'), form_data)
 
     # Product import
     with open(PRODUCT_TEST_FILE_DIR, 'rb') as fp:
-        form_data = {'chips': fp}
+        form_data = {
+            'chips': fp,
+            'fab': ('rdl', 'rdl')
+        }
         client.post(reverse('products:chip_upload'), form_data)
+
+    print(Chip.objects.all().count())
 
     # axo files upload
     axo_files = []
@@ -78,7 +90,10 @@ def test_rdl_cell_gap_upload_view(client, user):
 
     # Product import
     with open(PRODUCT_TEST_FILE_DIR, 'rb') as fp:
-        form_data = {'chips': fp}
+        form_data = {
+            'chips': fp,
+            'fab': ('rdl', 'rdl')
+        }
         client.post(reverse('products:chip_upload'), form_data)
 
     # Open RDL cell gap
@@ -124,7 +139,10 @@ def test_toc_opt_upload_view(client, user):
 
     # Product import
     with open(PRODUCT_TEST_FILE_DIR, 'rb') as fp:
-        form_data = {'chips': fp}
+        form_data = {
+            'chips': fp,
+            'fab': ('rdl', 'rdl')
+        }
         client.post(reverse('products:chip_upload'), form_data)
 
     # TOC OPT files upload
