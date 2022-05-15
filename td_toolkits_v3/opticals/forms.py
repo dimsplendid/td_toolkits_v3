@@ -74,7 +74,8 @@ class AxoUploadForm(forms.Form):
         instrument = Instrument.default("AXO", factory)
 
         # the axo location order map to opt measurement point
-        points = [5, 3, 1, 6, 4, 2]
+        # points = [5, 3, 1, 6, 4, 2]
+        points = [1, 2, 3, 4, 5, 6]
 
         for file in files:
             file_name = str(file).split(".")[0]

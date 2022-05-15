@@ -5,6 +5,10 @@
 
 {% block content %}
 <h1>AXO Upload</h1>
+<p>
+    光學和 AXO 兩者量測點位的順序需相同。
+    光學以 QR code 向下，AXO 請金賢幫忙設定按光學的量測順序來量測
+</p>
 <form method="post" action="." enctype="multipart/form-data">
     {% csrf_token %}
     {{ form|crispy }}
