@@ -23,7 +23,10 @@ def test_chip_batch_create_view(client, user):
 
     # Product import
     with open(PRODUCT_TEST_FILE_DIR, 'rb') as fp:
-        form_data = {'chips': fp}
+        form_data = {
+            'chips': fp,
+            'fab': ('rdl', 'rdl')
+        }
         client.post(reverse('products:chip_upload'), form_data)
 
     # check all chip is add
