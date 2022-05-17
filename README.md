@@ -1,5 +1,6 @@
 td_toolkits_v3
 ==============================
+[![Django CI](https://github.com/dimsplendid/td_toolkits_v3/actions/workflows/django.yml/badge.svg)](https://github.com/dimsplendid/td_toolkits_v3/actions/workflows/django.yml)
 
 Tools for TD, reconstruct version 3
 
