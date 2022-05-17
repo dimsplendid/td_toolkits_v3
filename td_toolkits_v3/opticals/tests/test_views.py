@@ -77,8 +77,8 @@ def test_axo_upload_view(client, user):
     # test all allowed data are imported
     assert AxometricsLog.objects.all().count() == 282
     # test if the import data is correct
-    assert axo_1.cell_gap == pytest.approx(2.939389)
-    assert axo_2.cell_gap == pytest.approx(3.005118)
+    assert axo_1.cell_gap == pytest.approx(2.920464)
+    assert axo_2.cell_gap == pytest.approx(3.010722)
 
 def test_rdl_cell_gap_upload_view(client, user):
     # Authenticate the user
