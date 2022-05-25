@@ -121,7 +121,10 @@ class ReliabilitiesUploadForm(forms.Form):
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[9])
                 file, _ = File.objects.get_or_create(name=row[10])
-                jar_test_seal, _ = Seal.objects.get_or_create(name=row[7])
+                if (row[7] != 'N.A.'):
+                    jar_test_seal, _ = Seal.objects.get_or_create(name=row[7])
+                else:
+                    jar_test_seal = None
                 
                 if not LowTemperatureStorage.objects.filter(
                     lc=lc, pi=pi, seal=seal, vender=vender, file_source=file,
