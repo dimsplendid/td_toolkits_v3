@@ -226,9 +226,13 @@ class RefOptLoader():
     def ref(self, ref_product):
         self.__ref = ref_product
 
+class OPTFitting():
+    pass
 
+class RTFitting():
+    pass
 class OptFitting():
-
+    # TODO: deprecate and transfer to OPTFitting & RTFitting
     def __init__(self, name, rt_df, opt_df, opt_cutoff=3, random_state=None):
         """
         Parameters

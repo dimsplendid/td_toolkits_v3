@@ -268,6 +268,102 @@ class OpticalsFittingModel(TimeStampedModel):
             )
         ]
 
+class OptFittingModel(TimeStampedModel):
+    experiment = models.ForeignKey(
+        'products.Experiment',
+        on_delete=models.CASCADE,
+    )
+    # Configurations
+    lc = models.ForeignKey(
+        'materials.LiquidCrystal', 
+        on_delete=models.CASCADE
+    )
+    pi = models.ForeignKey(
+        'materials.Polyimide',
+        on_delete=models.CASCADE
+    )
+    seal = models.ForeignKey(
+        'materials.Seal',
+        on_delete=models.CASCADE
+    )
+    
+    def slug_gen(obj):
+        exp = obj.experiment.name
+        lc = obj.lc.name
+        pi = obj.pi.name
+        seal = obj.seal.name
+        return f'{lc}-{pi}-{seal}-{exp}'    
+    
+    slug = AutoSlugField(
+        unique=True, always_update=False,
+        populate_from=slug_gen
+    )
+    
+    # Origin data ranges
+    cell_gap_upper = models.FloatField()
+    cell_gap_lower = models.FloatField()
+    
+    # Fitting models
+    # OPTs
+    w_x = PickledObjectField()
+    w_y = PickledObjectField()
+    w_capital_y = PickledObjectField()
+    lc_percent = PickledObjectField()
+    transmittance = PickledObjectField()
+    v_percent = PickledObjectField()
+    # collect all r2
+    r2 = models.JSONField()
+    
+    def __str__(self):
+        return f"opt fitting model of {self.slug}"
+
+class RTFittingModel(TimeStampedModel):
+    experiment = models.ForeignKey(
+        'products.Experiment',
+        on_delete=models.CASCADE,
+    )
+    # Configurations
+    lc = models.ForeignKey(
+        'materials.LiquidCrystal', 
+        on_delete=models.CASCADE
+    )
+    pi = models.ForeignKey(
+        'materials.Polyimide',
+        on_delete=models.CASCADE
+    )
+    seal = models.ForeignKey(
+        'materials.Seal',
+        on_delete=models.CASCADE
+    )
+    
+    def slug_gen(obj):
+        exp = obj.experiment.name
+        lc = obj.lc.name
+        pi = obj.pi.name
+        seal = obj.seal.name
+        return f'{lc}-{pi}-{seal}-{exp}'    
+    
+    slug = AutoSlugField(
+        unique=True, always_update=False,
+        populate_from=slug_gen
+    )
+    
+    # Origin data ranges
+    cell_gap_upper = models.FloatField()
+    cell_gap_lower = models.FloatField()
+    
+    # Fitting models
+    # RTs
+    voltage = PickledObjectField()
+    response_time = PickledObjectField()
+    time_rise = PickledObjectField()
+    time_fall = PickledObjectField()
+    # collect all r2
+    r2 = models.JSONField()
+    
+    def __str__(self):
+        return f"rt fitting model of {self.slug}" 
+
 class OpticalSearchProfile(TimeStampedModel):
     name = models.CharField('Profile Name', max_length=255, default='Default')
     slug = AutoSlugField(
