@@ -365,8 +365,15 @@ class UShape:
                 result['Cond'] += [group['LC'].iloc[0]]
             df = pd.DataFrame(result)
             df.iloc[:, 3:] = df.iloc[:, 3:].astype(float)
+            df_range = df.groupby('ID').agg(
+                {'L255(Vpp)': lambda x: np.max(x) - np.min(x)}
+            ).reset_index()
+            df_range.columns = ['ID', 'L255(Vpp) Range']
             self.__voltage_setting = (
                 df.groupby('ID', as_index=False).mean()
+                .merge(
+                    df_range, on='ID', how='left'
+                )
                 .merge(
                     df[['ID', 'Cond']].drop_duplicates(), on='ID', how='left'
                 )
