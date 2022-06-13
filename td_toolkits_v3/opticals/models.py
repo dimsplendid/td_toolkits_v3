@@ -289,9 +289,9 @@ class OptFittingModel(TimeStampedModel):
     
     def slug_gen(obj):
         exp = obj.experiment.name
-        lc = obj.lc.name
-        pi = obj.pi.name
-        seal = obj.seal.name
+        lc = obj.lc.name.replace('-','')
+        pi = obj.pi.name.replace('-','')
+        seal = obj.seal.name.replace('-','')
         return f'{lc}-{pi}-{seal}-{exp}'    
     
     slug = AutoSlugField(
@@ -338,9 +338,9 @@ class RTFittingModel(TimeStampedModel):
     
     def slug_gen(obj):
         exp = obj.experiment.name
-        lc = obj.lc.name
-        pi = obj.pi.name
-        seal = obj.seal.name
+        lc = obj.lc.name.replace('-','')
+        pi = obj.pi.name.replace('-','')
+        seal = obj.seal.name.replace('-','')
         return f'{lc}-{pi}-{seal}-{exp}'    
     
     slug = AutoSlugField(

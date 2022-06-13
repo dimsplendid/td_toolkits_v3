@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import NamedTuple
+
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -13,7 +17,7 @@ from sklearn.preprocessing import (
 )
 from sklearn.pipeline import Pipeline
 
-from td_toolkits_v3.materials.models import LiquidCrystal
+from td_toolkits_v3.materials.models import LiquidCrystal, Polyimide, Seal
 from td_toolkits_v3.products.models import Experiment
 from td_toolkits_v3.opticals.models import (
     AxometricsLog, 
@@ -22,8 +26,19 @@ from td_toolkits_v3.opticals.models import (
     RDLCellGap,
     ResponseTimeLog,
     OpticalsFittingModel,
-    OpticalSearchProfile
+    OpticalSearchProfile,
+    OptFittingModel,
+    RTFittingModel,
 )
+
+class MaterialConfiguration(NamedTuple):
+    lc: str
+    pi: str
+    seal: str
+
+class CellGapRange(NamedTuple):
+    min: float
+    max: float
 
 class OptLoader():
     
@@ -94,6 +109,8 @@ class OptLoader():
         header = {
             "chip__name": "ID",
             "chip__lc__name": "LC",
+            "chip__pi__name": "PI",
+            "chip__seal__name": "Seal",
             "measure_point": "Point",
             "voltage": "Vop",
             "lc_percent": "LC%",
@@ -146,6 +163,8 @@ class OptLoader():
         header = {
             "chip__name": "ID",
             "chip__lc__name": "LC",
+            "chip__pi__name": "PI",
+            "chip__seal__name": "Seal",
             "measure_point": "Point",
             "voltage": "Vop",
             "time_rise": "Tr",
@@ -227,10 +246,458 @@ class RefOptLoader():
         self.__ref = ref_product
 
 class OPTFitting():
-    pass
+    def __init__(
+        self,
+        name: MaterialConfiguration,
+        opt_df: pd.DataFrame, 
+        opt_cutoff: int = 3, 
+        random_state: int | None = None,
+    ) -> None:
+        """
+        Parameters
+        ----------
+        name: MaterialConfiguration
+            Using the (LC, PI, Seal) name for the identifier of all models.
+        opt_df: Pandas.DataFrame
+            Fields need contain ('Cell Gap', 'Vop', 'Wx', 'Wy', 'WY', 'T%', 'LC%')
+        opt_cutoff: float, optional, default is 3
+            Couse opt is variance at low Vop(maybe come from the detection limit)
+            We need set a cut of.
+        """
+        self.name = name
+
+        self.cell_gap_range = CellGapRange(
+            opt_df['Cell Gap'].min(), 
+            opt_df['Cell Gap'].max(),
+        )
+        
+        self.opt_df = opt_df[opt_df['Vop'] > opt_cutoff]
+        
+        self.opt_sets = {}
+        self.opt_sets['train'], self.opt_sets['test'] = train_test_split(
+            self.opt_df,
+            test_size=0.1,
+            random_state=random_state,
+        )
+
+        self.__opt_transformer = None
+        self.__wx_model = None
+        self.__wy_model = None
+        self.__w_capital_y_model = None
+        self.__lc_percent_model = None
+        self.__transmittance_model = None
+        self.__v_percent_model = None
+
+        self.r2 = {}
+
+    def calc(self, models=None):
+        """
+        Calculate all model at once.
+
+        Parameters
+        ----------
+        models: list[str]
+            The list of the models' name
+        """
+        # get all models, the naming rule is ^([a-z]+_)+model$
+        to_be_cal = [s for s in self.__dir__() 
+            if re.search('^([a-z]+_)+model$', s)]
+        if models is not None:
+            to_be_cal = models
+        
+        for model in to_be_cal:
+            # calculate and generate short-cut for predict
+            setattr(self, model[:-6], getattr(self, model).predict)
+        
+
+    def save(self, experiment_name: str):
+        try:
+            OptFittingModel.objects.get(
+                experiment__name=experiment_name,
+                lc__name=self.name.lc,
+                pi__name=self.name.pi,
+                seal__name=self.name.seal,
+            )
+            return (
+                'There is such model in log, please delete it first '
+                'or try to update[TODO]'
+            )
+
+        except:
+            # calculation first
+            self.calc()
+            # saving
+            experiment = Experiment.objects.get(name=experiment_name)
+            lc = LiquidCrystal.objects.get(name=self.name.lc)
+            pi = Polyimide.objects.get(name=self.name.pi)
+            seal = Seal.objects.get(name=self.name.seal)
+            obj = OptFittingModel.objects.create(
+                experiment=experiment,
+                lc=lc,
+                pi=pi,
+                seal=seal,
+                cell_gap_upper=self.cell_gap_range.max,
+                cell_gap_lower=self.cell_gap_range.min,
+                w_x=self.wx_model,
+                w_y=self.wy_model,
+                w_capital_y=self.w_capital_y_model,
+                lc_percent=self.lc_percent_model,
+                transmittance=self.transmittance_model,
+                v_percent=self.v_percent_model,
+                r2=self.r2,
+            )
+            return obj
+   
+    @staticmethod
+    def _opt_transformer_f(x):
+        new_x = np.empty(shape=(len(x), 7), dtype=float)
+        new_x[:, 0] = 1
+        new_x[:, 1] = x[:, 0]
+        new_x[:, 2] = x[:, 1]
+        new_x[:, 3] = x[:, 0] * x[:, 1]
+        new_x[:, 4] = x[:, 0] ** 2
+        new_x[:, 5] = x[:, 0] ** 3
+        new_x[:, 6] = x[:, 0] ** 4
+        return new_x
+
+    @property
+    def opt_transformer(self):
+        """
+        custom opt transform function
+        [x0, x1] = [Vop, Cell Gpa]
+        [x0, x1] |-> [1, x0, x1, x0*x1, x0**2, x0**3, x0**4]
+        """
+        if self.__opt_transformer is not None:
+            return self.__opt_transformer
+
+        transformer = FunctionTransformer(self._opt_transformer_f)
+        self.__opt_transformer = transformer
+        return transformer
+
+    def __opt_model(self, y_label, transformer=None):
+        """
+        generate a model for optical fitting
+        data -> Scalar -> Transform(expand features) -> Linear Regression
+        """
+        if transformer is None:
+            transformer = PolynomialFeatures(degree=2)
+        model = Pipeline([
+            ('Scalar', StandardScaler()),
+            ('Custom Transform', transformer),
+            ('Linear', linear_model.TheilSenRegressor(fit_intercept=False))
+        ])
+        x_train = self.opt_sets['train'][['Vop', 'Cell Gap']].to_numpy()
+        y_train = self.opt_sets['train'][y_label].to_numpy()
+        x_test = self.opt_sets['test'][['Vop', 'Cell Gap']].to_numpy()
+        y_test = self.opt_sets['test'][y_label].to_numpy()
+        model.fit(x_train, y_train)
+        r2_score = model.score(x_test, y_test)
+        return model, r2_score
+
+    @property
+    def wx_model(self):
+        """
+        f(Vop, Cell Gap) |-> Wx
+        """
+        if self.__wx_model is not None:
+            return self.__wx_model
+        
+        self.__wx_model, r2_score = self.__opt_model('Wx')
+        self.r2['f(Vop, Cell Gap) |-> Wx'] = r2_score
+        return self.__wx_model
+
+    @property
+    def wy_model(self):
+        """
+        f(Vop, Cell Gap) |-> Wy
+        """
+        if self.__wy_model is not None:
+            return self.__wy_model
+
+        self.__wy_model, r2_score = self.__opt_model('Wy')
+        self.r2['f(Vop, Cell Gap) |-> Wy'] = r2_score
+        return self.__wy_model
+    
+    @property
+    def w_capital_y_model(self):
+        """
+        f(Vop, Cell Gap) |-> WY
+        """
+        if self.__w_capital_y_model is None:
+            self.__w_capital_y_model, r2_score = self.__opt_model('WY')
+            self.r2['f(Vop, Cell Gap) |-> WY'] = r2_score
+        
+        return self.__w_capital_y_model
+
+    @property
+    def lc_percent_model(self):
+        """
+        f(Vop, Cell Gap) |-> LC%
+        """
+        if self.__lc_percent_model is not None:
+            return self.__lc_percent_model
+
+        self.__lc_percent_model, r2_score = self.__opt_model(
+            'LC%', self.opt_transformer)
+        self.r2['f(Vop, Cell Gap) |-> LC%'] = r2_score
+        return self.__lc_percent_model
+    
+    @property
+    def transmittance_model(self):
+        """
+        f(Vop, Cell Gap) |-> T%
+        """
+        if self.__transmittance_model is not None:
+            return self.__transmittance_model
+
+        self.__transmittance_model, r2_score = self.__opt_model(
+            'T%', self.opt_transformer)
+        self.r2['f(Vop, Cell Gap) |-> T%'] = r2_score
+        return self.__transmittance_model
+
+    @staticmethod
+    def _v_percent_model_tranformer_f(x):
+        """
+        [x0, x1] = [T%, Cell Gap]
+        [x0, x1] |-> [1, x1, exp(x0+10)]
+        """
+        new_x = np.empty(shape=(len(x), 3), dtype=float)
+        new_x[:, 0] = 1
+        new_x[:, 1] = x[:, 1]
+        new_x[:, 2] = np.exp(x[:, 0]+10)
+
+        return new_x
+    
+    @property
+    def v_percent_model(self):
+        """
+        f(T%, Cell Gap) |-> Vop
+        """
+        if self.__v_percent_model is not None:
+            return self.__v_percent_model
+
+        # 1. should cut of T% after 100, make f(T%) is a funciton
+        opt_df = self.opt_df.copy()
+        opt_cut_off_df = []
+        for id in opt_df['ID'].unique():
+            tmp_df_1 = opt_df[opt_df['ID']==id]
+            for point in tmp_df_1['Point'].unique():
+                tmp_df_2 = tmp_df_1[tmp_df_1['Point']==point]
+                tmp_df_2 = tmp_df_2.iloc[:tmp_df_2['T%'].argmax(),:]
+                opt_cut_off_df.append(tmp_df_2)
+        opt_cut_off_df = pd.concat(opt_cut_off_df)
+        # 2. And we usually inteterstin in the higer T% region
+        #    Select 85% for now.
+        opt_cut_off_df = opt_cut_off_df[opt_cut_off_df['T%']>85]
+
+        train, test = train_test_split(opt_cut_off_df, test_size=0.1)
+        x_train = train[["T%", "Cell Gap"]].to_numpy()
+        y_train = train['Vop'].to_numpy()
+        x_test = test[['T%', 'Cell Gap']].to_numpy()
+        y_test = test['Vop'].to_numpy()
+
+        # 3. Using pipeline the special transformer
+        
+        model = Pipeline([
+            ('Scalar', StandardScaler()),
+            ('Custom Transform', FunctionTransformer(
+                self._v_percent_model_tranformer_f)),
+            ('Linear', linear_model.TheilSenRegressor(fit_intercept=False))
+        ])
+        model.fit(x_train, y_train)
+        self.__v_percent_model = model
+        self.r2['f(T%, Cell Gap) |-> Vop'] = model.score(x_test, y_test)
+        return model
 
 class RTFitting():
-    pass
+    def __init__(
+        self, 
+        name: MaterialConfiguration, 
+        rt_df: pd.DataFrame, 
+        random_state: int | None = None,
+    ):
+        """
+        Parameters
+        ----------
+        name: str
+            Using the LC name for the identifier of all models.
+        rt_df: pandas.DataFrame
+            Fields need contain ('Cell Gap', 'Vop', 'RT', 'Tr', 'Tf')
+        """
+        self.name = name
+        self.rt_df = rt_df
+
+        self.cell_gap_range = CellGapRange(
+            rt_df['Cell Gap'].min(), 
+            rt_df['Cell Gap'].max(),
+        )
+        
+        self.rt_sets = {}
+        self.rt_sets['train'], self.rt_sets['test'] = train_test_split(
+            self.rt_df,
+            test_size=0.1,
+            random_state=random_state,
+        )
+
+        self.__voltage_model = None
+
+        self.__rt_transformer = None
+        self.__response_time_model = None
+        self.__time_rise_model = None
+        self.__time_fall_model = None
+
+        self.r2 = {}
+
+    def calc(self, models=None):
+        """
+        Calculate all model at once.
+
+        Parameters
+        ----------
+        models: list[str]
+            The list of the models' name
+        """
+        # get all models, the naming rule is ^([a-z]+_)+model$
+        to_be_cal = [s for s in self.__dir__() 
+            if re.search('^([a-z]+_)+model$', s)]
+        if models is not None:
+            to_be_cal = models
+        
+        for model in to_be_cal:
+            # calculate and generate short-cut for predict
+            setattr(self, model[:-6], getattr(self, model).predict)
+        
+
+    def save(self, experiment_name: str):
+        try:
+            RTFittingModel.objects.get(
+                experiment__name=experiment_name,
+                lc__name=self.name.lc,
+                pi__name=self.name.pi,
+                seal__name=self.name.seal,
+            )
+            return 'There is such model in log, please delete it first' \
+                 + ' or try to update[TODO]'
+
+        except:
+            # calculation first
+            self.calc()
+            # saving
+            experiment = Experiment.objects.get(name=experiment_name)
+            lc = LiquidCrystal.objects.get(name=self.name.lc)
+            pi = Polyimide.objects.get(name=self.name.pi)
+            seal = Seal.objects.get(name=self.name.seal)
+            obj = RTFittingModel.objects.create(
+                experiment=experiment,
+                lc=lc,
+                pi=pi,
+                seal=seal,
+                cell_gap_upper=self.cell_gap_range.max,
+                cell_gap_lower=self.cell_gap_range.min,
+                voltage=self.voltage_model,
+                response_time=self.response_time_model,
+                time_rise=self.time_rise_model,
+                time_fall=self.time_fall_model,
+                r2=self.r2,
+            )
+            return obj
+    @property
+    def voltage_model(self):
+        """
+        f(Tr, cell gap) |-> Vop
+        """
+        if self.__voltage_model is not None:
+            return self.__voltage_model
+
+        model = Pipeline([
+            ('Scalar', StandardScaler()),
+            ('Poly', PolynomialFeatures(degree=2)),
+            ('Linear', linear_model.LinearRegression(fit_intercept=False))
+        ])
+        x_train = self.rt_sets['train'][['Tr', 'Cell Gap']].to_numpy()
+        y_train = self.rt_sets['train']['Vop'].to_numpy()
+        x_test = self.rt_sets['test'][['Tr', 'Cell Gap']].to_numpy()
+        y_test = self.rt_sets['test']['Vop'].to_numpy()
+        model.fit(x_train, y_train)
+        self.__voltage_model = model
+        self.r2['f(Tr, Cell Gap) |-> Vop'] = model.score(x_test, y_test)
+        return model
+
+    @staticmethod
+    def _rt_transformer_f(x):
+        new_x = np.empty(shape=(len(x), 5), dtype=float)
+        new_x[:, 0] = 1
+        new_x[:, 1] = x[:, 0]
+        new_x[:, 2] = x[:, 1]
+        new_x[:, 3] = x[:, 0] * x[:, 1]
+        new_x[:, 4] = x[:, 0] ** 2
+        return new_x
+
+    @property
+    def rt_transformer(self):
+        """
+        custom rt transform function
+        [x0, x1] = [Vop, Cell Gap]
+        [x0, x1] |-> [1, x0, x1, x0*x1, x0**2]
+        """
+        if self.__rt_transformer is not None:
+            return self.__rt_transformer
+
+        transformer = FunctionTransformer(self._rt_transformer_f)
+        self.__rt_transformer = transformer
+        return transformer
+
+    def __rt_model(self, y_label):
+        model = Pipeline([
+            ('Scalar', StandardScaler()),
+            ('Custom Transform', self.rt_transformer),
+            ('Linear', linear_model.TheilSenRegressor(fit_intercept=False))
+        ])
+        x_train = self.rt_sets['train'][['Vop', 'Cell Gap']].to_numpy()
+        y_train = self.rt_sets['train'][y_label].to_numpy()
+        x_test = self.rt_sets['test'][['Vop', 'Cell Gap']].to_numpy()
+        y_test = self.rt_sets['test'][y_label].to_numpy()
+        model.fit(x_train, y_train)
+        r2_score = model.score(x_test, y_test)
+        return model, r2_score
+
+    @property
+    def response_time_model(self):
+        """
+        f(Vop, Cell Gap) |-> RT
+        """
+        if self.__response_time_model is not None:
+            return self.__response_time_model
+        
+        self.__response_time_model, r2_score = self.__rt_model('RT')
+        self.r2['f(Vop, Cell Gap) |-> RT'] = r2_score
+        return self.__response_time_model
+
+    @property
+    def time_rise_model(self):
+        """
+        f(Vop, Cell Gap) |-> Tr
+        """
+        if self.__time_rise_model is not None:
+            return self.__time_rise_model
+        
+        self.__time_rise_model, r2_score = self.__rt_model('Tr')
+        self.r2['f(Vop, Cell Gap) |-> Tr'] = r2_score
+        return self.__time_rise_model
+
+    @property
+    def time_fall_model(self):
+        """
+        f(Cell Gap) |-> Tf
+        """
+        if self.__time_fall_model is not None:
+            return self.__time_fall_model
+
+        self.__time_fall_model, r2_score = self.__rt_model('Tf')
+        self.r2['f(Cell Gap) |-> Tf'] = r2_score
+        return self.__time_fall_model
+
+    
 class OptFitting():
     # TODO: deprecate and transfer to OPTFitting & RTFitting
     def __init__(self, name, rt_df, opt_df, opt_cutoff=3, random_state=None):
