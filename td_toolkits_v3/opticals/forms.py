@@ -31,7 +31,13 @@ from .models import (
     OpticalReference,
     OpticalReference,
 )
-from .tools.utils import OptLoader, OptFitting
+from .tools.utils import (
+    OptLoader, 
+    OptFitting, # TODO: to be deprecated
+    OPTFitting,
+    RTFitting,
+    MaterialConfiguration,
+)
 
 
 class AxoUploadForm(forms.Form):
@@ -537,3 +543,89 @@ OpticalReferenceFormset = forms.inlineformset_factory(
     OpticalReference,
     form=OpticalReferenceForm,
 )
+
+class FittingBaseForm(forms.Form):
+    
+    exp_id = forms.ChoiceField(choices=("", ""), initial=None)
+    cell_gap = forms.ChoiceField(
+        choices=[('axo', 'AXO'), ('rdl', 'RDL')],
+        initial=('axo', 'AXO'),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Set the last experiment name for the upload axo data
+        self.fields["exp_id"].choices = list(
+            Experiment.objects.all().values_list("name", "name")
+        )
+        last_exp = Experiment.objects.last()
+        if last_exp is not None:
+            last_exp_id = last_exp.name
+            self.fields["exp_id"].initial = (last_exp_id, last_exp_id)
+            
+    def calculate(self, request):
+        raise('Method Not Implement')
+    
+class OptFittingForm(FittingBaseForm):
+    
+    def calculate(self, request):
+        request.session["message"] = 'Error:'
+        data_loader = OptLoader(
+            self.cleaned_data['exp_id'],
+            self.cleaned_data['cell_gap'],
+        )
+
+        opt_df = data_loader.opt
+        opt_df['cfg'] = opt_df['LC'] + ',' + opt_df['PI'] + ',' + opt_df['Seal']
+
+        all_cfg = [
+            MaterialConfiguration(*c.split(',')) for c in opt_df.cfg.unique()
+        ]
+        for cfg in all_cfg:
+            tmp_opt_df = opt_df[
+                  (opt_df['LC']==cfg.lc) 
+                & (opt_df['PI']==cfg.pi)
+                & (opt_df['Seal']==cfg.seal)
+            ]
+            opt_fitting = OPTFitting(cfg, tmp_opt_df)
+            msg = opt_fitting.save(self.cleaned_data['exp_id'])
+
+        if type(msg) == str:
+            request.session["message"] = msg
+        else:
+            request.session["message"] =( 'Calculate '
+                f'{self.cleaned_data["exp_id"]}'
+                ' success.')
+        request.session["exp_id"] = self.cleaned_data['exp_id']
+
+class RTFittingForm(FittingBaseForm):
+    
+    def calculate(self, request):
+        request.session["message"] = 'Error:'
+        data_loader = OptLoader(
+            self.cleaned_data['exp_id'],
+            self.cleaned_data['cell_gap'],
+        )
+
+        rt_df = data_loader.rt
+        rt_df['cfg'] = rt_df['LC'] + ',' + rt_df['PI'] + ',' + rt_df['Seal']
+
+        all_cfg = [
+            MaterialConfiguration(*c.split(',')) for c in rt_df.cfg.unique()
+        ]
+        for cfg in all_cfg:
+            tmp_rt_df = rt_df[
+                  (rt_df['LC']==cfg.lc) 
+                & (rt_df['PI']==cfg.pi)
+                & (rt_df['Seal']==cfg.seal)
+            ]
+            rt_fitting = RTFitting(cfg, tmp_rt_df)
+            msg = rt_fitting.save(self.cleaned_data['exp_id'])
+
+        if type(msg) == str:
+            request.session["message"] = msg
+        else:
+            request.session["message"] =( 'Calculate '
+                f'{self.cleaned_data["exp_id"]}'
+                ' success.')
+        request.session["exp_id"] = self.cleaned_data['exp_id']

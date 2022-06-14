@@ -30,11 +30,15 @@ from .forms import (
     CalculateOpticalForm,
     ProductModelTypeForm,
     OpticalReferenceFormset,
+    OptFittingForm,
+    RTFittingForm,
 )
 from .models import (
     OpticalReference, 
     OpticalsFittingModel,
-    OpticalSearchProfile
+    OpticalSearchProfile,
+    OptFittingModel,
+    RTFittingModel,
 )
 
 
@@ -141,6 +145,75 @@ class OpticalReferenceListView(ListView):
 
 class OpticalReferenceDetailView(DetailView):
     model = OpticalReference
+
+class OptFittingView(LoginRequiredMixin, FormView):
+    form_class = OptFittingForm
+    template_name = 'form_generic.html'
+
+    def form_valid(self, form):
+        form.calculate(self.request)
+        return super().form_valid(form)
+    success_url = reverse_lazy('opticals:opt_fitting_check')
+
+class RTFittingView(LoginRequiredMixin, FormView):
+    form_class = RTFittingForm
+    template_name = 'form_generic.html'
+
+    def form_valid(self, form):
+        form.calculate(self.request)
+        return super().form_valid(form)
+    success_url = reverse_lazy('opticals:rt_fitting_check')
+    
+class FittingCheckBaseView(TemplateView):
+    template_name = 'opticals/calculate_check.html'
+    
+    def get(self, request, *args, **kwargs):
+        if request.GET.get('experiment'):
+            request.session['exp_id'] = request.GET.get('experiment')
+
+        return super().get(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['message'] = self.request.session.get('message')
+        # render r2 score table
+        all_r2 = []
+        models = kwargs['model'].objects.filter(
+            experiment__name = self.request.session['exp_id']
+        ).values('lc__name', 'pi__name', 'seal__name','r2')
+        for record in models:
+            df = pd.DataFrame(record['r2'], index=[0])
+            df.insert(0, 'LC', record['lc__name'])
+            df.insert(1, 'PI', record['pi__name'])
+            df.insert(2, 'Seal', record['seal__name'])
+            all_r2.append(df)
+        df = pd.concat(all_r2, ignore_index=True)
+        # changing some notation to make it easier see on website
+        df.columns = [column.replace('|->', '=') for column in df.columns]
+        df.columns = [column.replace('Cell Gap', 'd') for column in df.columns]
+        # add link to LC
+        # def url(x):
+        #     url = reverse_lazy("materials:lc_detail", kwargs={'slug': x.lower()})
+        #     return f'<a href="{url}">{x}</a>'
+        # df['LC'] = df['LC'].apply(url)
+        
+        context['table'] = df.to_html(
+            float_format=lambda x: f'{x:.3f}',
+            classes=['table', 'table-hover', 'text-center', 'table-striped'],
+            justify='center',
+            index=False,
+            escape=False,
+        )
+        context['id'] = self.request.session['exp_id']
+        return context
+
+class OptFittingCheckView(FittingCheckBaseView):
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(model=OptFittingModel,**kwargs)
+
+class RTFittingCheckView(FittingCheckBaseView):
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(model=RTFittingModel,**kwargs)
 
 class CalculateOpticalView(LoginRequiredMixin, FormView):
     form_class = CalculateOpticalForm

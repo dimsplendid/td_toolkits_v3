@@ -64,6 +64,26 @@ urlpatterns = [
         name='calculate_check'
     ),
     path(
+        'calculate/opt/',
+        views.OptFittingView.as_view(),
+        name='opt_fitting'
+    ),
+    path(
+        'calculate/opt/check/',
+        views.OptFittingCheckView.as_view(),
+        name='opt_fitting_check'
+    ),
+    path(
+        'calculate/rt/',
+        views.RTFittingView.as_view(),
+        name='rt_fitting'
+    ),
+    path(
+        'calculate/rt/check/',
+        views.RTFittingCheckView.as_view(),
+        name='rt_fitting_check'
+    ),
+    path(
         'search/',
         views.OpticalSearchView.as_view(),
         name='search'
