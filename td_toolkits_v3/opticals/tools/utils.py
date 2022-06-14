@@ -693,7 +693,18 @@ class RTFitting():
         if self.__time_fall_model is not None:
             return self.__time_fall_model
 
-        self.__time_fall_model, r2_score = self.__rt_model('Tf')
+        self.__time_fall_model = Pipeline([
+            ('Scalar', StandardScaler()),
+            ('Linear', linear_model.TheilSenRegressor())
+        ])
+        
+        x_train = self.rt_sets['train'][['Cell Gap']].to_numpy()
+        y_train = self.rt_sets['train']['Tf'].to_numpy()
+        x_test = self.rt_sets['test'][['Cell Gap']].to_numpy()
+        y_test = self.rt_sets['test']['Tf'].to_numpy()
+        self.__time_fall_model.fit(x_train, y_train)
+        r2_score = self.__time_fall_model.score(x_test, y_test)
+        
         self.r2['f(Cell Gap) |-> Tf'] = r2_score
         return self.__time_fall_model
 
