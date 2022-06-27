@@ -1076,7 +1076,8 @@ class OptFitting():
 
 
 class OptResultGenerator():
-    
+    # TODO: to be deprecated
+    # Need separate this function either
     def __init__(self, lc:str, ref:tuple):
         """
         loading the newest optical model of lc, 

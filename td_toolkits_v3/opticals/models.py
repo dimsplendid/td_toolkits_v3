@@ -221,6 +221,7 @@ class ValidManager(models.Manager):
 
 
 class OpticalsFittingModel(TimeStampedModel):
+    # TODO: to be deprecated
     experiment = models.ForeignKey(
         "products.Experiment", on_delete=models.CASCADE)
     lc = models.ForeignKey("materials.LiquidCrystal", on_delete=models.CASCADE)

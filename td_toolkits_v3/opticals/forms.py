@@ -629,3 +629,9 @@ class RTFittingForm(FittingBaseForm):
                 f'{self.cleaned_data["exp_id"]}'
                 ' success.')
         request.session["exp_id"] = self.cleaned_data['exp_id']
+        
+class ConfigurationForm(forms.Form):
+    ...
+    
+class ExperimentFrom(forms.Form):
+    ...
