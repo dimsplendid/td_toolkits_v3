@@ -341,7 +341,8 @@ class OpticalSearchView(TemplateView):
             i[0] for i in 
             OpticalsFittingModel.objects.all()
             .values_list('lc__name')
-            .order_by('modified')
+            # Seems distinct is not compatible to order_by
+            # .order_by('modified') 
             .distinct()
         ]
         context['profile_list'] = OpticalSearchProfile.objects.all()
