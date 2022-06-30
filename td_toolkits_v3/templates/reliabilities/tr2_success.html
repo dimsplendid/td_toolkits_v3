@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}
+TR2 Result
+{% endblock title %}
+{% block content %}
+<h2>TR2 Result</h2>
+
+<div>
+    <h3>Figure 1: RA Score Histagram</h3>
+    {{ plot|safe }}
+</div>
+<div>
+    <h3>Table 1: RA Score</h3>
+    {{ score|safe }}
+</div>
+<div>
+    <h3>Table 2: RA Score Raw</h3>
+    {{ summary|safe }}
+</div>
+{% endblock content %}

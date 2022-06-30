@@ -50,5 +50,15 @@ urlpatterns = [
         'ushape/',
         views.UShapeView.as_view(),
         name='ushape',
+    ),
+    path(
+        'tr2/',
+        views.ReliabilityPhaseTwoView.as_view(),
+        name='tr2'
+    ),
+    path(
+        'tr2/success/',
+        views.ReliabilityPhaseTwoSuccessView.as_view(),
+        name='tr2_result'
     )
 ]
