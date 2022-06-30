@@ -394,6 +394,10 @@ class UShape:
         """
         return (gray_level/255)**gamma * 99
 
+class ReliabilityWork:
+    ...
+
+
 # Test main
 # Show the difference ratio and the final table of the table shrink
 if __name__ == '__main__':
