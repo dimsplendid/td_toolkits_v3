@@ -47,7 +47,9 @@ class Batch(models.Model):
     
 
 class ReliabilityBase(Configuration):
+    name = 'RA Item Name'
     batch = ForeignKey(Batch, on_delete=models.CASCADE, null=True, blank=True)
+    cmp = 'lt'
 
     class Meta:
         abstract = True
@@ -55,6 +57,7 @@ class ReliabilityBase(Configuration):
 
 class VoltageHoldingRatio(ReliabilityBase, TimeStampedModel):
     name = 'VHR(heat)'
+    cmp = 'gt'
 
     class UVAging(models.TextChoices):
         BEFORE_UV = 'Before UV'
@@ -88,6 +91,8 @@ class VoltageHoldingRatio(ReliabilityBase, TimeStampedModel):
 
 class DeltaAngle(ReliabilityBase, TimeStampedModel):
     name = 'Δ angle'
+    cmp = 'lt'
+    
     measure_voltage = models.FloatField(default=14.0)
     measure_freq = models.FloatField(default=60.0)
     measure_time = models.FloatField(default=72.0)
@@ -111,6 +116,7 @@ class DeltaAngle(ReliabilityBase, TimeStampedModel):
 
 class Adhesion(ReliabilityBase, TimeStampedModel):
     name = 'Adhesion test'
+    cmp = 'gt'
     
     adhesion_interface = models.CharField(
         max_length=255, help_text='enter condition')
@@ -135,6 +141,7 @@ class Adhesion(ReliabilityBase, TimeStampedModel):
 
 class LowTemperatureStorage(ReliabilityBase, TimeStampedModel):
     name = 'LTS'
+    cmp = 'gt'
 
     storage_condition = models.CharField(
         max_length=10,
@@ -214,6 +221,8 @@ class LowTemperatureOperation(ReliabilityBase, TimeStampedModel):
 
 class PressureCookingTest(ReliabilityBase, TimeStampedModel):
     name = 'PCT'
+    cmp = 'gt'
+    
     value = models.FloatField(default=0.)
     unit = 'hours'
     measure_condition = models.CharField(
@@ -239,6 +248,8 @@ class PressureCookingTest(ReliabilityBase, TimeStampedModel):
 
 class SealWVTR(ReliabilityBase, TimeStampedModel):
     name = 'Seal WVTR'
+    cmp = 'lt'
+    
     value = models.FloatField(default=0.)
     unit = models.CharField(max_length=255 ,default='%')
     time = models.FloatField(default=24)
@@ -262,6 +273,8 @@ class SealWVTR(ReliabilityBase, TimeStampedModel):
 
 class UShapeAC(ReliabilityBase, TimeStampedModel):
     name = 'U-shape AC%'
+    cmp = 'lt'
+    
     unit = ''
     value = models.FloatField()
     time = models.FloatField()
