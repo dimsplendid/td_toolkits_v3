@@ -25,7 +25,8 @@ from td_toolkits_v3.materials.models import (
 from td_toolkits_v3.products.models import Experiment
 
 from .forms import (
-    ReliabilitiesUploadForm
+    ReliabilitiesUploadForm,
+    ReliabilityPhaseTwoForm,
 )
 from .models import ReliabilitySearchProfile
 from .tools.utils import ReliabilityScore, UShape
@@ -350,3 +351,41 @@ class UShapeView(TemplateView):
             return response
 
         return super().get(request, *args, **kwargs)
+
+class ReliabilityPhaseTwoView(LoginRequiredMixin, FormView):
+    template_name = 'form_generic.html'
+    form_class = ReliabilityPhaseTwoForm
+    success_url = reverse_lazy('reliabilities:tr2_result')
+    
+    def form_valid(self, form):
+        form.calc(self.request)
+        return super().form_valid(form)
+    
+class ReliabilityPhaseTwoSuccessView(TemplateView):
+    template_name = 'reliabilities/tr2_success.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        table_style = {
+            'float_format': lambda x: f'{x:.2f}',
+            'classes': [
+                'table', 
+                'table-hover', 
+                'text-center', 
+                'table-striped'
+            ],
+            'justify': 'center',
+            'index': False,
+            'escape': False,
+        }
+        
+        context['summary'] = pd.read_json(
+            self.request.session.get('summary')
+        ).to_html(**table_style)
+        context['score'] = pd.read_json(
+            self.request.session.get('score')
+        ).to_html(**table_style)
+        context['plot'] = self.request.session.get('plot')
+        
+        return context
