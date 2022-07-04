@@ -27,10 +27,37 @@ class Configuration(models.Model):
 
     class Meta:
         abstract = True
+        
+class Batch(models.Model):
+    name = models.CharField(
+        "Batch Name",
+        max_length=255,
+    )
+    
+    slug = AutoSlugField(
+        'Batch Address',
+        unique=True, always_update=False, populate_from='name'
+    )
+    
+    def __str__(self) -> str:
+        return self.name
+    
+    def get_absolute_url(self):
+        return reverse("batch_detail", kwargs={"slug": self.slug})
+    
+
+class ReliabilityBase(Configuration):
+    name = 'RA Item Name'
+    batch = ForeignKey(Batch, on_delete=models.CASCADE, null=True, blank=True)
+    cmp = 'lt'
+
+    class Meta:
+        abstract = True
 
 
-class VoltageHoldingRatio(Configuration, TimeStampedModel):
+class VoltageHoldingRatio(ReliabilityBase, TimeStampedModel):
     name = 'VHR(heat)'
+    cmp = 'gt'
 
     class UVAging(models.TextChoices):
         BEFORE_UV = 'Before UV'
@@ -62,8 +89,10 @@ class VoltageHoldingRatio(Configuration, TimeStampedModel):
         return ''
 
 
-class DeltaAngle(Configuration, TimeStampedModel):
+class DeltaAngle(ReliabilityBase, TimeStampedModel):
     name = 'Δ angle'
+    cmp = 'lt'
+    
     measure_voltage = models.FloatField(default=14.0)
     measure_freq = models.FloatField(default=60.0)
     measure_time = models.FloatField(default=72.0)
@@ -85,8 +114,9 @@ class DeltaAngle(Configuration, TimeStampedModel):
         return ''
 
 
-class Adhesion(Configuration, TimeStampedModel):
+class Adhesion(ReliabilityBase, TimeStampedModel):
     name = 'Adhesion test'
+    cmp = 'gt'
     
     adhesion_interface = models.CharField(
         max_length=255, help_text='enter condition')
@@ -109,8 +139,9 @@ class Adhesion(Configuration, TimeStampedModel):
         return 'Peeling surface: ' + str(self.peeling)
 
 
-class LowTemperatureStorage(Configuration, TimeStampedModel):
+class LowTemperatureStorage(ReliabilityBase, TimeStampedModel):
     name = 'LTS'
+    cmp = 'gt'
 
     storage_condition = models.CharField(
         max_length=10,
@@ -145,7 +176,7 @@ class LowTemperatureStorage(Configuration, TimeStampedModel):
         return ''
 
 
-class LowTemperatureOperation(Configuration, TimeStampedModel):
+class LowTemperatureOperation(ReliabilityBase, TimeStampedModel):
     name = 'LTO'
     
     storage_condition = models.CharField(
@@ -188,8 +219,10 @@ class LowTemperatureOperation(Configuration, TimeStampedModel):
         return ''
 
 
-class PressureCookingTest(Configuration, TimeStampedModel):
+class PressureCookingTest(ReliabilityBase, TimeStampedModel):
     name = 'PCT'
+    cmp = 'gt'
+    
     value = models.FloatField(default=0.)
     unit = 'hours'
     measure_condition = models.CharField(
@@ -213,8 +246,10 @@ class PressureCookingTest(Configuration, TimeStampedModel):
         return ''
 
 
-class SealWVTR(Configuration, TimeStampedModel):
+class SealWVTR(ReliabilityBase, TimeStampedModel):
     name = 'Seal WVTR'
+    cmp = 'lt'
+    
     value = models.FloatField(default=0.)
     unit = models.CharField(max_length=255 ,default='%')
     time = models.FloatField(default=24)
@@ -236,8 +271,10 @@ class SealWVTR(Configuration, TimeStampedModel):
     def value_remark(self):
         return ''
 
-class UShapeAC(Configuration, TimeStampedModel):
+class UShapeAC(ReliabilityBase, TimeStampedModel):
     name = 'U-shape AC%'
+    cmp = 'lt'
+    
     unit = ''
     value = models.FloatField()
     time = models.FloatField()
