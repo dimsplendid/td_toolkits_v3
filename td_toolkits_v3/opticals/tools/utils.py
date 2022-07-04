@@ -272,6 +272,7 @@ class OPTFitting():
         )
         
         self.opt_df = opt_df[opt_df['Vop'] > opt_cutoff]
+        self.preprocess()
         
         self.opt_sets = {}
         self.opt_sets['train'], self.opt_sets['test'] = train_test_split(
@@ -289,6 +290,15 @@ class OPTFitting():
         self.__v_percent_model = None
 
         self.r2 = {}
+        
+    def preprocess(self):
+        
+        # 1. remove VT < 10% at 8V
+        brokens = self.opt_df['ID'][
+            (self.opt_df['Vop']==8)
+          & (self.opt_df['LC%']<0.1)
+        ]
+        self.opt_df = self.opt_df[~self.opt_df['ID'].isin(brokens)]
 
     def calc(self, models=None):
         """
