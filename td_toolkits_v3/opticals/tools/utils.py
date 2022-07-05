@@ -297,7 +297,8 @@ class OPTFitting():
         brokens = self.opt_df['ID'][
             (self.opt_df['Vop']==8)
           & (self.opt_df['LC%']<0.1)
-        ]
+        ].unique()
+        
         self.opt_df = self.opt_df[~self.opt_df['ID'].isin(brokens)]
 
     def calc(self, models=None):
@@ -536,6 +537,7 @@ class RTFitting():
         """
         self.name = name
         self.rt_df = rt_df
+        self.preprocess()
 
         self.cell_gap_range = CellGapRange(
             rt_df['Cell Gap'].min(), 
@@ -557,6 +559,16 @@ class RTFitting():
         self.__time_fall_model = None
 
         self.r2 = {}
+        
+    def preprocess(self):
+        
+        # 1. remove VT < 10% at 8V
+        brokens = self.rt_df['ID'][
+            (self.rt_df['RT']>150)
+          | (self.rt_df['RT']<0)
+        ].unique()
+        
+        self.rt_df = self.rt_df[~self.rt_df['ID'].isin(brokens)]
 
     def calc(self, models=None):
         """
