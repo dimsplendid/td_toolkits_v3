@@ -156,6 +156,9 @@ class RDLCellGapUploadForm(forms.Form):
             self.cleaned_data["rdl_cell_gap"],
             sheet_name='upload',
         )
+        # make sure the short id type is str.
+        rdl_cell_gap = rdl_cell_gap.astype({'short id': 'str'})
+        
         experiment = Experiment.objects.get(
             name=str(self.cleaned_data["exp_id"]))
 
