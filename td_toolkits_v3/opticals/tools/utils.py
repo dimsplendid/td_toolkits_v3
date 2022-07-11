@@ -1397,12 +1397,23 @@ class OptictalsScore():
         return self.__plot
     
 class OptTableGenerator():
-    
+    """Generate the Optical Table"""
     def __init__(
         self, 
-        experiment: str, 
-        reference: str | None = None
+        experiment: str,
+        target_cell_gap: float | None = None,
+        reference: str | None = None,
     ):
+        """Optical Table Generator Initialization
+
+        Args:
+            experiment (str): 
+                The experiment name
+            target_cell_gap (float | None):
+                The target cell gap. Default is None.
+            reference (str | None, optional): 
+                The reference product name. Defaults is None.
+        """
         try:
             self.experiment = Experiment.objects.get(name=experiment)
         except Experiment.DoesNotExist:
@@ -1413,8 +1424,24 @@ class OptTableGenerator():
                 self.reference = OpticalReference.objects.get(name=reference)
             except OpticalReference.DoesNotExist:
                 raise(f'Reference {reference} does not exist!')
-                
         else:
             self.reference = None
+            
+        if target_cell_gap is not None:
+            self.target_cell_gap = target_cell_gap
+        else:
+            if self.reference is None:
+                raise('No reference product and no target cell gap!')
+            else:
+                self.target_cell_gap = self.reference.cell_gap
+            
+        
+            
+    def calc(self):
+        
+        # Calculate the optical(VT) part
+        table_records = {}
+        
+        
             
         
