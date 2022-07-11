@@ -1,10 +1,10 @@
 import io
 import csv
 from datetime import datetime, timedelta, timezone
-import pytz
 import pandas as pd
 
 from django import forms
+from django.http import HttpRequest
 
 from td_toolkits_v3.products.models import (
     ProductModelType,
@@ -30,6 +30,8 @@ from .models import (
     ResponseTimeLog,
     OpticalReference,
     OpticalReference,
+    OptFittingModel,
+    RTFittingModel,
 )
 from .tools.utils import (
     OptLoader, 
@@ -511,9 +513,11 @@ class CalculateOpticalForm(forms.Form):
         if type(msg) == str:
             request.session["message"] = msg
         else:
-            request.session["message"] =( 'Calculate '
+            request.session["message"] = (
+                'Calculate '
                 f'{self.cleaned_data["exp_id"]}'
-                ' success.')
+                ' success.'
+            )
         request.session["exp_id"] = self.cleaned_data['exp_id']
 
 class ProductModelTypeForm(forms.ModelForm):
@@ -638,3 +642,21 @@ class ConfigurationForm(forms.Form):
     
 class ExperimentFrom(forms.Form):
     ...
+    
+class OpticalPhaseTwoForm(forms.Form):
+    experiment = forms.ModelChoiceField(
+        queryset=Experiment.objects.filter(optfittingmodel=True)
+    )
+    
+    reference = forms.ModelChoiceField(
+        queryset=OpticalReference.objects.all(),
+        required=False,
+    )
+    
+    def calc(self, request: HttpRequest):
+        experiment = self.cleaned_data['experiment']
+        reference = self.cleaned_data['reference']
+        # Calculate result
+        
+        # Save result to cookie
+        

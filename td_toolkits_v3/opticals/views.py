@@ -32,6 +32,7 @@ from .forms import (
     OpticalReferenceFormset,
     OptFittingForm,
     RTFittingForm,
+    OpticalPhaseTwoForm,
 )
 from .models import (
     OpticalReference, 
@@ -529,3 +530,15 @@ class OpticalDataDumpView(TemplateView):
         context = super().get_context_data(**kwargs)
         context['exps'] = Experiment.objects.all()
         return context
+    
+class OpticalPhaseTwoView(LoginRequiredMixin, FormView):
+    template_name: str = 'form_generic.html'
+    form_class = OpticalPhaseTwoForm
+    success_url = reverse_lazy('home')
+    
+    def form_valid(self, form):
+        form.calc(self.request)
+        return super().form_valid(form)
+    
+class OpticalPhaseTwoSuccessView(TemplateView):
+    ...

@@ -122,5 +122,10 @@ urlpatterns = [
         'data/dump/',
         views.OpticalDataDumpView.as_view(),
         name='data_dump'
-    )
+    ),
+    path(
+        'tr2/',
+        views.OpticalPhaseTwoView.as_view(),
+        name='tr2'
+    ),
 ]
