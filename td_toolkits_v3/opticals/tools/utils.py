@@ -1395,3 +1395,26 @@ class OptictalsScore():
             self.__plot = plot(fig, output_type='div')
         
         return self.__plot
+    
+class OptTableGenerator():
+    
+    def __init__(
+        self, 
+        experiment: str, 
+        reference: str | None = None
+    ):
+        try:
+            self.experiment = Experiment.objects.get(name=experiment)
+        except Experiment.DoesNotExist:
+            raise(f'Exp {experiment} does not exist!')
+        
+        if reference is not None:
+            try:
+                self.reference = OpticalReference.objects.get(name=reference)
+            except OpticalReference.DoesNotExist:
+                raise(f'Reference {reference} does not exist!')
+                
+        else:
+            self.reference = None
+            
+        
