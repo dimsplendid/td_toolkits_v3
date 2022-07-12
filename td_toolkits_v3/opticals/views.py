@@ -534,11 +534,27 @@ class OpticalDataDumpView(TemplateView):
 class OpticalPhaseTwoView(LoginRequiredMixin, FormView):
     template_name: str = 'form_generic.html'
     form_class = OpticalPhaseTwoForm
-    success_url = reverse_lazy('home')
+    success_url = reverse_lazy('opticals:tr2_success')
     
     def form_valid(self, form):
         form.calc(self.request)
         return super().form_valid(form)
     
-class OpticalPhaseTwoSuccessView(TemplateView):
-    ...
+class OpticalPhaseTwoSuccessView(View):
+    def get(self, request, *args, **kwargs):
+        if 'result' in  request.session:            
+            with BytesIO() as b:
+                writer = pd.ExcelWriter(b, engine='openpyxl')
+                for k, v in request.session['result'].items():
+                    pd.read_json(v).to_excel(writer, sheet_name=k, index=False)
+                writer.save()
+                file_name = 'OPT Result.xlsx'
+                response = HttpResponse(
+                    b.getvalue(),
+                    content_type=(
+                        'application/'
+                        'vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    )
+                )
+                response['Content-Disposition'] = f'attachment; filename={file_name}'
+                return response

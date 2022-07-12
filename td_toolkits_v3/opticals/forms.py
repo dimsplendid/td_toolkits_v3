@@ -39,6 +39,7 @@ from .tools.utils import (
     OPTFitting,
     RTFitting,
     MaterialConfiguration,
+    OptTableGenerator
 )
 
 
@@ -657,6 +658,11 @@ class OpticalPhaseTwoForm(forms.Form):
         experiment = self.cleaned_data['experiment']
         reference = self.cleaned_data['reference']
         # Calculate result
-        
+        opt_tr2_result = OptTableGenerator(experiment, reference=reference)
+        opt_tr2_result.calc()
         # Save result to cookie
-        
+        result = {
+            k: v.to_json() for
+            k, v in opt_tr2_result.tables.items()
+        }
+        request.session['result'] = result

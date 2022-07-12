@@ -128,4 +128,9 @@ urlpatterns = [
         views.OpticalPhaseTwoView.as_view(),
         name='tr2'
     ),
+    path(
+        'tr2/success/',
+        views.OpticalPhaseTwoSuccessView.as_view(),
+        name='tr2_success'
+    )
 ]
