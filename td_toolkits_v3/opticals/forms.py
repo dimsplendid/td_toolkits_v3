@@ -1,10 +1,10 @@
 import io
 import csv
 from datetime import datetime, timedelta, timezone
-import pytz
 import pandas as pd
 
 from django import forms
+from django.http import HttpRequest
 
 from td_toolkits_v3.products.models import (
     ProductModelType,
@@ -30,6 +30,8 @@ from .models import (
     ResponseTimeLog,
     OpticalReference,
     OpticalReference,
+    OptFittingModel,
+    RTFittingModel,
 )
 from .tools.utils import (
     OptLoader, 
@@ -37,6 +39,7 @@ from .tools.utils import (
     OPTFitting,
     RTFitting,
     MaterialConfiguration,
+    OptTableGenerator
 )
 
 
@@ -156,6 +159,9 @@ class RDLCellGapUploadForm(forms.Form):
             self.cleaned_data["rdl_cell_gap"],
             sheet_name='upload',
         )
+        # make sure the short id type is str.
+        rdl_cell_gap = rdl_cell_gap.astype({'short id': 'str'})
+        
         experiment = Experiment.objects.get(
             name=str(self.cleaned_data["exp_id"]))
 
@@ -508,9 +514,11 @@ class CalculateOpticalForm(forms.Form):
         if type(msg) == str:
             request.session["message"] = msg
         else:
-            request.session["message"] =( 'Calculate '
+            request.session["message"] = (
+                'Calculate '
                 f'{self.cleaned_data["exp_id"]}'
-                ' success.')
+                ' success.'
+            )
         request.session["exp_id"] = self.cleaned_data['exp_id']
 
 class ProductModelTypeForm(forms.ModelForm):
@@ -629,3 +637,32 @@ class RTFittingForm(FittingBaseForm):
                 f'{self.cleaned_data["exp_id"]}'
                 ' success.')
         request.session["exp_id"] = self.cleaned_data['exp_id']
+        
+class ConfigurationForm(forms.Form):
+    ...
+    
+class ExperimentFrom(forms.Form):
+    ...
+    
+class OpticalPhaseTwoForm(forms.Form):
+    experiment = forms.ModelChoiceField(
+        queryset=Experiment.objects.filter(optfittingmodel=True)
+    )
+    
+    reference = forms.ModelChoiceField(
+        queryset=OpticalReference.objects.all(),
+        required=False,
+    )
+    
+    def calc(self, request: HttpRequest):
+        experiment = self.cleaned_data['experiment']
+        reference = self.cleaned_data['reference']
+        # Calculate result
+        opt_tr2_result = OptTableGenerator(experiment, reference=reference)
+        opt_tr2_result.calc()
+        # Save result to cookie
+        result = {
+            k: v.to_json() for
+            k, v in opt_tr2_result.tables.items()
+        }
+        request.session['result'] = result

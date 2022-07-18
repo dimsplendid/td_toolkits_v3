@@ -32,6 +32,7 @@ from .forms import (
     OpticalReferenceFormset,
     OptFittingForm,
     RTFittingForm,
+    OpticalPhaseTwoForm,
 )
 from .models import (
     OpticalReference, 
@@ -341,7 +342,8 @@ class OpticalSearchView(TemplateView):
             i[0] for i in 
             OpticalsFittingModel.objects.all()
             .values_list('lc__name')
-            .order_by('modified')
+            # Seems distinct is not compatible to order_by
+            # .order_by('modified') 
             .distinct()
         ]
         context['profile_list'] = OpticalSearchProfile.objects.all()
@@ -528,3 +530,31 @@ class OpticalDataDumpView(TemplateView):
         context = super().get_context_data(**kwargs)
         context['exps'] = Experiment.objects.all()
         return context
+    
+class OpticalPhaseTwoView(LoginRequiredMixin, FormView):
+    template_name: str = 'form_generic.html'
+    form_class = OpticalPhaseTwoForm
+    success_url = reverse_lazy('opticals:tr2_success')
+    
+    def form_valid(self, form):
+        form.calc(self.request)
+        return super().form_valid(form)
+    
+class OpticalPhaseTwoSuccessView(View):
+    def get(self, request, *args, **kwargs):
+        if 'result' in  request.session:            
+            with BytesIO() as b:
+                writer = pd.ExcelWriter(b, engine='openpyxl')
+                for k, v in request.session['result'].items():
+                    pd.read_json(v).to_excel(writer, sheet_name=k, index=False)
+                writer.save()
+                file_name = 'OPT Result.xlsx'
+                response = HttpResponse(
+                    b.getvalue(),
+                    content_type=(
+                        'application/'
+                        'vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    )
+                )
+                response['Content-Disposition'] = f'attachment; filename={file_name}'
+                return response
