@@ -1419,32 +1419,30 @@ class OptTableGenerator():
             
         if target_cell_gap is not None:
             self.target_cell_gap = target_cell_gap
+            self.cell_gap_range = CellGapRange(
+                self.target_cell_gap - 0.6,
+                self.target_cell_gap + 0.5,
+            )
+            self.cell_gaps = np.linspace(
+                self.cell_gap_range.min,
+                self.cell_gap_range.max,
+                12,
+            )
         else:
-            if self.reference is None:
-                # TODO: How to add the LC design cell gap?
-                raise('No reference product and no target cell gap!')
-            else:
-                self.target_cell_gap = self.reference.cell_gap
-                
-        self.cell_gap_range = CellGapRange(
-            self.target_cell_gap - 0.6,
-            self.target_cell_gap + 0.5,
-        )
-        self.cell_gaps = np.linspace(
-            self.cell_gap_range.min,
-            self.cell_gap_range.max,
-            12,
-        )
+            # Need initialize the cell gap range for each model from LC
+            self.target_cell_gap = None
+            self.cell_gaps = None
+            self.cell_gap_range = None
         
         if OptFittingModel.objects.filter(experiment=self.experiment).exists():
-            self.opt_models = OptFittingModel.objects.filter(
+            self.opt_models: list[OptFittingModel] = OptFittingModel.objects.filter(
                 experiment=self.experiment
             )
         else:
             raise('No OptFittingModel for this experiment!')
         
         if RTFittingModel.objects.filter(experiment=self.experiment).exists():
-            self.rt_models = RTFittingModel.objects.filter(
+            self.rt_models: list[RTFittingModel] = RTFittingModel.objects.filter(
                 experiment=self.experiment
             )
         else:
@@ -1464,6 +1462,15 @@ class OptTableGenerator():
         record['LC'] = model.lc.name
         record['PI'] = model.pi.name
         record['Seal'] = model.seal.name
+        record['V90'] = model.v_percent.predict(
+            np.array([[90] * len(cell_gaps), cell_gaps]).T
+        )
+        record['V95'] = model.v_percent.predict(
+            np.array([[95] * len(cell_gaps), cell_gaps]).T
+        )
+        record['V99'] = model.v_percent.predict(
+            np.array([[99] * len(cell_gaps), cell_gaps]).T
+        )
         record['Voltage'] = voltages
         record['Cell Gap'] = cell_gaps
         record['Δnd'] = cell_gaps * model.lc.delta_n
@@ -1488,7 +1495,7 @@ class OptTableGenerator():
             return np.where(
                 x_over_blu < 0.008856,
                 7.787 * x/blu[opt] + 16/116,
-                (x/blu[opt]) ** (1/3)
+                np.abs(x/blu[opt]) ** (1/3)
             )
         f_x = f(record['Wx'], 'Xn')
         f_y = f(record['Wy'], 'Yn')
@@ -1552,59 +1559,68 @@ class OptTableGenerator():
     def calc(self):
         
         # Calculate the optical(VT) part
-        # V90, V95, V99, and if there is ref setting and RT fitting model, 
+        # V estimate(5.0 V) and if there is ref setting and RT fitting model, 
         # calculate the Vref from RT part
-        self.tables = {}
-        # If the reference LC is the same as the opt LC,
-        # then using it to calculate the Vref.
-        # If there are multiple same LC, also match the PI
-        for v_persent in [90, 95, 99]:
-            opt_table_list = []
-            for opt_model in self.opt_models:
-                voltages = opt_model.v_percent.predict(
-                    np.array([[v_persent]*len(
-                        self.cell_gaps
-                    ), self.cell_gaps]).T
+        self.tables = {}        
+        v_estimate = 5.0
+        
+        opt_table_list = []
+        for opt_model in self.opt_models:
+            if self.target_cell_gap is None:
+                cell_gap = opt_model.lc.designed_cell_gap
+                cell_gap_range = CellGapRange(
+                    cell_gap - 0.6,
+                    cell_gap + 0.5,
                 )
-                opt_table_list.append(self.opt_generator(
-                    opt_model, voltages, self.cell_gaps
-                ))
-                if self.rt_models is not None:
-                    # Fisrt check if the LC and PI are the same
-                    # and unique
-                    if self.rt_models.filter(
+                cell_gaps = np.linspace(
+                    cell_gap_range.min,
+                    cell_gap_range.max,
+                    12,
+                )
+                
+            else:
+                cell_gaps = self.cell_gaps
+            voltages = np.array([v_estimate]*len(
+                cell_gaps
+            ))
+            opt_table_list.append(self.opt_generator(
+                opt_model, voltages, cell_gaps
+            ))
+            if self.rt_models is not None:
+                # Fisrt check if the LC and PI are the same
+                # and unique
+                if self.rt_models.filter(
+                    lc__name=opt_model.lc.name,
+                    pi__name=opt_model.pi.name,
+                ).count() == 1:
+                    rt_model = self.rt_models.get(
                         lc__name=opt_model.lc.name,
                         pi__name=opt_model.pi.name,
-                    ).count() == 1:
-                        rt_model = self.rt_models.get(
-                            lc__name=opt_model.lc.name,
-                            pi__name=opt_model.pi.name,
-                        )
-                    # If not, check if the LC is the same
-                    elif (self.rt_models.filter(
-                        lc__name=opt_model.lc.name,
-                        pi__name=opt_model.pi.name,
-                    ).count() == 0) & (self.rt_models.filter(
-                        lc__name=opt_model.lc.name,
-                    ).count() > 0):
-                        rt_model = self.rt_models.filter(
-                            lc__name=opt_model.lc.name,
-                        )[0]
-                    # If not, skip this LC
-                    else:
-                        continue
-                    
-                    rt_table = self.rt_generator(
-                        rt_model, voltages, self.cell_gaps
                     )
-                    opt_table_list[-1] = pd.merge(
-                        opt_table_list[-1], rt_table,
-                        on=['LC', 'PI', 'Seal', 'Voltage', 'Cell Gap'],
-                    )
-            self.tables[f'V{v_persent}'] = pd.concat(
-                opt_table_list,
-                ignore_index=True,
-            )
+                # If not, check if the LC is the same
+                elif (self.rt_models.filter(
+                    lc__name=opt_model.lc.name,
+                    pi__name=opt_model.pi.name,
+                ).count() == 0) & (self.rt_models.filter(
+                    lc__name=opt_model.lc.name,
+                ).count() > 0):
+                    rt_model = self.rt_models.filter(
+                        lc__name=opt_model.lc.name,
+                    )[0]
+                # If not, skip this LC
+                else:
+                    continue
+                
+                rt_table = self.rt_generator(
+                    rt_model, voltages, cell_gaps
+                )
+                opt_table_list[-1] = pd.merge(
+                    opt_table_list[-1], rt_table,
+                    on=['LC', 'PI', 'Seal', 'Voltage', 'Cell Gap'],
+                )
+        self.tables[f'V={v_estimate}'] = pd.concat(
+            opt_table_list, ignore_index=True
+        )
             
         if self.reference is not None:
             # Check is there match LC and PI
@@ -1629,13 +1645,28 @@ class OptTableGenerator():
             
             if rt_model is not None:
                 ref_voltage = rt_model.voltage.predict(
-                    [[self.reference.time_rise, self.target_cell_gap]]
+                    [[self.reference.time_rise, self.reference.cell_gap]]
                 )[0]
                 opt_table_list = []
                 for opt_model in self.opt_models:
-                    voltages = np.array([ref_voltage]*len(self.cell_gaps))
+                    if self.target_cell_gap is None:
+                        cell_gap = opt_model.lc.designed_cell_gap
+                        cell_gap_range = CellGapRange(
+                            cell_gap - 0.6,
+                            cell_gap + 0.5,
+                        )
+                        cell_gaps = np.linspace(
+                            cell_gap_range.min,
+                            cell_gap_range.max,
+                            12,
+                        )
+                        
+                    else:
+                        cell_gaps = self.cell_gaps
+                        
+                    voltages = np.array([ref_voltage]*len(cell_gaps))
                     opt_table_list.append(self.opt_generator(
-                        opt_model, voltages, self.cell_gaps
+                        opt_model, voltages, cell_gaps
                     ))
                     if self.rt_models.filter(
                         lc__name=opt_model.lc.name,
@@ -1659,7 +1690,7 @@ class OptTableGenerator():
                     else:
                         continue
                     rt_table = self.rt_generator(
-                        rt_model, voltages, self.cell_gaps
+                        rt_model, voltages, cell_gaps
                     )
                     opt_table_list[-1] = pd.merge(
                         opt_table_list[-1], rt_table,
