@@ -1,13 +1,16 @@
 from __future__ import annotations
 
-from typing import NamedTuple
+from typing import NamedTuple, Callable, Tuple, List, Dict, Union, Optional
+from pydantic import BaseModel
 
 import numpy as np
 import pandas as pd
 import plotly.express as px
 from plotly.offline import plot
 import re
+
 from scipy.interpolate import interp1d
+from scipy.integrate import quad
 from sklearn import linear_model
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import (
@@ -16,6 +19,7 @@ from sklearn.preprocessing import (
     FunctionTransformer
 )
 from sklearn.pipeline import Pipeline
+from sklearn.metrics import r2_score
 
 from td_toolkits_v3.materials.models import LiquidCrystal, Polyimide, Seal
 from td_toolkits_v3.products.models import Experiment
@@ -1701,4 +1705,74 @@ class OptTableGenerator():
                     opt_table_list,
                     ignore_index=True,
                 )
+
+class Refraction(NamedTuple):
+    l: float
+    n: float
+
+class LiquidCrystalPydantic(BaseModel):
+    d: float
+    k11: float
+    k22: float
+    k33: float
+    
+    ne_exp: List[Refraction]
+    no_exp: List[Refraction]
+    ne: Optional[Callable[[float],float]] = None
+    no: Optional[Callable[[float],float]] = None
+    blu: Callable[[float],float] = lambda x: 1
+    
+    
+    
+    def __init__(self, *args, **kwargs):
+        self.update_forward_refs()
+        super().__init__(*args, **kwargs)
+        self.ne = self.refraction_2(
+            min(self.ne_exp, key=lambda x: x.l),
+            max(self.ne_exp, key=lambda x: x.l),
+        )
+        self.no = self.refraction_2(
+            min(self.no_exp, key=lambda x: x.l),
+            max(self.no_exp, key=lambda x: x.l),
+        )
+    
+    @property
+    def k_avg(self) -> float:
+        return (self.k11+self.k22+self.k33) / 3
+    
+    @staticmethod
+    def cauchy_2(A: float, B: float) -> Callable[[float], float]:
+        return lambda x: A + B/x**2
+    
+    def refraction_2(
+        self,
+        p1: Refraction, 
+        p2: Refraction,
+    ) -> Callable[[float], float]:
+        A = (p1.n*p1.l**2 - p2.n*p2.l**2)/(p1.l**2 - p2.l**2)
+        B = (p1.n - p2.n) * p1.l**2 * p2.l**2/(p2.l**2 - p1.l**2)
+        return self.cauchy_2(A, B)   
+    
+    @property
+    def refraction_r2(self) -> Dict[str, float]:
+        x_ne = [x[0] for x in self.ne_exp]
+        y_ne_pred = [self.ne(x) for x in x_ne]
+        r2_ne = r2_score(y_ne_pred, [x[1] for x in self.ne_exp])
         
+        x_no = [x[0] for x in self.no_exp]
+        y_no_pred = [self.no(x) for x in x_no]
+        r2_no = r2_score(y_no_pred, [x[1] for x in self.no_exp])
+        
+        return {
+            'ne': r2_ne,
+            'no': r2_no,
+        }
+    
+    @property
+    def scatter(self):
+        return quad(
+            lambda x: ((self.ne(x)**2-self.no(x)**2)**2) * self.blu(x),
+            380, 780,
+            limit=1000,
+            epsabs = 1,
+        )[0] * self.d / self.k_avg
