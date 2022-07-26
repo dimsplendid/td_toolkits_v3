@@ -88,5 +88,15 @@ urlpatterns = [
         'template/',
         views.TemplateDownloadView.as_view(),
         name='template'
+    ),
+    path(
+        'lc/refraction-index/upload/',
+        views.RefractionIndexUploadView.as_view(),
+        name='refraction_index_upload'
+    ),
+    path(
+        'lc/refraction-index/update/success/',
+        views.RefractionIndexUploadSuccessView.as_view(),
+        name='refraction_index_upload_success'
     )
 ]

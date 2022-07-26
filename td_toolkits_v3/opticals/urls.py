@@ -132,5 +132,10 @@ urlpatterns = [
         'tr2/success/',
         views.OpticalPhaseTwoSuccessView.as_view(),
         name='tr2_success'
-    )
+    ),
+    path(
+        'tr2/advanced-cr/',
+        views.AdvancedContrastView.as_view(),
+        name='advanced_contrast'
+    ),
 ]

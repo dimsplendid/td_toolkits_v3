@@ -666,3 +666,4 @@ class OpticalPhaseTwoForm(forms.Form):
             k, v in opt_tr2_result.tables.items()
         }
         request.session['result'] = result
+        

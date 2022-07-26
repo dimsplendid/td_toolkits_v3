@@ -1,5 +1,6 @@
 from io import BytesIO
 import pandas as pd
+from typing import List, Dict, Tuple, Union, Optional
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
@@ -558,3 +559,7 @@ class OpticalPhaseTwoSuccessView(View):
                 )
                 response['Content-Disposition'] = f'attachment; filename={file_name}'
                 return response
+            
+class AdvancedContrastView(TemplateView):
+    template_name: str = 'opticals/advanced_contrast.html'
+    
