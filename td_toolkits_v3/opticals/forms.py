@@ -1,4 +1,5 @@
 import io
+from typing import List, Tuple, Dict, Union, Optional
 import csv
 from datetime import datetime, timedelta, timezone
 import numpy as np
@@ -695,7 +696,7 @@ class AdvancedContrastRatioForm(forms.Form):
     
     def calc(self, request: HttpRequest):
         experiment = self.cleaned_data['experiment']
-        reference = self.cleaned_data['reference']
+        reference: Optional[OpticalReference] = self.cleaned_data['reference']
         # TODO
         back_light = self.cleaned_data['back_light']
         lcs = LiquidCrystal.objects.filter(
@@ -770,10 +771,10 @@ class AdvancedContrastRatioForm(forms.Form):
             formatter=lambda x: np.round(9*x) + 1,
         )
         result = pd.DataFrame(result)
-        if (reference is not None) and (reference.lc not in lcs):
+        if (reference is not None) and (reference.lc in lcs):
             result["CR"] = (
                 result["CR Index"]
-                / result[result['LC']==reference.lc]['CR Index']
+                / result[result['LC']==reference.lc.name]['CR Index']
                 * reference.contrast_ratio
             )
         print(result)
