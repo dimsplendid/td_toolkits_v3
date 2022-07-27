@@ -774,7 +774,7 @@ class AdvancedContrastRatioForm(forms.Form):
         if (reference is not None) and (reference.lc in lcs):
             result["CR"] = (
                 result["CR Index"]
-                / result[result['LC']==reference.lc.name]['CR Index']
+                / result[result['LC']==reference.lc.name]['CR Index'][0]
                 * reference.contrast_ratio
             )
         print(result)
