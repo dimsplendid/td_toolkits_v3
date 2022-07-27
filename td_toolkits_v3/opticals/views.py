@@ -562,6 +562,9 @@ class OpticalPhaseTwoSuccessView(View):
                 response['Content-Disposition'] = f'attachment; filename={file_name}'
                 return response
             
+class AdvancedContrastRatioIndexView(TemplateView):
+    template_name = 'opticals/advanced_contrast_index.html'
+            
 class AdvancedContrastRatioView(FormView):
     template_name: str = 'form_generic.html'
     form_class = AdvancedContrastRatioForm

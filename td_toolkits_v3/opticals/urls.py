@@ -135,8 +135,13 @@ urlpatterns = [
     ),
     path(
         'tr2/advanced-cr/',
-        views.AdvancedContrastRatioView.as_view(),
+        views.AdvancedContrastRatioIndexView.as_view(),
         name='advanced_contrast'
+    ),
+    path(
+        'tr2/advanced-cr/calculate/',
+        views.AdvancedContrastRatioView.as_view(),
+        name='advanced_contrast_calculation'
     ),
     path(
         'tr2/advanced-cr/success/',

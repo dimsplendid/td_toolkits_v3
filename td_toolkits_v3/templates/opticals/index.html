@@ -27,7 +27,7 @@
         <li> <a href="{% url 'opticals:toc_rt_log_upload' %}">TOC RT Upload</a> </li>
     </ol>
 </div>
-<div>
+{% comment %} <div>
     <h2>LC TR2 Standard Process</h2>
     <ol>
         <li> Data Upload </li>
@@ -35,7 +35,7 @@
         <li> <a href="{% url 'opticals:calculate' %}">TR2 Optical fitting</a></li>
         <li> <a href="{% url 'opticals:search_profile_list' %}">Optical Search Profile</a></li>
     </ol>
-</div>
+</div> {% endcomment %}
 <hr>
 <div>
     <h2>TR2</h2>
@@ -44,6 +44,7 @@
         <li> <a href="{% url 'opticals:opt_fitting' %}">TR2 OPT fitting</a></li>
         <li> <a href="{% url 'opticals:rt_fitting' %}">TR2 RT fitting</a></li>
         <li> <a href="{% url 'opticals:tr2' %}">Show Result</a></li>
+        <li> <a href="{% url 'advanced_contrast' %}">Advanced Contrast Ratio</a></li>
     </ol>
 </div>
 <hr>
