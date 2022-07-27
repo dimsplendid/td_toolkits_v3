@@ -1,8 +1,7 @@
 from io import BytesIO
 import pandas as pd
-from typing import List, Dict, Tuple, Union, Optional
+from typing import List, Dict, Tuple, Union, Optional, Any
 
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
@@ -14,6 +13,8 @@ from django.views.generic import (
 )
 from django.views.generic.edit import FormView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.cache import cache
+
 from td_toolkits_v3.materials.models import LiquidCrystal
 from td_toolkits_v3.products.models import Experiment
 
@@ -34,6 +35,7 @@ from .forms import (
     OptFittingForm,
     RTFittingForm,
     OpticalPhaseTwoForm,
+    AdvancedContrastRatioForm,
 )
 from .models import (
     OpticalReference, 
@@ -560,6 +562,30 @@ class OpticalPhaseTwoSuccessView(View):
                 response['Content-Disposition'] = f'attachment; filename={file_name}'
                 return response
             
-class AdvancedContrastView(TemplateView):
-    template_name: str = 'opticals/advanced_contrast.html'
+class AdvancedContrastRatioView(FormView):
+    template_name: str = 'form_generic.html'
+    form_class = AdvancedContrastRatioForm
+    success_url: Optional[str] = reverse_lazy(
+        'opticals:advanced_contrast_ratio_success'
+    )
     
+    def form_valid(self, form):
+        form.calc(self.request)
+        return super().form_valid(form)
+    
+
+class AdvancedContrastRatioSuccessView(TemplateView):
+    template_name: str = 'opticals/advanced_contrast_ratio_success.html'
+    
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Advanced Contrast Ratio'
+        result: pd.DataFrame = (cache.get('result'))
+        context['result'] = result.to_html(
+            float_format=lambda x: f'{x:.2f}',
+            classes=['table', 'table-hover', 'text-center', 'table-striped'],
+            justify='center',
+            index=False,
+            escape=False,
+        )
+        return context

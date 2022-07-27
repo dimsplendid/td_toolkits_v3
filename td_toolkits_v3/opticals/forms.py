@@ -1,10 +1,12 @@
 import io
 import csv
 from datetime import datetime, timedelta, timezone
+import numpy as np
 import pandas as pd
 
 from django import forms
 from django.http import HttpRequest
+from django.core.cache import cache
 
 from td_toolkits_v3.products.models import (
     ProductModelType,
@@ -32,6 +34,8 @@ from .models import (
     OpticalReference,
     OptFittingModel,
     RTFittingModel,
+    BackLightUnit,
+    BackLightIntensity,
 )
 from .tools.utils import (
     OptLoader, 
@@ -39,7 +43,12 @@ from .tools.utils import (
     OPTFitting,
     RTFitting,
     MaterialConfiguration,
-    OptTableGenerator
+    OptTableGenerator,
+    tr2_score,
+)
+
+from td_toolkits_v3.materials.tools.utils import (
+    LiquidCrystalPydantic,
 )
 
 
@@ -646,7 +655,9 @@ class ExperimentFrom(forms.Form):
     
 class OpticalPhaseTwoForm(forms.Form):
     experiment = forms.ModelChoiceField(
-        queryset=Experiment.objects.filter(optfittingmodel=True)
+        queryset=Experiment.objects.all().exclude(
+            optfittingmodel=None
+        )
     )
     
     reference = forms.ModelChoiceField(
@@ -667,3 +678,103 @@ class OpticalPhaseTwoForm(forms.Form):
         }
         request.session['result'] = result
         
+class AdvancedContrastRatioForm(forms.Form):
+    experiment = forms.ModelChoiceField(
+        queryset=Experiment.objects.all().exclude(
+            optfittingmodel=None
+        )
+    )
+    reference = forms.ModelChoiceField(
+        queryset=OpticalReference.objects.all(),
+        required=False,
+    )
+    back_light = forms.ModelChoiceField(
+        queryset=BackLightUnit.objects.all(),
+        required=False,
+    )
+    
+    def calc(self, request: HttpRequest):
+        experiment = self.cleaned_data['experiment']
+        reference = self.cleaned_data['reference']
+        # TODO
+        back_light = self.cleaned_data['back_light']
+        lcs = LiquidCrystal.objects.filter(
+            optfittingmodel__experiment=experiment,
+            # optfittingmodel__isnull=False
+        ).exclude(ne_exps=None).exclude(no_exps=None)
+        # Calculate result
+        # Calculate Vop
+        
+        result = {
+            'LC': [],
+            'PI': [],
+            'Seal': [],
+            'ne R2': [],
+            'no R2': [],
+            'LC%': [],
+            'Scatter Index': [],
+            'CR Index': [],
+            'CR Score': [],
+        }
+        
+        if (reference is None) or (reference.lc not in lcs):
+            vop = 5
+        else:
+            try:
+                # If there is RTFiggingModel of ref LC, get
+                # Vop from Tr and cell gap
+                vop = RTFittingModel.objects.get(
+                    lc=reference.lc,
+                    experiment=self.cleaned_data['experiment'],
+                ).voltage.predict(np.array([[
+                    reference.time_rise,
+                    reference.lc.designed_cell_gap,
+                ]]))[0]
+            except:
+                vop = 5
+        
+        # Calculate Transmittance and set Parameter for CR Calculation
+        lc_properties = {
+            lc.name: LiquidCrystalPydantic(
+                d=lc.designed_cell_gap,
+                k11=lc.k_11,
+                k22=lc.k_22,
+                k33=lc.k_33,
+                ne_exp=[(n.wavelength, n.value) for n in lc.ne_exps.all()],
+                no_exp=[(n.wavelength, n.value) for n in lc.no_exps.all()],
+            ) for lc in lcs
+        }
+        
+        for model in OptFittingModel.objects.filter(
+            experiment=experiment,
+            lc__name__in=lc_properties.keys()
+        ):
+            result["LC"] += [model.lc.name]
+            result["PI"] += [model.pi.name]
+            result["Seal"] += [model.seal.name]
+            result["ne R2"] += [lc_properties[model.lc.name].refraction_r2['ne']]
+            result["no R2"] += [lc_properties[model.lc.name].refraction_r2['no']]
+            result["LC%"] += [model.lc_percent.predict([
+                [vop, model.lc.designed_cell_gap]
+            ])[0]]
+            result['Scatter Index'] += [
+                lc_properties[model.lc.name].scatter
+            ]
+        
+        result["CR Index"] = (
+            np.array(result["LC%"]) / np.array(result["Scatter Index"]) * 10000
+        )
+        result["CR Score"] = tr2_score(
+            result["CR Index"],
+            method="min-max",
+            formatter=lambda x: np.round(9*x) + 1,
+        )
+        result = pd.DataFrame(result)
+        if (reference is not None) and (reference.lc not in lcs):
+            result["CR"] = (
+                result["CR Index"]
+                / result[result['LC']==reference.lc]['CR Index']
+                * reference.contrast_ratio
+            )
+        print(result)
+        cache.set('result', result)

@@ -217,4 +217,4 @@ class RefractionIndexUploadForm(forms.Form):
                 continue
             
             lcs.append(lc)
-        cache.set('lcs', lcs, 60)
+        cache.set('lcs', lcs, 30)
