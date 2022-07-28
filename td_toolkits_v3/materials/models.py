@@ -19,6 +19,33 @@ class Vender(TimeStampedModel):
 def get_default_vender():
     return Vender.objects.get_or_create(name="INX")[0]
 
+class RefractionIndex(TimeStampedModel):
+    wavelength = models.FloatField(
+        "Wavelength", help_text="in nm")
+    value = models.FloatField(
+        "Refraction Index")
+    
+
+    def __str__(self):
+        return f"{self.value} at {self.wavelength} nm"
+
+    class Meta:
+        abstract = True
+
+class OrdinaryRefractionIndex(RefractionIndex):
+    lc = models.ForeignKey(
+        'LiquidCrystal', 
+        on_delete=models.CASCADE,
+        related_name="no_exps",
+    )
+
+class ExtraordinaryRefractionIndex(RefractionIndex):
+    lc = models.ForeignKey(
+        'LiquidCrystal', 
+        on_delete=models.CASCADE,
+        related_name="ne_exps",
+    )
+
 class MaterialType(models.TextChoices):
     AAS = 'AAS', 'AAS'
     TN = 'TN', 'TN'

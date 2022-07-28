@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import List, Tuple, Dict, Union, Optional
 
 from io import BytesIO
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -14,6 +15,8 @@ from django.views.generic import (
 )
 from django.views.generic.edit import FormView, UpdateView
 from django.http.response import HttpResponse
+from django.core.cache import cache
+
 import pandas as pd
 from config.settings.base import APPS_DIR
 from config.settings.base import UPLOAD_TEMPLATE_DIR
@@ -24,7 +27,11 @@ from .models import (
     Polyimide,
     Seal
 )
-from .forms import MaterialsUploadForm, MaterialsUpdateForm
+from .forms import (
+    MaterialsUploadForm,
+    MaterialsUpdateForm,
+    RefractionIndexUploadForm,
+)
 from td_toolkits_v3.materials.tools import utils
 
 class VenderListView(ListView):
@@ -207,3 +214,70 @@ class TemplateDownloadView(View):
         )
         response['Content-Disposition'] = f'attachment; filename={file_name}'
         return response
+
+class RefractionIndexUploadView(FormView):
+    template_name: str = 'form_generic.html'
+    form_class = RefractionIndexUploadForm
+    # success_url: str = reverse_lazy(
+    #     'materials:refraction_index_upload_success'
+    # )
+    success_url: Optional[str] = reverse_lazy(
+        'materials:refraction_index_upload_success'
+    )
+    
+    def form_valid(self, form):
+        form.save()
+        return super().form_valid(form)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Refraction Index Upload'
+        context['file_path'] = reverse_lazy(
+            'materials:template'
+        ) + '?download=lc_datasheet_refraction_template'
+        
+        return context
+    
+class RefractionIndexUploadSuccessView(TemplateView):
+    template_name = 'materials/refraction_index_upload_success.html'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Refraction Index Upload Success'
+        lcs = cache.get('lcs')
+        table = {
+            'LC': [],
+            'ne_450': [],
+            'no_450': [],
+            'ne_509': [],
+            'no_509': [],
+            'ne_546': [],
+            'no_546': [],
+            'ne_589': [],
+            'no_589': [],
+            'ne_633': [],
+            'no_633': [],
+        }
+        for lc in lcs:
+            table['LC'].append(lc)
+            table['ne_450'].append(lc.ne_exps.get(wavelength=450).value)
+            table['no_450'].append(lc.no_exps.get(wavelength=450).value)
+            table['ne_509'].append(lc.ne_exps.get(wavelength=509).value)
+            table['no_509'].append(lc.no_exps.get(wavelength=509).value)
+            table['ne_546'].append(lc.ne_exps.get(wavelength=546).value)
+            table['no_546'].append(lc.no_exps.get(wavelength=546).value)
+            table['ne_589'].append(lc.ne_exps.get(wavelength=589).value)
+            table['no_589'].append(lc.no_exps.get(wavelength=589).value)
+            table['ne_633'].append(lc.ne_exps.get(wavelength=633).value)
+            table['no_633'].append(lc.no_exps.get(wavelength=633).value)
+            
+        table_df = pd.DataFrame(table)
+        table_html = table_df.to_html(
+            float_format=lambda x: f'{x:.4f}',
+            classes='table table-striped table-bordered table-hover',
+            justify='center',
+            index=False,
+            escape=False,
+        )
+        context['table'] = table_html
+        return context
+        

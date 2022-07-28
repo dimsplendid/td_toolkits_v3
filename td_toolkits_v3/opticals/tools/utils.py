@@ -7,7 +7,7 @@ import pandas as pd
 import plotly.express as px
 from plotly.offline import plot
 import re
-from scipy.interpolate import interp1d
+
 from sklearn import linear_model
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import (
@@ -1701,4 +1701,4 @@ class OptTableGenerator():
                     opt_table_list,
                     ignore_index=True,
                 )
-        
+

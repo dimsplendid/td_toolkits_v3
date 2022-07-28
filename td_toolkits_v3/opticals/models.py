@@ -399,4 +399,29 @@ class OpticalSearchProfile(TimeStampedModel):
     def get_absolute_url(self):
         return reverse(
             "opticals:search_profile_detail", kwargs={"slug": self.slug})
+        
+class BackLightUnit(TimeStampedModel):
+    name = models.CharField('Name', max_length=255, default='Default')
+    slug = AutoSlugField(
+        'Back Light Unit Address', unique=True, always_update=False,
+        populate_from='name'
+    )
+    
+    def __str__(self):
+        return self.name
+    
+class OpticalWaveBase(TimeStampedModel):
+    wavelength = models.FloatField('Wavelength(nm)')
+    value = models.FloatField('Value')
+    
+    class Meta:
+        abstract = True
+        
+class BackLightIntensity(OpticalWaveBase):
+    blu = models.ForeignKey(
+        BackLightUnit,
+        on_delete=models.CASCADE,
+        related_name='back_light_intensity'
+    )
+    
     
