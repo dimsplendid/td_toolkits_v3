@@ -147,5 +147,15 @@ urlpatterns = [
         'tr2/advanced-cr/success/',
         views.AdvancedContrastRatioSuccessView.as_view(),
         name='advanced_contrast_ratio_success'
-    )
+    ),
+    path(
+        'blu/upload/',
+        view=views.BackLightUnitUploadView.as_view(),
+        name='blu_upload',
+    ),
+    path(
+        'blu/upload/success/',
+        view=views.BackLightUnitUploadSuccessView.as_view(),
+        name='blu_upload_success',
+    ),
 ]

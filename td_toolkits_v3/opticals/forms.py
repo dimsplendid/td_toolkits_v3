@@ -777,5 +777,31 @@ class AdvancedContrastRatioForm(forms.Form):
                 / result[result['LC']==reference.lc.name]['CR Index'][0]
                 * reference.contrast_ratio
             )
-        print(result)
         cache.set('result', result)
+        
+class BackLightUnitUploadForm(forms.Form):
+    file = forms.FileField(
+        widget=forms.FileInput(
+            attrs={"accpet": ".xlsx"}
+        )
+    )
+    name: str = forms.CharField(max_length=255)
+    
+    def save(self):
+        file = self.cleaned_data['file']
+        
+        blu_intensity = []
+        blu = BackLightUnit.objects.create(
+            name=self.cleaned_data['name'],
+        )
+        for row in pd.read_excel(file).itertuples():
+            blu_intensity.append(
+                BackLightIntensity(
+                    wavelength=row.wavelength,
+                    value=row.value,
+                    blu=blu,
+                )
+            )
+            
+        BackLightIntensity.objects.bulk_create(blu_intensity)
+        cache.set('blu', blu)

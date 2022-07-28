@@ -1,6 +1,9 @@
 from io import BytesIO
-import pandas as pd
 from typing import List, Dict, Tuple, Union, Optional, Any
+
+import pandas as pd
+import plotly.express as px
+from plotly.offline import plot
 
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -36,6 +39,7 @@ from .forms import (
     RTFittingForm,
     OpticalPhaseTwoForm,
     AdvancedContrastRatioForm,
+    BackLightUnitUploadForm,
 )
 from .models import (
     OpticalReference, 
@@ -43,6 +47,7 @@ from .models import (
     OpticalSearchProfile,
     OptFittingModel,
     RTFittingModel,
+    BackLightUnit,
 )
 
 
@@ -591,4 +596,32 @@ class AdvancedContrastRatioSuccessView(TemplateView):
             index=False,
             escape=False,
         )
+        return context
+    
+class BackLightUnitUploadView(FormView):
+    template_name: str = 'form_generic.html'
+    form_class = BackLightUnitUploadForm
+    success_url: Optional[str] = reverse_lazy(
+        'opticals:blu_upload_success'
+    )
+    
+    def form_valid(self, form):
+        form.save()
+        return super().form_valid(form)
+    
+class BackLightUnitUploadSuccessView(TemplateView):
+    template_name: str = 'opticals/back_light_unit_upload_success.html'
+    
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Back Light Unit Upload Success'
+        
+        # Draw the uploaded data
+        blu: BackLightUnit = cache.get('blu')
+        blu_df = pd.DataFrame(
+            blu.back_light_intensity.values('wavelength', 'value')
+        )
+        blu_df.columns = ['wavelength(nm)', 'intensity(a.u.)']
+        fig = px.line(blu_df, x='wavelength(nm)', y='intensity(a.u.)')
+        context['plot'] = plot(fig, output_type='div')
         return context

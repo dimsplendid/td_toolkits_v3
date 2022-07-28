@@ -407,6 +407,9 @@ class BackLightUnit(TimeStampedModel):
         populate_from='name'
     )
     
+    def __str__(self):
+        return self.name
+    
 class OpticalWaveBase(TimeStampedModel):
     wavelength = models.FloatField('Wavelength(nm)')
     value = models.FloatField('Value')
