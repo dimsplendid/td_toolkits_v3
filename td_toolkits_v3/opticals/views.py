@@ -65,10 +65,11 @@ class AxoUploadView(LoginRequiredMixin, FormView):
         return super().form_valid(form)
     
 class AxoUploadSuccessView(TemplateView):
-    template_name = 'opticals/axo_upload_success.html'
+    template_name = 'form_generic.html'
     
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
+        context['title'] = 'Axo Upload Success'
         df: pd.DataFrame = cache.get('df')
         context['log']: dict[str, list] = cache.get('save_log')
         try:
@@ -81,12 +82,15 @@ class AxoUploadSuccessView(TemplateView):
             )
         except:
             context['table'] = None
+        context['nexts'] = {
+            "OPT Upload": reverse_lazy('opticals:toc_opt_log_upload'),
+        }
         return context
 
 class RDLCellGapUploadView(LoginRequiredMixin, FormView):
     template_name = 'form_generic.html'
     form_class = RDLCellGapUploadForm
-    success_url = reverse_lazy('opticals:rdl_cell_gap_upload')
+    success_url = reverse_lazy('opticals:rdl_cell_gap_upload_success')
 
     def form_valid(self, form):
         form.save()
@@ -97,6 +101,30 @@ class RDLCellGapUploadView(LoginRequiredMixin, FormView):
         context['title'] = "RDL Cell Gap Upload"
         context['file_path'] = reverse_lazy('materials:template') \
                              + '?download=optical_rdl_cellgap_upload_template'
+        return context
+
+class RDLCellGapUploadSuccessView(TemplateView):
+    template_name = 'success_generic.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = "RDL Cell Gap Upload Success"
+        context['log'] = cache.get('save_log')
+        try:
+            context['table'] = cache.get('df').to_html(
+                float_format=lambda x: f'{x:.4f}',
+                classes='table table-striped table-bordered table-hover',
+                justify='center',
+                index=False,
+                escape=False,
+            )
+        except:
+            context['table'] = None
+            
+        context["nexts"] = {
+            "AXO Upload": reverse_lazy('opticals:axo_upload'),
+            "OPT Upload": reverse_lazy('opticals:toc_opt_log_upload'),
+        }
         return context
 
 class OptUploadView(LoginRequiredMixin, FormView):

@@ -4,22 +4,31 @@
 
 {% block content %}
 <h1>{{title}}</h1>
-{% for next_target in nexts %}
-<a class="btn btn-primary" href="{{nexts.next_target}}">{{next_target}}</a>
+{% for target, url in nexts.items %}
+<a class="btn btn-primary" href={{url}}>{{target}}</a>
 {% endfor %}
+<hr/>
+{% if table %}
 <div>
     {{table|safe}}
 </div>
+{% endif %}
+{% if log.file_name %}
 <div class="alert alert-info" role="alert">
     <h4 class="alert-heading">File Name</h4>
     {% for row in log.file_name %}
         <p>{{row}}</p>
     {% endfor %}
 </div>
+{% endif %}
+
+{% if log.warning %}
 <div class="alert alert-warning" role="alert">
     <h4 class="alert-heading">Warning</h4>
     {% for row in log.warning %}
         <p>{{row}}</p>
     {% endfor %}
 </div>
+{% endif %}
+
 {% endblock content %}

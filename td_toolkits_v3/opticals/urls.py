@@ -24,6 +24,11 @@ urlpatterns = [
         name='rdl_cell_gap_upload'
     ),
     path(
+        'rdl/cell-gap/upload/success/',
+        views.RDLCellGapUploadSuccessView.as_view(),
+        name='rdl_cell_gap_upload_success'
+    ),
+    path(
         'toc/opt/upload/',
         views.OptUploadView.as_view(),
         name='toc_opt_log_upload'

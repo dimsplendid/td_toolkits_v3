@@ -140,8 +140,8 @@ class AxoUploadForm(forms.Form):
                     except:
                         if data[row_count][8] > 1:
                             save_log['warning'].append(
-                                f"Measure at {chip.name}({chip.short_name}) "
-                                f"of point [{point}] is has large RMS, "
+                                f"Measurement at {chip.name}({chip.short_name}) "
+                                f"of point [{point}] has large RMS({data[row_count][8]}), "
                                 f"skip it."
                             )
                             continue
@@ -211,7 +211,10 @@ class RDLCellGapUploadForm(forms.Form):
 
         factory = Factory.default("Fab1")
         instrument = Instrument.default("RETS", factory)
-
+        save_log = {
+            "file_name": [self.cleaned_data['rdl_cell_gap']],
+            "warning": [],
+        }
         for row in rdl_cell_gap.to_numpy():
             # Check if there is chip data, otherwise skip.
             try:
@@ -220,11 +223,38 @@ class RDLCellGapUploadForm(forms.Form):
                     sub__condition__experiment=experiment
                 )
             except:
+                save_log["warning"].append(
+                    f"Chip: {row[0]} is not in the database."
+                )
                 continue
-
-            RDLCellGap.objects.create(
-                chip=chip, cell_gap=row[1], instrument=instrument
-            )
+            
+            try:
+                RDLCellGap.objects.get(
+                    chip=chip
+                )
+                save_log["warning"].append(
+                    f"The chip {chip.name}({chip.short_name}) is duplicate, keep the old one"
+                )
+                continue
+            except:
+                RDLCellGap.objects.create(
+                    chip=chip, cell_gap=row[1], instrument=instrument
+                )
+        cache.set(
+            "df",
+            pd.DataFrame(
+                RDLCellGap.objects.filter(
+                    chip__sub__condition__experiment=experiment
+                ).values(
+                    'chip__name',
+                    'cell_gap',
+                )
+            ).rename(columns={
+                'chip__name': 'ID',
+                'cell_gap': 'Cell Gap',
+            })
+        )
+        cache.set("save_log", save_log)
 
 
 class OptUploadForm(forms.Form):
