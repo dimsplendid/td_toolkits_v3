@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}{{title}}{% endblock title %};
+
+{% block content %}
+<h1>{{title}}</h1>
+{% for next_target in nexts %}
+<a class="btn btn-primary" href="{{nexts.next_target}}">{{next_target}}</a>
+{% endfor %}
+<div>
+    {{table|safe}}
+</div>
+<div class="alert alert-info" role="alert">
+    <h4 class="alert-heading">File Name</h4>
+    {% for row in log.file_name %}
+        <p>{{row}}</p>
+    {% endfor %}
+</div>
+<div class="alert alert-warning" role="alert">
+    <h4 class="alert-heading">Warning</h4>
+    {% for row in log.warning %}
+        <p>{{row}}</p>
+    {% endfor %}
+</div>
+{% endblock content %}
