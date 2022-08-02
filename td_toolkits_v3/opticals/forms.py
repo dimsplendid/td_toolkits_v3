@@ -96,6 +96,11 @@ class AxoUploadForm(forms.Form):
         # points = [5, 3, 1, 6, 4, 2]
         points = [1, 2, 3, 4, 5, 6]
 
+        save_log = {
+            'file_name': [],
+            'warning': [],
+        }
+        
         for file in files:
             file_name = str(file).split(".")[0]
             short_names = [s.strip() for s in file_name.split("+")]
@@ -106,6 +111,7 @@ class AxoUploadForm(forms.Form):
             data_range = range(28, 28 + len(points) * len(short_names))
             data = [row for idx, row in enumerate(reader) if idx in data_range]
             row_count = 0
+            save_log['file_name'].append(file_name)
             for short_name in short_names:
                 # print(short_name)
                 # Check if there is chip data, otherwise skip.
@@ -115,6 +121,9 @@ class AxoUploadForm(forms.Form):
                         sub__condition__experiment=experiment
                     )
                 except:
+                    save_log['warning'].append(
+                        f"Chip: {short_name} is not in the database."
+                    )
                     continue
                 # print(chip)
                 for point in points:
@@ -123,12 +132,19 @@ class AxoUploadForm(forms.Form):
                             chip=chip,
                             measure_point=point,
                         )
-                        print(
+                        save_log['warning'].append(
                             f"{chip.name}({chip.short_name})"
-                            + f" at point [{point}] is duplicate"
+                            f" at point [{point}] is duplicate, keep the old one"
                         )
                         continue
                     except:
+                        if data[row_count][8] > 1:
+                            save_log['warning'].append(
+                                f"Measure at {chip.name}({chip.short_name}) "
+                                f"of point [{point}] is has large RMS, "
+                                f"skip it."
+                            )
+                            continue
                         AxometricsLog.objects.create(
                             chip=chip,
                             measure_point=point,
@@ -144,6 +160,24 @@ class AxoUploadForm(forms.Form):
                             instrument=instrument,
                         )
                         row_count += 1
+        
+            cache.set("df", 
+                pd.DataFrame(
+                        AxometricsLog.objects.filter(
+                        chip__sub__condition__experiment=experiment
+                    ).values(
+                        'chip__name',
+                        'cell_gap',
+                        'rms',
+                    )
+                ).rename(columns={
+                    'chip__name': 'ID',
+                    'cell_gap': 'Cell Gap',
+                    'rms': 'RMS',
+                })
+            )
+            cache.set("save_log", save_log)
+        
 
 
 class RDLCellGapUploadForm(forms.Form):

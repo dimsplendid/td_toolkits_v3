@@ -14,6 +14,11 @@ urlpatterns = [
         name='axo_upload'
     ),
     path(
+        'axo/upload/success/',
+        views.AxoUploadSuccessView.as_view(),
+        name='axo_upload_success'
+    ),
+    path(
         'rdl/cell-gap/upload/',
         views.RDLCellGapUploadView.as_view(),
         name='rdl_cell_gap_upload'

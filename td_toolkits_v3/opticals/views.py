@@ -58,11 +58,30 @@ class IndexView(TemplateView):
 class AxoUploadView(LoginRequiredMixin, FormView):
     template_name = 'opticals/axo_upload.html'
     form_class = AxoUploadForm
-    success_url = reverse_lazy('opticals:axo_upload')
+    success_url = reverse_lazy('opticals:axo_upload_success')
 
     def form_valid(self, form):
         form.save(self.request)
         return super().form_valid(form)
+    
+class AxoUploadSuccessView(TemplateView):
+    template_name = 'opticals/axo_upload_success.html'
+    
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        df: pd.DataFrame = cache.get('df')
+        context['log']: dict[str, list] = cache.get('save_log')
+        try:
+            context['table'] = df.to_html(
+                float_format=lambda x: f'{x:.4f}',
+                classes='table table-striped table-bordered table-hover',
+                justify='center',
+                index=False,
+                escape=False,
+            )
+        except:
+            context['table'] = None
+        return context
 
 class RDLCellGapUploadView(LoginRequiredMixin, FormView):
     template_name = 'form_generic.html'
