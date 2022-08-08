@@ -65,7 +65,7 @@ class AxoUploadView(LoginRequiredMixin, FormView):
         return super().form_valid(form)
     
 class AxoUploadSuccessView(TemplateView):
-    template_name = 'form_generic.html'
+    template_name = 'success_generic.html'
     
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
