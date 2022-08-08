@@ -25,9 +25,20 @@ class MaterialsUploadForm(forms.Form):
             self.cleaned_data['materials'], sheet_name='Polyimide')
         seal_df = pd.read_excel(
             self.cleaned_data['materials'], sheet_name='Seal')
+        save_log = {
+            'file_name': [self.cleaned_data['materials'].name],
+            'warning': [],
+        }
+        df_log = {
+            'material': [],
+            'name': [],
+        }
         # LC part
         for row in lc_df.to_dict(orient='records'):
             if LiquidCrystal.objects.filter(name=row['Name']):
+                save_log['warning'].append(
+                    f"LC: {row['Name']} already exists"
+                )
                 continue
             else:
                 vender = Vender.objects.get_or_create(
@@ -49,10 +60,15 @@ class MaterialsUploadForm(forms.Form):
                     k_33=float(row['K33(pN)']),
                     density=float(row['d(g/cm^3)']),
                 )
+                df_log['material'].append('LC')
+                df_log['name'].append(row['Name'])
 
         # PI part
         for row in pi_df.to_dict(orient='records'):
             if Polyimide.objects.filter(name=row['Name']):
+                save_log['warning'].append(
+                    f"PI: {row['Name']} already exists"
+                )
                 continue
             else:
                 vender = Vender.objects.get_or_create(
@@ -61,9 +77,14 @@ class MaterialsUploadForm(forms.Form):
                     name=str(row['Name']),
                     vender=vender,
                 )
+                df_log['material'].append('PI')
+                df_log['name'].append(row['Name'])
         # Seal part
         for row in seal_df.to_dict(orient='records'):
             if Seal.objects.filter(name=row['Name']):
+                save_log['warning'].append(
+                    f"Seal: {row['Name']} already exists"
+                )
                 continue
             else:
                 vender = Vender.objects.get_or_create(
@@ -72,6 +93,12 @@ class MaterialsUploadForm(forms.Form):
                     name=str(row['Name']),
                     vender=vender,
                 )
+                df_log['material'].append('Seal')
+                df_log['name'].append(row['Name'])
+        # Save log to cache
+        cache.set('save_log', save_log)
+        cache.set('df_log', pd.DataFrame(df_log))
+        
 
 class MaterialsUpdateForm(forms.Form):
     materials = forms.FileField(
