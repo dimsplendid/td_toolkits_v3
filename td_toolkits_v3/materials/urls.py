@@ -39,6 +39,11 @@ urlpatterns = [
         name='upload'
     ),
     path(
+        'upload/success/',
+        views.MaterialsUploadSuccessView.as_view(),
+        name='upload_success'
+    ),
+    path(
         route='update/',
         view=views.MaterialsUpdateView.as_view(),
         name='update'
