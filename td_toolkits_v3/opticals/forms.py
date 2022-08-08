@@ -293,8 +293,13 @@ class OptUploadForm(forms.Form):
             name=str(self.cleaned_data["exp_id"]))
         # print(files)
         factory = Factory.default(self.cleaned_data["factory"])
-
         opt_df = pd.DataFrame()
+        
+        save_log = {
+            "file_name": [file.name for file in files],
+            "warning": [],
+        }
+        
         for file in files:
             # Using pd read csv this time
             tmp_df = pd.read_csv(
@@ -302,6 +307,7 @@ class OptUploadForm(forms.Form):
             opt_df = pd.concat([opt_df, tmp_df])
 
         if len(opt_df) == 0:
+            save_log["warning"].append("No data found in the file")
             return
         # print(opt_df.head())
         # 0. drop na for chip, date, time
@@ -348,7 +354,12 @@ class OptUploadForm(forms.Form):
         ]
 
         opt_df = opt_df[opt_df.iloc[:, 2].isin(chip_could_log)]
-
+        
+        if len(opt_df) == 0:
+            save_log["warning"].append("No logable data found in the file")
+            cache.set("save_log", save_log)
+            return
+        
         # 6. modified data type
         opt_df.iloc[:, 3] = opt_df.iloc[:, 3].astype("int")  # measure point
         opt_df.iloc[:, 5] = opt_df.iloc[:, 5].astype("str")  # operator
@@ -359,22 +370,29 @@ class OptUploadForm(forms.Form):
         opt_df.iloc[:, 33] = opt_df.iloc[:, 33].astype("float")  # w_y
         # 7. batch create for each chip
         logs = []
-        instrument_id = Instrument.default(opt_df.iloc[0, 4], factory).id
+        instrument = Instrument.default(opt_df.iloc[0, 4], factory)
 
         for chip_name in opt_df.iloc[:, 2].unique():
-            chip_id = Chip.objects.get(
-                name=chip_name, sub__condition__experiment=experiment
-            ).id
+            try:
+                chip = Chip.objects.get(
+                    name=chip_name, sub__condition__experiment=experiment
+                )
+            except Chip.DoesNotExist:
+                save_log["warning"].append(
+                    f"The chip {chip_name} is not found in the experiment"
+                )
+                continue
+                
             tmp_df = opt_df[opt_df.iloc[:, 2] == chip_name]
             if len(tmp_df) == 0:
                 continue
             for row in tmp_df.to_numpy():
                 logs.append(
                     OpticalLog(
-                        chip_id=chip_id,
+                        chip=chip,
                         measure_point=row[3],
                         measure_time=row[-1],
-                        instrument_id=instrument_id,
+                        instrument=instrument,
                         operator=row[5],
                         voltage=row[6],
                         lc_percent=row[11],
@@ -386,6 +404,8 @@ class OptUploadForm(forms.Form):
 
         OpticalLog.objects.bulk_create(logs)
 
+        # save the log to cache
+        cache.set("save_log", save_log)
 
 class ResponseTimeUploadForm(forms.Form):
     exp_id = forms.ChoiceField(choices=("", ""), initial=None)
@@ -432,6 +452,11 @@ class ResponseTimeUploadForm(forms.Form):
         data_type = self.cleaned_data['data_type']
 
         rt_df = []
+        
+        save_log = {
+            "file_name": [file.name for file in files],
+            "warning": [],
+        }
         for file in files:
             print(file.name)
             if data_type == 'txt':
@@ -458,6 +483,8 @@ class ResponseTimeUploadForm(forms.Form):
         unwanted_mask = rt_df.iloc[:, 7].astype("str").str.match("[ a-zA-Z]+")
         rt_df = rt_df[~unwanted_mask]
         if len(rt_df) == 0:
+            save_log["warning"].append("No logable data found in the files")
+            cache.set("save_log", save_log)
             return
 
         # modified types
@@ -517,6 +544,10 @@ class ResponseTimeUploadForm(forms.Form):
         ]
 
         rt_df = rt_df[rt_df.iloc[:, 2].isin(chip_could_log)]
+        if len(rt_df) == 0:
+            save_log["warning"].append("No logable data found in the files")
+            cache.set("save_log", save_log)
+            return
         logs = []
         instrument_id = Instrument.default(rt_df.iloc[0, 4], factory).id
 

@@ -130,7 +130,7 @@ class RDLCellGapUploadSuccessView(TemplateView):
 class OptUploadView(LoginRequiredMixin, FormView):
     template_name = 'form_generic.html'
     form_class = OptUploadForm
-    success_url = reverse_lazy('opticals:toc_opt_log_upload')
+    success_url = reverse_lazy('opticals:toc_opt_log_upload_success')
 
     def form_valid(self, form):
         form.save(self.request)
@@ -141,10 +141,23 @@ class OptUploadView(LoginRequiredMixin, FormView):
         context['title'] = "TOC OPT Upload"
         return context
 
+class OptUploadSuccessView(TemplateView):
+    template_name: str = 'success_generic.html'
+    
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'TOC OPT Upload Success'
+        context['log'] = cache.get('save_log')
+        context['nexts'] = {
+            "RT Upload": reverse_lazy('opticals:toc_rt_log_upload'),
+            "OPT Fitting": reverse_lazy('opticals:opt_fitting'),
+        }
+        return context
+                
 class ResponseTimeUploadView(LoginRequiredMixin, FormView):
     template_name = 'form_generic.html'
     form_class = ResponseTimeUploadForm
-    success_url = reverse_lazy('opticals:toc_rt_log_upload')
+    success_url = reverse_lazy('opticals:toc_rt_log_upload_success')
 
     def form_valid(self, form):
         form.save(self.request)
@@ -155,6 +168,18 @@ class ResponseTimeUploadView(LoginRequiredMixin, FormView):
         context['title'] = 'TOC Response Time Upload'
         return context
 
+class ResponseTimeUploadSuccessView(TemplateView):
+    template_name = 'success_generic.html'
+    
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'TOC Response Time Upload Success'
+        context['log'] = cache.get('save_log')
+        context['nexts'] = {
+            "OPT Upload": reverse_lazy('opticals:toc_opt_log_upload'),
+            "RT Fitting": reverse_lazy('opticals:rt_fitting'),
+        }
+        return context
 
 class OpticalReferenceCreateView(LoginRequiredMixin, CreateView):
     template_name = 'form_generic.html'

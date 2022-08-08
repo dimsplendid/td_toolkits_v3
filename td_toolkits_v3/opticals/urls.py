@@ -34,9 +34,19 @@ urlpatterns = [
         name='toc_opt_log_upload'
     ),
     path(
+        'toc/opt/upload/success/',
+        views.OptUploadSuccessView.as_view(),
+        name='toc_opt_log_upload_success'
+    ),
+    path(
         'toc/rt/upload/',
         views.ResponseTimeUploadView.as_view(),
         name='toc_rt_log_upload'
+    ),
+    path(
+        'toc/rt/upload/success/',
+        views.ResponseTimeUploadSuccessView.as_view(),
+        name='toc_rt_log_upload_success'
     ),
     path(
         'ref/list/',
