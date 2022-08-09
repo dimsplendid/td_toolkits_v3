@@ -1,6 +1,6 @@
 import re
 
-from typing import Dict, List, Tuple, Union, Optional, Literal
+from typing import List, Tuple, Optional, Literal
 from pydantic import BaseModel, Field, validator
 from datetime import timedelta
 from openpyxl.cell.cell import Cell
