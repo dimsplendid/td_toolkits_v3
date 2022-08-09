@@ -1,4 +1,5 @@
 from django import forms
+from django.http import HttpRequest
 import pandas as pd
 
 from td_toolkits_v3.materials.models import (
@@ -9,6 +10,7 @@ from td_toolkits_v3.materials.models import (
 )
 
 from .models import (
+    Batch,
     Adhesion,
     DeltaAngle,
     File,
@@ -19,6 +21,8 @@ from .models import (
     UShapeAC,
     VoltageHoldingRatio,
 )
+
+from .tools import utils
 
 class ReliabilitiesUploadForm(forms.Form):
     reliabilites = forms.FileField(
@@ -84,9 +88,10 @@ class ReliabilitiesUploadForm(forms.Form):
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[9])
                 file, _ = File.objects.get_or_create(name=row[10])
+                batch, _ = Batch.objects.get_or_create(name=row[11])
                 if not Adhesion.objects.filter(
                     lc=lc, pi=pi, seal=seal, vender=vender, file_source=file,
-                    adhesion_interface=row[6], method=row[7]).exists():
+                    adhesion_interface=row[6], method=row[7], batch=batch).exists():
                     Adhesion.objects.create(
                         lc=lc, pi=pi, seal=seal, vender=vender, 
                         file_source=file,
@@ -94,7 +99,8 @@ class ReliabilitiesUploadForm(forms.Form):
                         adhesion_interface=row[6], 
                         method=row[7], 
                         value=row[4], 
-                        peeling=row[8]
+                        peeling=row[8],
+                        batch=batch
                     )
 
         if len(lto_df):
@@ -103,24 +109,28 @@ class ReliabilitiesUploadForm(forms.Form):
                 vender, _ = Vender.objects.get_or_create(name=row[9])
                 file, _ = File.objects.get_or_create(name=row[10])
                 jar_test_seal, _ = Seal.objects.get_or_create(name=row[7])
+                batch, _ = Batch.objects.get_or_create(name=row[11])
                 
                 if not LowTemperatureOperation.objects.filter(
                     lc=lc, pi=pi, seal=seal, vender=vender, file_source=file,
                     storage_condition=row[5], slv_condition=row[6],
                     jar_test_seal=jar_test_seal,
-                    measure_temperature=row[8]).exists():
+                    measure_temperature=row[8], batch=batch).exists():
 
                     LowTemperatureOperation.objects.create(
                         lc=lc, pi=pi, seal=seal, vender=vender, file_source=file,
                         storage_condition=row[5], slv_condition=row[6],
                         jar_test_seal=jar_test_seal, measure_temperature=row[8],
-                        value=LowTemperatureOperation.value_mapping[row[4]])
+                        value=LowTemperatureOperation.value_mapping[row[4]],
+                        batch=batch
+                    )
 
         if len(lts_df):
             for _, row in lts_df.iterrows():
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[9])
                 file, _ = File.objects.get_or_create(name=row[10])
+                batch, _ = Batch.objects.get_or_create(name=row[11])
                 if (row[7] != 'N.A.'):
                     jar_test_seal, _ = Seal.objects.get_or_create(name=row[7])
                 else:
@@ -130,27 +140,30 @@ class ReliabilitiesUploadForm(forms.Form):
                     lc=lc, pi=pi, seal=seal, vender=vender, file_source=file,
                     storage_condition=row[5], slv_condition=row[6],
                     jar_test_seal=jar_test_seal,
-                    measure_temperature=row[8]).exists():
+                    measure_temperature=row[8], batch=batch).exists():
                     LowTemperatureStorage.objects.create(
                         lc=lc, pi=pi, seal=seal, vender=vender, 
                         file_source=file,
                         storage_condition=row[5], slv_condition=row[6],
                         jar_test_seal=jar_test_seal, measure_temperature=row[8],
-                        value=row[4])
+                        value=row[4], batch=batch)
 
         if len(pct_df):
             for _, row in pct_df.iterrows():
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[7])
                 file, _ = File.objects.get_or_create(name=row[8])
+                batch, _ = Batch.objects.get_or_create(name=row[9])
                 if not PressureCookingTest.objects.filter(
                     lc=lc, pi=pi, seal=seal, vender=vender, file_source=file,
                     measure_condition=row[5], test_vehical=row[6],
+                    batch=batch,
                     ).exists():
                     PressureCookingTest.objects.create(
                         value=row[4], lc=lc, pi=pi, seal=seal, vender=vender, 
                         file_source=file,
                         measure_condition=row[5], test_vehical=row[6],
+                        batch=batch,
                     )
 
         if len(seal_wvtr_df):
@@ -159,26 +172,32 @@ class ReliabilitiesUploadForm(forms.Form):
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[10])
                 file, _ = File.objects.get_or_create(name=row[11])
+                batch, _ = Batch.objects.get_or_create(name=row[12])
                 if not SealWVTR.objects.filter(
                     lc=lc, pi=pi, seal=seal, vender=vender, file_source=file,
-                    temperature=row[7], humidity=row[8], thickness=row[9]
-                    ).exists():
+                    temperature=row[7], humidity=row[8], thickness=row[9],
+                    batch=batch
+                ).exists():
                     SealWVTR.objects.create(
                         value=row[4], lc=lc, pi=pi, seal=seal, vender=vender, 
                         file_source=file,
                         unit=row[5], time=row[6],
-                        temperature=row[7], humidity=row[8], thickness=row[9])
+                        temperature=row[7], humidity=row[8], thickness=row[9],
+                        batch=batch
+                    )
 
         if len(delta_angle_df):
             for _, row in delta_angle_df.iterrows():
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[9])
                 file, _ = File.objects.get_or_create(name=row[10])
+                batch, _ = Batch.objects.get_or_create(name=row[11])
                 if not DeltaAngle.objects.filter(
                     lc=lc, pi=pi, seal=seal, vender=vender, file_source=file,
                     measure_voltage=row[5], measure_freq=row[6], 
                     measure_time=row[7],
-                    measure_temperature=row[8]
+                    measure_temperature=row[8],
+                    batch=batch
                 ).exists():
                     DeltaAngle.objects.create(
                         value=row[4], lc=lc, pi=pi, seal=seal, vender=vender, 
@@ -186,7 +205,8 @@ class ReliabilitiesUploadForm(forms.Form):
                         measure_voltage=row[5], 
                         measure_freq=row[6], 
                         measure_time=row[7],
-                        measure_temperature=row[8]
+                        measure_temperature=row[8],
+                        batch=batch
                     )
 
         if len(u_shape_ac_df):
@@ -194,28 +214,68 @@ class ReliabilitiesUploadForm(forms.Form):
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[7])
                 file, _ = File.objects.get_or_create(name=row[8])
+                batch, _ = Batch.objects.get_or_create(name=row[9])
                 if not UShapeAC.objects.filter(
                     lc=lc, pi=pi, seal=seal, vender=vender, file_source=file,
-                    time=row[5], temperature=row[6],).exists():
+                    time=row[5], temperature=row[6],batch=batch).exists():
                     UShapeAC.objects.create(
                         value=row[4], lc=lc, pi=pi, seal=seal, vender=vender, 
                         file_source=file,
-                        time=row[5], temperature=row[6],)
+                        time=row[5], temperature=row[6],batch=batch)
 
         if len(vhr_df):
             for _, row in vhr_df.iterrows():
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[9])
                 file, _ = File.objects.get_or_create(name=row[10])
+                batch, _ = Batch.objects.get_or_create(name=row[11])
                 if not VoltageHoldingRatio.objects.filter(
                     lc=lc, pi=pi, seal=seal, vender=vender, file_source=file,
                     measure_voltage=row[5], measure_freq=row[6], 
                     measure_temperature=row[7],
-                    uv_aging=row[8]).exists():
+                    uv_aging=row[8], batch=batch).exists():
                     VoltageHoldingRatio.objects.create(
                         value=row[4], lc=lc, pi=pi, seal=seal, vender=vender, 
                         file_source=file,
                         measure_voltage=row[5], measure_freq=row[6], 
                         measure_temperature=row[7],
-                        uv_aging=row[8]
+                        uv_aging=row[8], batch=batch
                     )
+
+class ReliabilityPhaseTwoForm(forms.Form):
+    batch = forms.ModelChoiceField(queryset=Batch.objects.all())
+    vhr_weight = forms.FloatField(label='VHR(%) weight', initial=1.)
+    delta_angle_weight = forms.FloatField(label='Δ angle(°) weight', initial=1.)
+    adhesion_weight = forms.FloatField(label='Adhesion(kgw) weight', initial=1.)
+    lts_weight = forms.FloatField(label='LTS(days) weight', initial=1.)
+    pct_weight = forms.FloatField(label='PCT(hrs) weight', initial=1.)
+    sealwvtr_weight = forms.FloatField(label='Seal WVTR(%) weight', initial=1.)
+    ushape_ac_weight = forms.FloatField(label='U-Shape AC(%) weight', initial=1.)
+    
+    def calc(self, request: HttpRequest):
+        weight = {
+            'VHR(heat)': self.cleaned_data['vhr_weight'],
+            'Δ angle': self.cleaned_data['delta_angle_weight'],
+            'Adhesion test': self.cleaned_data['adhesion_weight'],
+            'LTS': self.cleaned_data['lts_weight'],
+            'PCT': self.cleaned_data['pct_weight'],
+            'Seal WVTR': self.cleaned_data['sealwvtr_weight'],
+            'U-shape AC%': self.cleaned_data['ushape_ac_weight'],
+        }
+        batch = self.cleaned_data['batch']
+        
+        result = utils.ReliabilityPhaseTwo(batch)
+        result.scale_factor = weight
+        
+        result.search(VoltageHoldingRatio)
+        result.search(DeltaAngle)
+        result.search(Adhesion)
+        result.search(LowTemperatureStorage)
+        result.search(PressureCookingTest)
+        result.search(SealWVTR)
+        result.search(UShapeAC)
+        
+        request.session['summary'] = result.summary.to_json()
+        request.session['score'] = result.score.to_json()
+        request.session['plot'] = result.plot
+    

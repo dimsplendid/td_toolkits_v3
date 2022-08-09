@@ -10,6 +10,7 @@ from .models import (
     SealWVTR,
     UShapeAC,
     VoltageHoldingRatio,
+    Batch,
 )
 
 admin.site.register(Adhesion)
@@ -21,4 +22,5 @@ admin.site.register(PressureCookingTest)
 admin.site.register(SealWVTR)
 admin.site.register(UShapeAC)
 admin.site.register(VoltageHoldingRatio)
+admin.site.register(Batch)
 

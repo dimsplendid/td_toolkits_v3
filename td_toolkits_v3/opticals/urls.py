@@ -122,5 +122,40 @@ urlpatterns = [
         'data/dump/',
         views.OpticalDataDumpView.as_view(),
         name='data_dump'
-    )
+    ),
+    path(
+        'tr2/',
+        views.OpticalPhaseTwoView.as_view(),
+        name='tr2'
+    ),
+    path(
+        'tr2/success/',
+        views.OpticalPhaseTwoSuccessView.as_view(),
+        name='tr2_success'
+    ),
+    path(
+        'tr2/advanced-cr/',
+        views.AdvancedContrastRatioIndexView.as_view(),
+        name='advanced_contrast'
+    ),
+    path(
+        'tr2/advanced-cr/calculate/',
+        views.AdvancedContrastRatioView.as_view(),
+        name='advanced_contrast_calculation'
+    ),
+    path(
+        'tr2/advanced-cr/success/',
+        views.AdvancedContrastRatioSuccessView.as_view(),
+        name='advanced_contrast_ratio_success'
+    ),
+    path(
+        'blu/upload/',
+        view=views.BackLightUnitUploadView.as_view(),
+        name='blu_upload',
+    ),
+    path(
+        'blu/upload/success/',
+        view=views.BackLightUnitUploadSuccessView.as_view(),
+        name='blu_upload_success',
+    ),
 ]

@@ -1,3 +1,6 @@
+from __future__ import annotations
+from typing import Type, TypeVar, Literal
+
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -7,6 +10,7 @@ from scipy.interpolate import interp1d
 
 from td_toolkits_v3.opticals.tools.utils import tr2_score, OptLoader
 from td_toolkits_v3.reliabilities.models import (
+    ReliabilityBase,
     Adhesion,
     DeltaAngle,
     File,
@@ -393,6 +397,121 @@ class UShape:
         gamma: float, default is 2.2
         """
         return (gray_level/255)**gamma * 99
+
+RALogType = TypeVar('RALogType', bound=ReliabilityBase)
+
+class ReliabilityTable:
+    
+    def __init__(self):
+        self.pattern = re.compile(r'(?<!^)(?=[A-Z])')
+        self.header = {
+            'lc__name': 'LC',
+            'pi__name': 'PI',
+            'seal__name': 'Seal',
+            'value': 'Value',
+            'vender__name': 'Vender',
+            'file_source__name': 'file source'
+        }
+        self.tables: dict[str, pd.DataFrame] = {}
+        self.__score: pd.DataFrame|None = None
+        
+    def search(self, Model: RALogType):
+        raise("do not implement")
+        
+    @property
+    def score(self):
+        raise("do not implement")
+        
+
+class ReliabilityPhaseTwo(ReliabilityTable):
+    
+    def __init__(self, batch):
+        super().__init__()
+        self.batch = batch
+        self.cmp: dict[str, Literal['lt', 'gt']] = {}
+        self.scale_factor: dict[str, float] = {}
+    
+    def search(self, Model: RALogType) -> pd.DataFrame:
+        """search the proper RA table
+
+        Args:
+            Model (RALogType): The RA log models
+
+        Returns:
+            pd.DataFrame: The Search result.
+        """
+        if Model.name in self.tables:
+            return self.tables[Model.name]
+        
+        self.tables[Model.name] = pd.DataFrame(
+            Model.objects.filter(batch__name=self.batch).values(*self.header)
+        ).rename(columns=self.header)
+        self.cmp[Model.name] = Model.cmp
+        
+        return self.tables[Model.name]
+    
+    @property
+    def summary(self) -> pd.DataFrame:
+        """produce summary table of searched ra
+
+        Returns:
+            pd.DataFrame: The summary table of all data
+        """
+        result = pd.DataFrame({'LC':[], 'PI':[], 'Seal':[]})
+        
+        for item in self.tables:
+            if len(self.tables[item]) == 0:
+                continue
+            tmp_df = self.tables[item]
+            tmp_df = tmp_df.rename(columns={'Value': item})
+            result = pd.merge(
+                result, tmp_df.iloc[:,:4], 
+                on=['LC', 'PI', 'Seal'],
+                how='outer',
+            )
+        
+        return result
+    
+    @property
+    def score(self) -> pd.DataFrame:
+        """Generate RA Score Table
+
+        Returns:
+            pd.DataFrame: RA Score Result
+        """
+        
+        summary = self.summary
+        result = summary.iloc[:,:3].copy()
+        for item in summary.columns[3:]:
+            if item not in self.scale_factor:
+                self.scale_factor[item] = 1
+            
+            result[item] = tr2_score(
+                summary[item],
+                'min-max',
+                self.cmp[item],
+                self.scale_factor[item],
+                lambda x: np.round(9*x) + 1,
+            )
+            
+        result['Sum'] = result.iloc[:, 3:].sum(axis=1)
+        result = result.sort_values('Sum', ascending=False)
+        
+        return result
+    
+    @property
+    def plot(self):
+        df = self.score.fillna('None')
+        df['Configuration'] = df['LC']+ ', '+df['PI']+ ', '+df['Seal']
+        df = df.iloc[:, 3:]
+        plot_df = df.set_index('Configuration').stack().reset_index()
+        plot_df.columns = ['Configuration', 'Item', 'Score']
+        fig = px.bar(
+            plot_df, x='Item', y='Score', color='Configuration',
+            barmode='group',
+        )
+        return plot(fig, output_type='div')
+
 
 # Test main
 # Show the difference ratio and the final table of the table shrink

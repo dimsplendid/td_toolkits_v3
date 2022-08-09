@@ -1,4 +1,5 @@
 from django import forms
+from django.core.cache import cache
 
 import pandas as pd
 
@@ -7,6 +8,8 @@ from .models import (
     LiquidCrystal,
     Polyimide,
     Seal,
+    OrdinaryRefractionIndex,
+    ExtraordinaryRefractionIndex,
 )
 
 class MaterialsUploadForm(forms.Form):
@@ -136,3 +139,82 @@ class MaterialsUpdateForm(forms.Form):
                 seal.save()
                 
             except Exception as e: print(e)
+
+class RefractionIndexUploadForm(forms.Form):
+    refraction_index = forms.FileField(
+        widget=forms.FileInput(attrs={"accept": ".xlsx"})
+    )
+    
+    def save(self):
+        df = pd.read_excel(
+            self.cleaned_data['refraction_index'],
+            sheet_name='upload'
+        )
+        lcs = []
+        for row in df.to_dict(orient='records'):
+            try:
+                lc = LiquidCrystal.objects.get(name=row['LC'])
+                if lc.ne_exps.all():
+                    continue
+                no_logs = [
+                    OrdinaryRefractionIndex(
+                        wavelength=450,
+                        value=float(row['no_450']),
+                        lc=lc,
+                    ),
+                    OrdinaryRefractionIndex(
+                        wavelength=509,
+                        value=float(row['no_509']),
+                        lc=lc,
+                    ),
+                    OrdinaryRefractionIndex(
+                        wavelength=546,
+                        value=float(row['no_546']),
+                        lc=lc,
+                    ),
+                    OrdinaryRefractionIndex(
+                        wavelength=589,
+                        value=float(row['no_589']),
+                        lc=lc,
+                    ),
+                    OrdinaryRefractionIndex(
+                        wavelength=633,
+                        value=float(row['no_633']),
+                        lc=lc,
+                    ),
+                ]
+                ne_logs = [
+                    ExtraordinaryRefractionIndex(
+                        wavelength=450,
+                        value=float(row['ne_450']),
+                        lc=lc,
+                    ),
+                    ExtraordinaryRefractionIndex(
+                        wavelength=509,
+                        value=float(row['ne_509']),
+                        lc=lc,
+                    ),
+                    ExtraordinaryRefractionIndex(
+                        wavelength=546,
+                        value=float(row['ne_546']),
+                        lc=lc,
+                    ),
+                    ExtraordinaryRefractionIndex(
+                        wavelength=589,
+                        value=float(row['ne_589']),
+                        lc=lc,
+                    ),
+                    ExtraordinaryRefractionIndex(
+                        wavelength=633,
+                        value=float(row['ne_633']),
+                        lc=lc,
+                    ),
+                ]
+                OrdinaryRefractionIndex.objects.bulk_create(no_logs)
+                ExtraordinaryRefractionIndex.objects.bulk_create(ne_logs)
+                
+            except LiquidCrystal.DoesNotExist:
+                continue
+            
+            lcs.append(lc)
+        cache.set('lcs', lcs, 30)
