@@ -84,7 +84,7 @@ class ImageStickingParser:
                     CheckPoint(
                         stress_time=timedelta(minutes=5),
                         recover_times=[5, 10],
-                        gray_levels=[32, 64],
+                        gray_levels=[32, 64, 128],
                     ),
                     CheckPoint(
                         stress_time=timedelta(minutes=10),
@@ -188,7 +188,7 @@ class ImageStickingParser:
         cell: Cell,
         index: int = -1,
     ):
-        allowed_log = re.findall(r'\d', cell.value)
+        allowed_log = re.findall(r'\d', str(cell.value))
         if index < len(allowed_log):
             return int(allowed_log[index])
         else:
