@@ -258,11 +258,12 @@ class ImageStickingBase(CheckPoint):
     ra_level: int
     
 class Spec(ImageStickingBase):
-    remark: str
+    remark: Optional[str]
     
 class Judgement(Spec):
     ok: int = Field(0, ge=0)
     ng: int = Field(0, ge=0)
+    ng_level: int = Field(0, ge=0, le=6)
     
     @property
     def total(self):
@@ -289,12 +290,30 @@ class Chip(BaseModel):
 class Log(Chip):
     value: List[ImageStickingBase] = []
         
-class Judger(Spec):
+class Judger(BaseModel):
     name: str
     judgements: List[Judgement] = []
     
-    def judge(self, log: Log):
-        ...
+    def judge(self, logs: List[Log]):
+        for judgement in self.judgements:
+            for log in logs:
+                if log.value is None:
+                    continue
+                for item in filter(
+                    lambda x: (
+                        x.gray_level == judgement.gray_level and
+                        x.stress_time == judgement.stress_time and
+                        x.is_type == judgement.is_type and
+                        x.recover_time == judgement.recover_time
+                    ),
+                    log.value
+                ):
+                    if judgement.ra_level >= item.ra_level:
+                        judgement.ok += 1
+                    else:
+                        judgement.ng += 1
+                        if judgement.ng_level < item.ra_level:
+                            judgement.ng_level = item.ra_level
     
     @classmethod
     def table(cls, Judgers: List[Judger]):
