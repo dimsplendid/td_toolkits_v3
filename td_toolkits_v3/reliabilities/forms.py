@@ -1,6 +1,10 @@
 from django import forms
 from django.http import HttpRequest
+from django.core.cache import cache
+
 import pandas as pd
+from openpyxl import load_workbook, Workbook
+from datetime import datetime
 
 from td_toolkits_v3.materials.models import (
     LiquidCrystal,
@@ -23,6 +27,7 @@ from .models import (
 )
 
 from .tools import utils
+from .tools import image_sticking
 
 class ReliabilitiesUploadForm(forms.Form):
     reliabilites = forms.FileField(
@@ -279,3 +284,41 @@ class ReliabilityPhaseTwoForm(forms.Form):
         request.session['score'] = result.score.to_json()
         request.session['plot'] = result.plot
     
+class ImageStickingUploadForm(forms.Form):
+    file = forms.FileField(
+        help_text='Excel file(.xlsx)',
+        widget=forms.FileInput(attrs={'accept': '.xlsx'})
+    )
+    
+    def calc(self):
+        wb = load_workbook(self.cleaned_data['file'])
+        file_name = (
+            # f"{self.cleaned_data['file'].name}_"
+            "traffic_light_"
+            f"{datetime.now().strftime('%Y%m%d%H%M%S')}.xlsx"
+        )
+        
+        parser = image_sticking.Parser(wb)
+        result = parser.parse()
+        conditions = pd.DataFrame(
+            [i.dict(exclude={'value'}) for i in result]
+        )['condition'].unique()
+        
+        logs = {}
+        for judge_kind, judger in image_sticking.Judger.load_specs().items():
+            logs[judge_kind] = {}
+            for condition in conditions:
+                log = [i for i in filter(lambda x: x.condition==condition, result)]
+                logs[judge_kind][condition] = image_sticking.Judger(
+                    name=condition,
+                    judgements=judger.judgements,
+                )
+                logs[judge_kind][condition].judge(log)
+                    
+        wb = Workbook()
+        ws = wb.active
+        ws.title = 'Summary'
+                    
+        image_sticking.Judger.table(ws, logs)
+        cache.set('file_name', file_name)
+        cache.set('wb', wb)

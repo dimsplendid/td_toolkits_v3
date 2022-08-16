@@ -333,6 +333,7 @@ td_toolkits_v3/media/
 ~*
 
 # ignore jupyter notebook(just for testing)
+jupyter_notebook/
 .ipynb_checkpoints*
 *.ipynb
 

@@ -1,6 +1,7 @@
 from io import BytesIO
 import pandas as pd
 
+from django.core.cache import cache
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse, HttpRequest
 from django.shortcuts import get_object_or_404, redirect
@@ -16,6 +17,7 @@ from django.views.generic.edit import (
     FormView,
     UpdateView,
 )
+from openpyxl.writer.excel import save_virtual_workbook
 
 from td_toolkits_v3.materials.models import (
     LiquidCrystal,
@@ -27,6 +29,7 @@ from td_toolkits_v3.products.models import Experiment
 from .forms import (
     ReliabilitiesUploadForm,
     ReliabilityPhaseTwoForm,
+    ImageStickingUploadForm,
 )
 from .models import ReliabilitySearchProfile
 from .tools.utils import ReliabilityScore, UShape
@@ -389,3 +392,35 @@ class ReliabilityPhaseTwoSuccessView(TemplateView):
         context['plot'] = self.request.session.get('plot')
         
         return context
+    
+class ImageStickingUploadView(FormView):
+    template_name: str = 'form_generic.html'
+    form_class = ImageStickingUploadForm
+    success_url = reverse_lazy('reliabilities:image_sticking_traffic_light_success')
+    
+    def form_valid(self, form):
+        form.calc()
+        return super().form_valid(form)
+
+class ImageStickingSuccessView(View):
+    def get(
+        self, 
+        request: HttpRequest,
+        *args, **kwargs,
+    ):
+        try:
+            file_name = cache.get('file_name')
+            wb = cache.get('wb')
+        except Exception as e:
+            raise e
+
+        response = HttpResponse(
+            save_virtual_workbook(wb),
+            content_type=(
+                'application/'
+                'vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+        )
+        response['Content-Disposition'] = f'attachment; filename={file_name}'
+        return response
+        
