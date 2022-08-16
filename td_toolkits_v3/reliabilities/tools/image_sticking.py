@@ -96,8 +96,8 @@ class Judger(BaseModel):
                         judgement.ok += 1
                     else:
                         judgement.ng += 1
-                        if judgement.ng_level < item.ra_level:
-                            judgement.ng_level = item.ra_level
+                    if judgement.ng_level < item.ra_level:
+                        judgement.ng_level = item.ra_level
     
     @classmethod
     def load_specs(
@@ -236,8 +236,8 @@ class Judger(BaseModel):
                     ),
                 ]
             ),
-            'MP': Judger(
-                name='MP',
+            'MP: Huawei': Judger(
+                name='MP Huawei',
                 judgements=[
                     Judgement(
                         stress_time=timedelta(hours=1),
@@ -253,6 +253,11 @@ class Judger(BaseModel):
                         is_type=ISType.L,
                         ra_level=0,
                     ),
+                ]
+            ),
+            'MP: 傳音(LG)': Judger(
+                name='MP: 傳音(LG)',
+                judgements=[
                     Judgement(
                         stress_time=timedelta(hours=1),
                         recover_time=0,
@@ -267,20 +272,11 @@ class Judger(BaseModel):
                         is_type=ISType.L,
                         ra_level=0,
                     ),
-                    Judgement(
-                        stress_time=timedelta(minutes=30),
-                        recover_time=0,
-                        gray_level=127,
-                        is_type=ISType.S,
-                        ra_level=0,
-                    ),
-                    Judgement(
-                        stress_time=timedelta(minutes=30),
-                        recover_time=0,
-                        gray_level=127,
-                        is_type=ISType.L,
-                        ra_level=0,
-                    ),
+                ]
+            ),
+            'MP: OPPO': Judger(
+                name='MP: OPPO',
+                judgements=[
                     Judgement(
                         stress_time=timedelta(minutes=5),
                         recover_time=0,
@@ -323,20 +319,11 @@ class Judger(BaseModel):
                         is_type=ISType.L,
                         ra_level=0,
                     ),
-                    Judgement(
-                        stress_time=timedelta(hours=1),
-                        recover_time=0,
-                        gray_level=127,
-                        is_type=ISType.S,
-                        ra_level=0,
-                    ),
-                    Judgement(
-                        stress_time=timedelta(hours=1),
-                        recover_time=0,
-                        gray_level=127,
-                        is_type=ISType.L,
-                        ra_level=0,
-                    ),
+                ]
+            ),
+            'MP: 華勤(32 灰取代 41 灰)': Judger(
+                name='MP: 華勤',
+                judgements=[
                     Judgement(
                         stress_time=timedelta(minutes=30),
                         recover_time=timedelta(minutes=3),
@@ -421,6 +408,11 @@ class Judger(BaseModel):
                         is_type=ISType.L,
                         ra_level=0,
                     ),
+                ]
+            ),
+            'MP: Lenovo(64 灰取代 60 灰)': Judger(
+                name='MP: Lenovo',
+                judgements=[
                     Judgement(
                         stress_time=timedelta(hours=1),
                         recover_time=timedelta(minutes=5),
@@ -451,8 +443,8 @@ class Judger(BaseModel):
                     ),
                 ]
             ),
-            'Tablet_1': Judger(
-                name='Tablet_1',
+            'Tablet: Huawei/小米': Judger(
+                name='Tablet: Huawei/小米',
                 judgements=[
                     Judgement(
                         stress_time=timedelta(hours=1),
@@ -465,69 +457,51 @@ class Judger(BaseModel):
                         stress_time=timedelta(hours=1),
                         recover_time=timedelta(minutes=3),
                         gray_level=128,
-                        is_type=ISType.L,
-                        ra_level=0,
-                    ),
-                    Judgement(
-                        stress_time=timedelta(minutes=30),
-                        recover_time=timedelta(minutes=3),
-                        gray_level=128,
-                        is_type=ISType.S,
-                        ra_level=0,
-                    ),
-                    Judgement(
-                        stress_time=timedelta(minutes=30),
-                        recover_time=timedelta(minutes=3),
-                        gray_level=128,
-                        is_type=ISType.L,
-                        ra_level=0,
-                    ),
-                    Judgement(
-                        stress_time=timedelta(hours=1),
-                        recover_time=timedelta(minutes=5),
-                        gray_level=128,
-                        is_type=ISType.S,
-                        ra_level=0,
-                    ),
-                    Judgement(
-                        stress_time=timedelta(hours=1),
-                        recover_time=timedelta(minutes=5),
-                        gray_level=128,
-                        is_type=ISType.L,
-                        ra_level=0,
-                    ),
-                    Judgement(
-                        stress_time=timedelta(hours=1),
-                        recover_time=timedelta(minutes=5),
-                        gray_level=127,
-                        is_type=ISType.S,
-                        ra_level=0,
-                    ),
-                    Judgement(
-                        stress_time=timedelta(hours=1),
-                        recover_time=timedelta(minutes=5),
-                        gray_level=127,
-                        is_type=ISType.L,
-                        ra_level=0,
-                    ),
-                    Judgement(
-                        stress_time=timedelta(hours=6),
-                        recover_time=timedelta(minutes=1),
-                        gray_level=64,
-                        is_type=ISType.S,
-                        ra_level=0,
-                    ),
-                    Judgement(
-                        stress_time=timedelta(hours=6),
-                        recover_time=timedelta(minutes=1),
-                        gray_level=64,
                         is_type=ISType.L,
                         ra_level=0,
                     ),
                 ]
             ),
-            'Tablet_2': Judger(
-                name='Tablet_2',
+            'Tablet: Lenovo': Judger(
+                name='Tablet: Lenovo',
+                judgements=[
+                    Judgement(
+                        stress_time=timedelta(minutes=30),
+                        recover_time=timedelta(minutes=3),
+                        gray_level=128,
+                        is_type=ISType.S,
+                        ra_level=0,
+                    ),
+                    Judgement(
+                        stress_time=timedelta(minutes=30),
+                        recover_time=timedelta(minutes=3),
+                        gray_level=128,
+                        is_type=ISType.L,
+                        ra_level=0,
+                    ),
+                ]
+            ),
+            'Tablet: 字節跳動': Judger(
+                name='Tablet: 字節跳動',
+                judgements=[
+                    Judgement(
+                        stress_time=timedelta(hours=1),
+                        recover_time=timedelta(minutes=5),
+                        gray_level=128,
+                        is_type=ISType.S,
+                        ra_level=0,
+                    ),
+                    Judgement(
+                        stress_time=timedelta(hours=1),
+                        recover_time=timedelta(minutes=5),
+                        gray_level=128,
+                        is_type=ISType.L,
+                        ra_level=0,
+                    ),
+                ]
+            ),
+            'Tablet: 百度': Judger(
+                name='Tablet: 百度',
                 judgements=[
                     Judgement(
                         stress_time=timedelta(hours=2),
@@ -543,6 +517,11 @@ class Judger(BaseModel):
                         is_type=ISType.L,
                         ra_level=0,
                     ),
+                ]
+            ),
+            'Tablet: 諾亞舟/步步高': Judger(
+                name='Tablet: 諾亞舟/步步高',
+                judgements=[
                     Judgement(
                         stress_time=timedelta(hours=2),
                         recover_time=0,
@@ -557,20 +536,11 @@ class Judger(BaseModel):
                         is_type=ISType.L,
                         ra_level=0,
                     ),
-                    Judgement(
-                        stress_time=timedelta(minutes=30),
-                        recover_time=timedelta(minutes=2),
-                        gray_level=32,
-                        is_type=ISType.S,
-                        ra_level=0,
-                    ),
-                    Judgement(
-                        stress_time=timedelta(minutes=30),
-                        recover_time=timedelta(minutes=2),
-                        gray_level=32,
-                        is_type=ISType.L,
-                        ra_level=0,
-                    ),
+                ]
+            ),
+            'Tablet: Google': Judger(
+                name='Tablet: Google',
+                judgements=[
                     Judgement(
                         stress_time=timedelta(minutes=5),
                         recover_time=timedelta(seconds=5),
@@ -615,23 +585,9 @@ class Judger(BaseModel):
                     ),
                 ]
             ),
-            'PC': Judger(
-                name='PC',
+            'PC: Huawei': Judger(
+                name='PC: Huawei',
                 judgements=[
-                    Judgement(
-                        stress_time=timedelta(hours=4),
-                        recover_time=timedelta(seconds=0),
-                        gray_level=64,
-                        is_type=ISType.S,
-                        ra_level=1,
-                    ),
-                    Judgement(
-                        stress_time=timedelta(hours=4),
-                        recover_time=timedelta(seconds=0),
-                        gray_level=64,
-                        is_type=ISType.L,
-                        ra_level=0,
-                    ),
                     Judgement(
                         stress_time=timedelta(hours=1),
                         recover_time=timedelta(seconds=0),
@@ -689,7 +645,7 @@ class Judger(BaseModel):
                 horizontal='center',
                 vertical='center',
             )
-            ws.row_dimensions[cell_ptr.row].height = 60
+            ws.row_dimensions[cell_ptr.row].height = 70
             cell_ptr.col += 1
             value = ''
             for test in cls.load_specs()[title].judgements:
