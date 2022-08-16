@@ -60,5 +60,15 @@ urlpatterns = [
         'tr2/success/',
         views.ReliabilityPhaseTwoSuccessView.as_view(),
         name='tr2_result'
+    ),
+    path(
+        'tr3/image-sticking/traffic-light/',
+        views.ImageStickingUploadView.as_view(),
+        name='image_sticking_traffic_light',
+    ),
+    path(
+        'tr3/image-sticking/traffic-light/success/',
+        views.ImageStickingSuccessView.as_view(),
+        name='image_sticking_traffic_light_success',
     )
 ]
