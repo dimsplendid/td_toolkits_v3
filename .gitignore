@@ -335,6 +335,7 @@ td_toolkits_v3/media/
 # ignore jupyter notebook(just for testing)
 .ipynb_checkpoints*
 *.ipynb
+jupyter_notebook/
 
 # VSCode Counter
 .VSCodeCounter/

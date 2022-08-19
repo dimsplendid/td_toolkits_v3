@@ -22,7 +22,8 @@ from td_toolkits_v3.materials.models import LiquidCrystal
 from td_toolkits_v3.products.models import Experiment
 
 from td_toolkits_v3.opticals.tools.utils import (
-    OptResultGenerator, 
+    # OptResultGenerator, 
+    OptTableGenerator,
     OptictalsScore,
     OptLoader,
 )
@@ -420,7 +421,7 @@ class OpticalSearchView(TemplateView):
         context = super().get_context_data(**kwargs)
         context['lc_list'] = [
             i[0] for i in 
-            OpticalsFittingModel.objects.all()
+            OptFittingModel.objects.all()
             .values_list('lc__name')
             # Seems distinct is not compatible to order_by
             # .order_by('modified') 
@@ -470,14 +471,23 @@ class OpticalSearchView(TemplateView):
             context['q_lc_list'] = LiquidCrystal.objects.filter(
                 name__in=lc_list)
             # store lc list cookies to for the ra searching
-            ref = (profile_df['Factory'][0], profile_df['Product'][0])
-            results = []
-            for lc in lc_list:
-                result_generator = OptResultGenerator(lc, ref)
-                results += [result_generator.table]
-
+            ref = OpticalReference.objects.get(
+                product_model_type__name=profile_df['Product'][0],
+                product_model_type__factory__name=profile_df['Factory'][0],
+            )
             # concat all results into one table
-            result = pd.concat(results, ignore_index=True)
+            opt_result_generator = OptTableGenerator(
+                lc_list=lc_list,
+                reference=ref, 
+                mode='search',
+            )
+            opt_result_generator.calc()
+            results = opt_result_generator.tables
+            result = results['Vref']
+            self.request.session['result'] = {
+                k: v.to_json() for
+                k, v in results.items()
+            }
             opt_score = OptictalsScore(result, profile_df)
             self.request.session['opt_result'] = result.to_json()
             self.request.session['opt_plot'] = opt_score.plot
