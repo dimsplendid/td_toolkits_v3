@@ -14,9 +14,19 @@ urlpatterns = [
         name='axo_upload'
     ),
     path(
+        'axo/upload/success/',
+        views.AxoUploadSuccessView.as_view(),
+        name='axo_upload_success'
+    ),
+    path(
         'rdl/cell-gap/upload/',
         views.RDLCellGapUploadView.as_view(),
         name='rdl_cell_gap_upload'
+    ),
+    path(
+        'rdl/cell-gap/upload/success/',
+        views.RDLCellGapUploadSuccessView.as_view(),
+        name='rdl_cell_gap_upload_success'
     ),
     path(
         'toc/opt/upload/',
@@ -24,9 +34,19 @@ urlpatterns = [
         name='toc_opt_log_upload'
     ),
     path(
+        'toc/opt/upload/success/',
+        views.OptUploadSuccessView.as_view(),
+        name='toc_opt_log_upload_success'
+    ),
+    path(
         'toc/rt/upload/',
         views.ResponseTimeUploadView.as_view(),
         name='toc_rt_log_upload'
+    ),
+    path(
+        'toc/rt/upload/success/',
+        views.ResponseTimeUploadSuccessView.as_view(),
+        name='toc_rt_log_upload_success'
     ),
     path(
         'ref/list/',

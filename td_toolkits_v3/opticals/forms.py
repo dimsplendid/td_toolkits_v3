@@ -96,6 +96,11 @@ class AxoUploadForm(forms.Form):
         # points = [5, 3, 1, 6, 4, 2]
         points = [1, 2, 3, 4, 5, 6]
 
+        save_log = {
+            'file_name': [],
+            'warning': [],
+        }
+        
         for file in files:
             file_name = str(file).split(".")[0]
             short_names = [s.strip() for s in file_name.split("+")]
@@ -106,6 +111,7 @@ class AxoUploadForm(forms.Form):
             data_range = range(28, 28 + len(points) * len(short_names))
             data = [row for idx, row in enumerate(reader) if idx in data_range]
             row_count = 0
+            save_log['file_name'].append(file_name)
             for short_name in short_names:
                 # print(short_name)
                 # Check if there is chip data, otherwise skip.
@@ -115,6 +121,9 @@ class AxoUploadForm(forms.Form):
                         sub__condition__experiment=experiment
                     )
                 except:
+                    save_log['warning'].append(
+                        f"Chip: {short_name} is not in the database."
+                    )
                     continue
                 # print(chip)
                 for point in points:
@@ -123,12 +132,19 @@ class AxoUploadForm(forms.Form):
                             chip=chip,
                             measure_point=point,
                         )
-                        print(
+                        save_log['warning'].append(
                             f"{chip.name}({chip.short_name})"
-                            + f" at point [{point}] is duplicate"
+                            f" at point [{point}] is duplicate, keep the old one"
                         )
                         continue
                     except:
+                        if data[row_count][8] > 1:
+                            save_log['warning'].append(
+                                f"Measurement at {chip.name}({chip.short_name}) "
+                                f"of point [{point}] has large RMS({data[row_count][8]}), "
+                                f"skip it."
+                            )
+                            continue
                         AxometricsLog.objects.create(
                             chip=chip,
                             measure_point=point,
@@ -144,6 +160,24 @@ class AxoUploadForm(forms.Form):
                             instrument=instrument,
                         )
                         row_count += 1
+        
+            cache.set("df", 
+                pd.DataFrame(
+                        AxometricsLog.objects.filter(
+                        chip__sub__condition__experiment=experiment
+                    ).values(
+                        'chip__name',
+                        'cell_gap',
+                        'rms',
+                    )
+                ).rename(columns={
+                    'chip__name': 'ID',
+                    'cell_gap': 'Cell Gap',
+                    'rms': 'RMS',
+                })
+            )
+            cache.set("save_log", save_log)
+        
 
 
 class RDLCellGapUploadForm(forms.Form):
@@ -177,7 +211,10 @@ class RDLCellGapUploadForm(forms.Form):
 
         factory = Factory.default("Fab1")
         instrument = Instrument.default("RETS", factory)
-
+        save_log = {
+            "file_name": [self.cleaned_data['rdl_cell_gap']],
+            "warning": [],
+        }
         for row in rdl_cell_gap.to_numpy():
             # Check if there is chip data, otherwise skip.
             try:
@@ -186,11 +223,38 @@ class RDLCellGapUploadForm(forms.Form):
                     sub__condition__experiment=experiment
                 )
             except:
+                save_log["warning"].append(
+                    f"Chip: {row[0]} is not in the database."
+                )
                 continue
-
-            RDLCellGap.objects.create(
-                chip=chip, cell_gap=row[1], instrument=instrument
-            )
+            
+            try:
+                RDLCellGap.objects.get(
+                    chip=chip
+                )
+                save_log["warning"].append(
+                    f"The chip {chip.name}({chip.short_name}) is duplicate, keep the old one"
+                )
+                continue
+            except:
+                RDLCellGap.objects.create(
+                    chip=chip, cell_gap=row[1], instrument=instrument
+                )
+        cache.set(
+            "df",
+            pd.DataFrame(
+                RDLCellGap.objects.filter(
+                    chip__sub__condition__experiment=experiment
+                ).values(
+                    'chip__name',
+                    'cell_gap',
+                )
+            ).rename(columns={
+                'chip__name': 'ID',
+                'cell_gap': 'Cell Gap',
+            })
+        )
+        cache.set("save_log", save_log)
 
 
 class OptUploadForm(forms.Form):
@@ -229,8 +293,13 @@ class OptUploadForm(forms.Form):
             name=str(self.cleaned_data["exp_id"]))
         # print(files)
         factory = Factory.default(self.cleaned_data["factory"])
-
         opt_df = pd.DataFrame()
+        
+        save_log = {
+            "file_name": [file.name for file in files],
+            "warning": [],
+        }
+        
         for file in files:
             # Using pd read csv this time
             tmp_df = pd.read_csv(
@@ -238,6 +307,7 @@ class OptUploadForm(forms.Form):
             opt_df = pd.concat([opt_df, tmp_df])
 
         if len(opt_df) == 0:
+            save_log["warning"].append("No data found in the file")
             return
         # print(opt_df.head())
         # 0. drop na for chip, date, time
@@ -284,7 +354,12 @@ class OptUploadForm(forms.Form):
         ]
 
         opt_df = opt_df[opt_df.iloc[:, 2].isin(chip_could_log)]
-
+        
+        if len(opt_df) == 0:
+            save_log["warning"].append("No logable data found in the file")
+            cache.set("save_log", save_log)
+            return
+        
         # 6. modified data type
         opt_df.iloc[:, 3] = opt_df.iloc[:, 3].astype("int")  # measure point
         opt_df.iloc[:, 5] = opt_df.iloc[:, 5].astype("str")  # operator
@@ -295,22 +370,29 @@ class OptUploadForm(forms.Form):
         opt_df.iloc[:, 33] = opt_df.iloc[:, 33].astype("float")  # w_y
         # 7. batch create for each chip
         logs = []
-        instrument_id = Instrument.default(opt_df.iloc[0, 4], factory).id
+        instrument = Instrument.default(opt_df.iloc[0, 4], factory)
 
         for chip_name in opt_df.iloc[:, 2].unique():
-            chip_id = Chip.objects.get(
-                name=chip_name, sub__condition__experiment=experiment
-            ).id
+            try:
+                chip = Chip.objects.get(
+                    name=chip_name, sub__condition__experiment=experiment
+                )
+            except Chip.DoesNotExist:
+                save_log["warning"].append(
+                    f"The chip {chip_name} is not found in the experiment"
+                )
+                continue
+                
             tmp_df = opt_df[opt_df.iloc[:, 2] == chip_name]
             if len(tmp_df) == 0:
                 continue
             for row in tmp_df.to_numpy():
                 logs.append(
                     OpticalLog(
-                        chip_id=chip_id,
+                        chip=chip,
                         measure_point=row[3],
                         measure_time=row[-1],
-                        instrument_id=instrument_id,
+                        instrument=instrument,
                         operator=row[5],
                         voltage=row[6],
                         lc_percent=row[11],
@@ -322,6 +404,8 @@ class OptUploadForm(forms.Form):
 
         OpticalLog.objects.bulk_create(logs)
 
+        # save the log to cache
+        cache.set("save_log", save_log)
 
 class ResponseTimeUploadForm(forms.Form):
     exp_id = forms.ChoiceField(choices=("", ""), initial=None)
@@ -368,6 +452,11 @@ class ResponseTimeUploadForm(forms.Form):
         data_type = self.cleaned_data['data_type']
 
         rt_df = []
+        
+        save_log = {
+            "file_name": [file.name for file in files],
+            "warning": [],
+        }
         for file in files:
             print(file.name)
             if data_type == 'txt':
@@ -394,6 +483,8 @@ class ResponseTimeUploadForm(forms.Form):
         unwanted_mask = rt_df.iloc[:, 7].astype("str").str.match("[ a-zA-Z]+")
         rt_df = rt_df[~unwanted_mask]
         if len(rt_df) == 0:
+            save_log["warning"].append("No logable data found in the files")
+            cache.set("save_log", save_log)
             return
 
         # modified types
@@ -453,6 +544,10 @@ class ResponseTimeUploadForm(forms.Form):
         ]
 
         rt_df = rt_df[rt_df.iloc[:, 2].isin(chip_could_log)]
+        if len(rt_df) == 0:
+            save_log["warning"].append("No logable data found in the files")
+            cache.set("save_log", save_log)
+            return
         logs = []
         instrument_id = Instrument.default(rt_df.iloc[0, 4], factory).id
 

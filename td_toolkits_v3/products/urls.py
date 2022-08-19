@@ -13,5 +13,10 @@ urlpatterns = [
         route='chip/upload/',
         view=views.ChipsBatchCreateView.as_view(),
         name='chip_upload'
-    )
+    ),
+    path(
+        'chip/upload/success/',
+        views.ChipBatchCreateSuccessView.as_view(),
+        name='chip_upload_success',
+    ),
 ]

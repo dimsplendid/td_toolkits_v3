@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Tuple, Dict, Union, Optional
+from typing import List, Tuple, Dict, Union, Optional, Any
 
 from io import BytesIO
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -84,7 +84,7 @@ class MaterialsUploadView(LoginRequiredMixin, FormView):
     # template_name = 'materials/materials_upload.html'
     template_name = 'form_generic.html'
     form_class = MaterialsUploadForm
-    success_url = reverse_lazy('materials:lc_list')
+    success_url = reverse_lazy('materials:upload_success')
 
     def get_context_data(self, **kwargs) -> dict[str, ]:
         context = super().get_context_data(**kwargs)
@@ -97,6 +97,29 @@ class MaterialsUploadView(LoginRequiredMixin, FormView):
     def form_valid(self, form):
         form.save()
         return super().form_valid(form)
+
+class MaterialsUploadSuccessView(TemplateView):
+    template_name = 'success_generic.html'
+    
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Material Upload Success'
+        df: pd.DataFrame = cache.get('df_log')
+        context['log']: dict[str, list] = cache.get('save_log')
+        try:
+            context['table'] = df.to_html(
+                float_format=lambda x: f'{x:.4f}',
+                classes='table table-striped table-bordered table-hover',
+                justify='center',
+                index=False,
+                escape=False,
+            )
+        except:
+            context['table'] = None
+        context['nexts'] = {
+            "Chip Upload": reverse_lazy('products:chip_upload'),
+        }
+        return context
 
 class MaterialsUpdateView(LoginRequiredMixin, FormView):
     template_name = 'form_generic.html'

@@ -22,7 +22,8 @@ from td_toolkits_v3.materials.models import LiquidCrystal
 from td_toolkits_v3.products.models import Experiment
 
 from td_toolkits_v3.opticals.tools.utils import (
-    OptResultGenerator, 
+    # OptResultGenerator, 
+    OptTableGenerator,
     OptictalsScore,
     OptLoader,
 )
@@ -58,16 +59,39 @@ class IndexView(TemplateView):
 class AxoUploadView(LoginRequiredMixin, FormView):
     template_name = 'opticals/axo_upload.html'
     form_class = AxoUploadForm
-    success_url = reverse_lazy('opticals:axo_upload')
+    success_url = reverse_lazy('opticals:axo_upload_success')
 
     def form_valid(self, form):
         form.save(self.request)
         return super().form_valid(form)
+    
+class AxoUploadSuccessView(TemplateView):
+    template_name = 'success_generic.html'
+    
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Axo Upload Success'
+        df: pd.DataFrame = cache.get('df')
+        context['log']: dict[str, list] = cache.get('save_log')
+        try:
+            context['table'] = df.to_html(
+                float_format=lambda x: f'{x:.4f}',
+                classes='table table-striped table-bordered table-hover',
+                justify='center',
+                index=False,
+                escape=False,
+            )
+        except:
+            context['table'] = None
+        context['nexts'] = {
+            "OPT Upload": reverse_lazy('opticals:toc_opt_log_upload'),
+        }
+        return context
 
 class RDLCellGapUploadView(LoginRequiredMixin, FormView):
     template_name = 'form_generic.html'
     form_class = RDLCellGapUploadForm
-    success_url = reverse_lazy('opticals:rdl_cell_gap_upload')
+    success_url = reverse_lazy('opticals:rdl_cell_gap_upload_success')
 
     def form_valid(self, form):
         form.save()
@@ -80,10 +104,34 @@ class RDLCellGapUploadView(LoginRequiredMixin, FormView):
                              + '?download=optical_rdl_cellgap_upload_template'
         return context
 
+class RDLCellGapUploadSuccessView(TemplateView):
+    template_name = 'success_generic.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = "RDL Cell Gap Upload Success"
+        context['log'] = cache.get('save_log')
+        try:
+            context['table'] = cache.get('df').to_html(
+                float_format=lambda x: f'{x:.4f}',
+                classes='table table-striped table-bordered table-hover',
+                justify='center',
+                index=False,
+                escape=False,
+            )
+        except:
+            context['table'] = None
+            
+        context["nexts"] = {
+            "AXO Upload": reverse_lazy('opticals:axo_upload'),
+            "OPT Upload": reverse_lazy('opticals:toc_opt_log_upload'),
+        }
+        return context
+
 class OptUploadView(LoginRequiredMixin, FormView):
     template_name = 'form_generic.html'
     form_class = OptUploadForm
-    success_url = reverse_lazy('opticals:toc_opt_log_upload')
+    success_url = reverse_lazy('opticals:toc_opt_log_upload_success')
 
     def form_valid(self, form):
         form.save(self.request)
@@ -94,10 +142,23 @@ class OptUploadView(LoginRequiredMixin, FormView):
         context['title'] = "TOC OPT Upload"
         return context
 
+class OptUploadSuccessView(TemplateView):
+    template_name: str = 'success_generic.html'
+    
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'TOC OPT Upload Success'
+        context['log'] = cache.get('save_log')
+        context['nexts'] = {
+            "RT Upload": reverse_lazy('opticals:toc_rt_log_upload'),
+            "OPT Fitting": reverse_lazy('opticals:opt_fitting'),
+        }
+        return context
+                
 class ResponseTimeUploadView(LoginRequiredMixin, FormView):
     template_name = 'form_generic.html'
     form_class = ResponseTimeUploadForm
-    success_url = reverse_lazy('opticals:toc_rt_log_upload')
+    success_url = reverse_lazy('opticals:toc_rt_log_upload_success')
 
     def form_valid(self, form):
         form.save(self.request)
@@ -108,6 +169,18 @@ class ResponseTimeUploadView(LoginRequiredMixin, FormView):
         context['title'] = 'TOC Response Time Upload'
         return context
 
+class ResponseTimeUploadSuccessView(TemplateView):
+    template_name = 'success_generic.html'
+    
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'TOC Response Time Upload Success'
+        context['log'] = cache.get('save_log')
+        context['nexts'] = {
+            "OPT Upload": reverse_lazy('opticals:toc_opt_log_upload'),
+            "RT Fitting": reverse_lazy('opticals:rt_fitting'),
+        }
+        return context
 
 class OpticalReferenceCreateView(LoginRequiredMixin, CreateView):
     template_name = 'form_generic.html'
@@ -348,7 +421,7 @@ class OpticalSearchView(TemplateView):
         context = super().get_context_data(**kwargs)
         context['lc_list'] = [
             i[0] for i in 
-            OpticalsFittingModel.objects.all()
+            OptFittingModel.objects.all()
             .values_list('lc__name')
             # Seems distinct is not compatible to order_by
             # .order_by('modified') 
@@ -398,14 +471,23 @@ class OpticalSearchView(TemplateView):
             context['q_lc_list'] = LiquidCrystal.objects.filter(
                 name__in=lc_list)
             # store lc list cookies to for the ra searching
-            ref = (profile_df['Factory'][0], profile_df['Product'][0])
-            results = []
-            for lc in lc_list:
-                result_generator = OptResultGenerator(lc, ref)
-                results += [result_generator.table]
-
+            ref = OpticalReference.objects.get(
+                product_model_type__name=profile_df['Product'][0],
+                product_model_type__factory__name=profile_df['Factory'][0],
+            )
             # concat all results into one table
-            result = pd.concat(results, ignore_index=True)
+            opt_result_generator = OptTableGenerator(
+                lc_list=lc_list,
+                reference=ref, 
+                mode='search',
+            )
+            opt_result_generator.calc()
+            results = opt_result_generator.tables
+            result = results['Vref']
+            self.request.session['result'] = {
+                k: v.to_json() for
+                k, v in results.items()
+            }
             opt_score = OptictalsScore(result, profile_df)
             self.request.session['opt_result'] = result.to_json()
             self.request.session['opt_plot'] = opt_score.plot

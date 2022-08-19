@@ -7,11 +7,14 @@ Optical Search
 <h3>Select <a href="{% url 'materials:lc_list' %}">LCs</a></h3>
 <div>
 <form action='' method='GET'>
-    <select class='form-select' multiple name='q'>
-        {% for lc in lc_list %}
-        <option> {{ lc }}</option>
-        {% endfor %}
-    </select>
+    <div class="form-group">
+        <select class='js-example-basic-multiple' style="width: 50%" multiple name='q'>
+        {% comment %} <select class='form-select' multiple name='q'> {% endcomment %}
+            {% for lc in lc_list %}
+            <option> {{ lc }}</option>
+            {% endfor %}
+        </select>
+    </div>
     <h3>
         <a href="{% url 'opticals:search_profile_list' %}"
         data-toggle="tooltip" data-placement="top" 
@@ -47,7 +50,7 @@ Optical Search
     >
         Copy
     </a>
-    <div class='mt-1'>
+    {% comment %} <div class='mt-1'>
         <table class='table table-hover text-center table-striped'>
             <thead>
                 <tr>
@@ -84,6 +87,9 @@ Optical Search
                 </tr>
             </tbody>
         </table>
+    </div> {% endcomment %}
+    <div>
+        {{ profile_table|safe }}
     </div>
     <button class='btn btn-primary' type='submit'>Search</button>
 </form>
