@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple
+from typing import NamedTuple, Literal
 
 import numpy as np
 import pandas as pd
@@ -1400,9 +1400,11 @@ class OptTableGenerator():
     """Generate the Optical Table"""
     def __init__(
         self, 
-        experiment: Experiment,
+        experiment: Experiment | None = None,
         target_cell_gap: float | None = None,
         reference: OpticalReference | None = None,
+        lc_list: list[str] | None = None,
+        mode: Literal['exp', 'search'] = 'exp'
     ):
         """Optical Table Generator Initialization
 
@@ -1414,7 +1416,6 @@ class OptTableGenerator():
             reference (str | None, optional): 
                 The reference product name. Defaults is None.
         """
-        self.experiment = experiment
         self.reference = reference        
             
         if target_cell_gap is not None:
@@ -1434,20 +1435,33 @@ class OptTableGenerator():
             self.cell_gaps = None
             self.cell_gap_range = None
         
-        if OptFittingModel.objects.filter(experiment=self.experiment).exists():
-            self.opt_models: list[OptFittingModel] = OptFittingModel.objects.filter(
-                experiment=self.experiment
-            )
-        else:
-            raise('No OptFittingModel for this experiment!')
-        
-        if RTFittingModel.objects.filter(experiment=self.experiment).exists():
-            self.rt_models: list[RTFittingModel] = RTFittingModel.objects.filter(
-                experiment=self.experiment
-            )
-        else:
-            self.rt_models = None
+        if mode == 'exp':
+            if experiment is None:
+                raise ValueError('Experiment is required for exp mode')
+            self.experiment = experiment
             
+            if OptFittingModel.objects.filter(experiment=self.experiment).exists():
+                self.opt_models: list[OptFittingModel] = OptFittingModel.objects.filter(
+                    experiment=self.experiment
+                )
+            
+            if RTFittingModel.objects.filter(experiment=self.experiment).exists():
+                self.rt_models: list[RTFittingModel] = RTFittingModel.objects.filter(
+                    experiment=self.experiment
+                )
+            else:
+                self.rt_models = None
+            
+        if mode == 'search':
+            if lc_list is None:
+                raise ValueError('LC list is required for search mode')
+            
+            self.opt_models = OptFittingModel.objects.filter(
+                lc__name__in=lc_list
+            )
+            self.rt_models = RTFittingModel.objects.filter(
+                lc__name__in=lc_list
+            )
             
     def opt_generator(
         self,
@@ -1700,5 +1714,11 @@ class OptTableGenerator():
                 self.tables['Vref'] = pd.concat(
                     opt_table_list,
                     ignore_index=True,
+                )
+                self.tables['Vref']['CR'] = self.tables['Vref']['CR Index'] * (
+                    self.reference.contrast_ratio / float(self.tables['Vref']['CR Index'][
+                        (self.tables['Vref']['LC'] == self.reference.lc.name) &
+                        (self.tables['Vref']['Cell Gap'] == self.reference.lc.designed_cell_gap)
+                    ])
                 )
 
