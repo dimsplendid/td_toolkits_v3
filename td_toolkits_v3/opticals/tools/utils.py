@@ -563,7 +563,7 @@ class RTFitting():
         
     def preprocess(self):
         
-        # 1. remove VT < 10% at 8V
+        # 1. remove non-sense measurement, too slow or negative
         brokens = self.rt_df['ID'][
             (self.rt_df['RT']>150)
           | (self.rt_df['RT']<0)
