@@ -7,6 +7,7 @@ import pandas as pd
 import plotly.express as px
 from plotly.offline import plot
 import re
+from enum import Enum
 
 from sklearn import linear_model
 from sklearn.model_selection import train_test_split
@@ -562,7 +563,7 @@ class RTFitting():
         
     def preprocess(self):
         
-        # 1. remove VT < 10% at 8V
+        # 1. remove non-sense measurement, too slow or negative
         brokens = self.rt_df['ID'][
             (self.rt_df['RT']>150)
           | (self.rt_df['RT']<0)
@@ -1637,6 +1638,10 @@ class OptTableGenerator():
         )
             
         if self.reference is not None:
+            class Match(Enum):
+                LC = 1
+                LCPI = 2
+                
             # Check is there match LC and PI
             if (self.rt_models.filter(
                 lc__name=self.reference.lc.name,
@@ -1644,18 +1649,22 @@ class OptTableGenerator():
                 rt_model = self.rt_models.get(
                     lc__name=self.reference.lc.name,
                 )
+                ref_match = Match.LC
             elif self.reference.pi is not None:
                 try:
                     rt_model = self.rt_models.get(
                         lc__name=self.reference.lc.name,
                         pi__name=self.reference.pi.name,
                     )
+                    ref_match = Match.LCPI
                 except:
                     rt_model = self.rt_models.filter(
                         lc__name=self.reference.lc.name,
                     )[0]
+                    ref_match = Match.LC
             else:
                 rt_model = None
+                ref_match = None
             
             if rt_model is not None:
                 ref_voltage = rt_model.voltage.predict(
@@ -1715,10 +1724,24 @@ class OptTableGenerator():
                     opt_table_list,
                     ignore_index=True,
                 )
-                self.tables['Vref']['CR'] = self.tables['Vref']['CR Index'] * (
-                    self.reference.contrast_ratio / float(self.tables['Vref']['CR Index'][
+                
+                ref_cr_index = None
+                
+                if ref_match == Match.LC:
+                    ref_cr_index = float(self.tables['Vref']['CR Index'][
                         (self.tables['Vref']['LC'] == self.reference.lc.name) &
                         (self.tables['Vref']['Cell Gap'] == self.reference.lc.designed_cell_gap)
-                    ])
-                )
+                    ].iloc[0])
+                    
+                elif ref_match == Match.LCPI:
+                    ref_cr_index = float(self.tables['Vref']['CR Index'][
+                        (self.tables['Vref']['LC'] == self.reference.lc.name) &
+                        (self.tables['Vref']['PI'] == self.reference.pi.name) &
+                        (self.tables['Vref']['Cell Gap'] == self.reference.lc.designed_cell_gap)
+                    ].iloc[0])
+                    
+                if ref_cr_index is not None:
+                    self.tables['Vref']['CR'] = self.tables['Vref']['CR Index'] * (
+                        self.reference.contrast_ratio / ref_cr_index
+                    )
 
