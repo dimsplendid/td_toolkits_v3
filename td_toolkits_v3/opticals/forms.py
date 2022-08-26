@@ -109,7 +109,10 @@ class AxoUploadForm(forms.Form):
                 io.StringIO(file.read().decode("utf-8", errors="ignore"))
             )
             data_range = range(28, 28 + len(points) * len(short_names))
-            data = [row for idx, row in enumerate(reader) if idx in data_range]
+            data = [
+                list(map(float,row))  for idx, row
+                in enumerate(reader) if idx in data_range
+            ]
             row_count = 0
             save_log['file_name'].append(file_name)
             for short_name in short_names:
