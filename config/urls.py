@@ -43,6 +43,10 @@ urlpatterns = [
         'reliabilities/',
         include('td_toolkits_v3.reliabilities.urls', namespace='reliabilities')
     ),
+    path(
+        'autofill/',
+        include('td_toolkits_v3.autofill.urls', namespace='autofill')
+    )
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
