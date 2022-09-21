@@ -8,4 +8,9 @@ urlpatterns = [
         views.Index.as_view(),
         name='index',
     ),
+    path(
+        'ras-test/',
+        views.RealiabilitySystemTest.as_view(),
+        name='ras-test'
+    )
 ]
