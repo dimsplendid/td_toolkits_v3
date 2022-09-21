@@ -81,7 +81,9 @@ Since [there is no official support for PostgreSQL 12 on Windows 10](https://www
 ```bash
 python manage.py migrate
 ```
+7 - WebDriver Setting
 
+For Autofill function, need download **Chrome 95 webdriver** and add to `PATH`
 
 ### <a name="running-tests">Running the tests and coverage test</a>
 
