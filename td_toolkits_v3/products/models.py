@@ -24,6 +24,12 @@ class ProductModelType(TimeStampedModel):
     def __str__(self):
         return self.name
 
+class ProductID(TimeStampedModel):
+    name = models.CharField(max_length=255)
+    model = models.ForeignKey(
+        to=ProductModelType, 
+        on_delete=models.CASCADE,
+    )
 
 class Project(TimeStampedModel):
     name = models.CharField(
@@ -50,6 +56,11 @@ class Factory(TimeStampedModel):
         blank=True,
     )
     desc = models.TextField("description", blank=True)
+    ra_name = models.CharField(
+        verbose_name='RAS Fab Name',
+        blank=True,
+        null=True,
+    )
 
     @classmethod
     def default(cls, name):
