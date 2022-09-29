@@ -2,6 +2,7 @@ from django import forms
 from django.http import HttpRequest
 from django.core.cache import cache
 
+import numpy as np
 import pandas as pd
 from openpyxl import load_workbook, Workbook
 from datetime import datetime
@@ -93,7 +94,10 @@ class ReliabilitiesUploadForm(forms.Form):
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[9])
                 file, _ = File.objects.get_or_create(name=row[10])
-                batch, _ = Batch.objects.get_or_create(name=row[11])
+                if np.isnan(row[11]):
+                    batch = None
+                else:
+                    batch, _ = Batch.objects.get_or_create(name=row[11])
                 if not Adhesion.objects.filter(
                     lc=lc, pi=pi, seal=seal, vender=vender, file_source=file,
                     adhesion_interface=row[6], method=row[7], batch=batch).exists():
@@ -104,7 +108,7 @@ class ReliabilitiesUploadForm(forms.Form):
                         adhesion_interface=row[6], 
                         method=row[7], 
                         value=row[4], 
-                        peeling=row[8],
+                        peeling=str(row[8]),
                         batch=batch
                     )
 
@@ -114,7 +118,10 @@ class ReliabilitiesUploadForm(forms.Form):
                 vender, _ = Vender.objects.get_or_create(name=row[9])
                 file, _ = File.objects.get_or_create(name=row[10])
                 jar_test_seal, _ = Seal.objects.get_or_create(name=row[7])
-                batch, _ = Batch.objects.get_or_create(name=row[11])
+                if np.isnan(row[11]):
+                    batch = None
+                else:
+                    batch, _ = Batch.objects.get_or_create(name=row[11])
                 
                 if not LowTemperatureOperation.objects.filter(
                     lc=lc, pi=pi, seal=seal, vender=vender, file_source=file,
@@ -135,7 +142,10 @@ class ReliabilitiesUploadForm(forms.Form):
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[9])
                 file, _ = File.objects.get_or_create(name=row[10])
-                batch, _ = Batch.objects.get_or_create(name=row[11])
+                if np.isnan(row[11]):
+                    batch = None
+                else:
+                    batch, _ = Batch.objects.get_or_create(name=row[11])
                 if (row[7] != 'N.A.'):
                     jar_test_seal, _ = Seal.objects.get_or_create(name=row[7])
                 else:
@@ -158,7 +168,10 @@ class ReliabilitiesUploadForm(forms.Form):
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[7])
                 file, _ = File.objects.get_or_create(name=row[8])
-                batch, _ = Batch.objects.get_or_create(name=row[9])
+                if np.isnan(row[9]):
+                    batch = None
+                else:
+                    batch, _ = Batch.objects.get_or_create(name=row[9])
                 if not PressureCookingTest.objects.filter(
                     lc=lc, pi=pi, seal=seal, vender=vender, file_source=file,
                     measure_condition=row[5], test_vehical=row[6],
@@ -177,7 +190,10 @@ class ReliabilitiesUploadForm(forms.Form):
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[10])
                 file, _ = File.objects.get_or_create(name=row[11])
-                batch, _ = Batch.objects.get_or_create(name=row[12])
+                if np.isnan(row[12]):
+                    batch = None
+                else:
+                    batch, _ = Batch.objects.get_or_create(name=row[12])
                 if not SealWVTR.objects.filter(
                     lc=lc, pi=pi, seal=seal, vender=vender, file_source=file,
                     temperature=row[7], humidity=row[8], thickness=row[9],
@@ -196,7 +212,10 @@ class ReliabilitiesUploadForm(forms.Form):
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[9])
                 file, _ = File.objects.get_or_create(name=row[10])
-                batch, _ = Batch.objects.get_or_create(name=row[11])
+                if np.isnan(row[11]):
+                    batch = None
+                else:
+                    batch, _ = Batch.objects.get_or_create(name=row[11])
                 if not DeltaAngle.objects.filter(
                     lc=lc, pi=pi, seal=seal, vender=vender, file_source=file,
                     measure_voltage=row[5], measure_freq=row[6], 
@@ -219,7 +238,10 @@ class ReliabilitiesUploadForm(forms.Form):
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[7])
                 file, _ = File.objects.get_or_create(name=row[8])
-                batch, _ = Batch.objects.get_or_create(name=row[9])
+                if np.isnan(row[9]):
+                    batch = None
+                else:
+                    batch, _ = Batch.objects.get_or_create(name=row[9])
                 if not UShapeAC.objects.filter(
                     lc=lc, pi=pi, seal=seal, vender=vender, file_source=file,
                     time=row[5], temperature=row[6],batch=batch).exists():
@@ -233,7 +255,10 @@ class ReliabilitiesUploadForm(forms.Form):
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[9])
                 file, _ = File.objects.get_or_create(name=row[10])
-                batch, _ = Batch.objects.get_or_create(name=row[11])
+                if np.isnan(row[11]):
+                    batch = None
+                else:
+                    batch, _ = Batch.objects.get_or_create(name=row[11])
                 if not VoltageHoldingRatio.objects.filter(
                     lc=lc, pi=pi, seal=seal, vender=vender, file_source=file,
                     measure_voltage=row[5], measure_freq=row[6], 
