@@ -94,7 +94,8 @@ class ReliabilitiesUploadForm(forms.Form):
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[9])
                 file, _ = File.objects.get_or_create(name=row[10])
-                if np.isnan(row[11]):
+                print(row[11])
+                if (type(row[11]) is not str) and np.isnan(row[11]):
                     batch = None
                 else:
                     batch, _ = Batch.objects.get_or_create(name=row[11])
@@ -118,7 +119,7 @@ class ReliabilitiesUploadForm(forms.Form):
                 vender, _ = Vender.objects.get_or_create(name=row[9])
                 file, _ = File.objects.get_or_create(name=row[10])
                 jar_test_seal, _ = Seal.objects.get_or_create(name=row[7])
-                if np.isnan(row[11]):
+                if (type(row[11]) is not str) and np.isnan(row[11]):
                     batch = None
                 else:
                     batch, _ = Batch.objects.get_or_create(name=row[11])
@@ -142,7 +143,7 @@ class ReliabilitiesUploadForm(forms.Form):
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[9])
                 file, _ = File.objects.get_or_create(name=row[10])
-                if np.isnan(row[11]):
+                if (type(row[11]) is not str) and np.isnan(row[11]):
                     batch = None
                 else:
                     batch, _ = Batch.objects.get_or_create(name=row[11])
@@ -168,7 +169,7 @@ class ReliabilitiesUploadForm(forms.Form):
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[7])
                 file, _ = File.objects.get_or_create(name=row[8])
-                if np.isnan(row[9]):
+                if (type(row[9]) is not str) and np.isnan(row[9]):
                     batch = None
                 else:
                     batch, _ = Batch.objects.get_or_create(name=row[9])
@@ -190,7 +191,7 @@ class ReliabilitiesUploadForm(forms.Form):
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[10])
                 file, _ = File.objects.get_or_create(name=row[11])
-                if np.isnan(row[12]):
+                if (type(row[12]) is not str) and np.isnan(row[12]):
                     batch = None
                 else:
                     batch, _ = Batch.objects.get_or_create(name=row[12])
@@ -212,7 +213,7 @@ class ReliabilitiesUploadForm(forms.Form):
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[9])
                 file, _ = File.objects.get_or_create(name=row[10])
-                if np.isnan(row[11]):
+                if (type(row[11]) is not str) and np.isnan(row[11]):
                     batch = None
                 else:
                     batch, _ = Batch.objects.get_or_create(name=row[11])
@@ -238,7 +239,7 @@ class ReliabilitiesUploadForm(forms.Form):
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[7])
                 file, _ = File.objects.get_or_create(name=row[8])
-                if np.isnan(row[9]):
+                if (type(row[9]) is not str) and np.isnan(row[9]):
                     batch = None
                 else:
                     batch, _ = Batch.objects.get_or_create(name=row[9])
@@ -255,7 +256,7 @@ class ReliabilitiesUploadForm(forms.Form):
                 lc, pi, seal = self.get_configureation(row)
                 vender, _ = Vender.objects.get_or_create(name=row[9])
                 file, _ = File.objects.get_or_create(name=row[10])
-                if np.isnan(row[11]):
+                if (type(row[11]) is not str) and np.isnan(row[11]):
                     batch = None
                 else:
                     batch, _ = Batch.objects.get_or_create(name=row[11])
