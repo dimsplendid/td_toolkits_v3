@@ -483,7 +483,7 @@ class OpticalSearchView(TemplateView):
             )
             opt_result_generator.calc()
             results = opt_result_generator.tables
-            result = results['Vref']
+            result = results['Vref'].dropna()
             self.request.session['result'] = {
                 k: v.to_json() for
                 k, v in results.items()
