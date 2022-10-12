@@ -25,6 +25,8 @@
         <li> <a href="{% url 'opticals:axo_upload' %}">AXO Cell Gap Upload</a> </li>
         <li> <a href="{% url 'opticals:toc_opt_log_upload' %}">TOC Opt Upload</a> </li>
         <li> <a href="{% url 'opticals:toc_rt_log_upload' %}">TOC RT Upload</a> </li>
+        <li> <a href="{% url 'opticals:ref_list' %}"> Optical Reference Product Setting </a></li>
+        <li> <a href="{% url 'opticals:search_profile_list' %}"> Profile Setting </a></li>
     </ol>
 </div>
 {% comment %} <div>
@@ -38,12 +40,11 @@
 </div> {% endcomment %}
 <hr>
 <div>
-    <h2>TR2</h2>
+    <h2>TR2 Standard Process</h2>
     <ol>
         <li> Data Upload </li>
         <li> <a href="{% url 'opticals:opt_fitting' %}">TR2 OPT fitting</a></li>
         <li> <a href="{% url 'opticals:rt_fitting' %}">TR2 RT fitting</a></li>
-        <li> <a href="{% url 'opticals:ref_list' %}"> Ref Setting </a></li>
         <li> <a href="{% url 'opticals:tr2' %}">Show Result</a></li>
         <li> <a href="{% url 'opticals:advanced_contrast' %}">Advanced Contrast Ratio</a></li>
     </ol>

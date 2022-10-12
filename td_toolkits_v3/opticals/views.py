@@ -8,6 +8,7 @@ from plotly.offline import plot
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
+from django.utils.http import urlencode
 from django.views.generic import (
     TemplateView,
     ListView,
@@ -388,8 +389,9 @@ class OpticalSearchProfileUpdateView(LoginRequiredMixin, UpdateView):
         'remark',
     ]
     def get(self, request, *args, **kwargs):
+        # print(request.GET.get('next'))
         request.session['next'] = request.GET.get('next')
-
+        
         return super().get(request, *args, **kwargs)
 
     def get_success_url(self) -> str:
@@ -483,7 +485,7 @@ class OpticalSearchView(TemplateView):
             )
             opt_result_generator.calc()
             results = opt_result_generator.tables
-            result = results['Vref']
+            result = results['Vref'].dropna()
             self.request.session['result'] = {
                 k: v.to_json() for
                 k, v in results.items()
