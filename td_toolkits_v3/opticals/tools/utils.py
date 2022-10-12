@@ -1643,28 +1643,63 @@ class OptTableGenerator():
                 LCPI = 2
                 
             # Check is there match LC and PI
-            if (self.rt_models.filter(
-                lc__name=self.reference.lc.name,
-            ).count() == 1):
-                rt_model = self.rt_models.get(
-                    lc__name=self.reference.lc.name,
-                )
-                ref_match = Match.LC
-            elif self.reference.pi is not None:
-                try:
-                    rt_model = self.rt_models.get(
-                        lc__name=self.reference.lc.name,
-                        pi__name=self.reference.pi.name,
-                    )
+            # if (
+            #     self.rt_models.filter(
+            #         lc__name=self.reference.lc.name,
+            #         cell_gap_lower__lte=self.reference.cell_gap,
+            #         cell_gap_upper__gte=self.reference.cell_gap,
+            #     ).count() == 1
+            #     ):
+            #     rt_model = self.rt_models.get(
+            #         lc__name=self.reference.lc.name,
+            #         cell_gap_lower__lte=self.reference.cell_gap,
+            #         cell_gap_upper__gte=self.reference.cell_gap,
+            #     )
+            #     ref_match = Match.LC
+            # elif self.reference.pi is not None:
+            #     try:
+            #         rt_model = self.rt_models.get(
+            #             lc__name=self.reference.lc.name,
+            #             pi__name=self.reference.pi.name,
+            #         )
+            #         ref_match = Match.LCPI
+            #     except:
+            #         rt_model = self.rt_models.filter(
+            #             lc__name=self.reference.lc.name,
+            #         )[0]
+            #         ref_match = Match.LC
+            # else:
+            #     rt_model = None
+            #     ref_match = None
+            
+            for model in RTFittingModel.objects.filter(
+                lc=self.reference.lc,
+                pi=self.reference.pi,
+                cell_gap_lower__lte=self.reference.cell_gap,
+                cell_gap_upper__gte=self.reference.cell_gap,
+            ):
+                print(model.r2['f(Vop, Cell Gap) |-> Tr'])
+                print(model.pi)
+                if model.r2['f(Vop, Cell Gap) |-> Tr'] > 0.8:
+                    rt_model = model
                     ref_match = Match.LCPI
-                except:
-                    rt_model = self.rt_models.filter(
-                        lc__name=self.reference.lc.name,
-                    )[0]
-                    ref_match = Match.LC
+                    break
             else:
-                rt_model = None
-                ref_match = None
+                for model in RTFittingModel.objects.filter(
+                    lc=self.reference.lc,
+                    cell_gap_lower__lte=self.reference.cell_gap,
+                    cell_gap_upper__gte=self.reference.cell_gap,
+                ):
+                    print(model.r2['f(Vop, Cell Gap) |-> Tr'])
+                    print(model.pi)
+                    if model.r2['f(Vop, Cell Gap) |-> Tr'] > 0.8:
+                        rt_model = model
+                        ref_match = Match.LC
+                        break
+                else:
+                    print('no model within intrapolate range')
+                    rt_model = None
+                    ref_match = None
             
             if rt_model is not None:
                 ref_voltage = rt_model.voltage.predict(
