@@ -1365,7 +1365,7 @@ class OptictalsScore():
         if self.__score is None:
             def f(x):
                 return np.round(9 * x) + 1
-            score_df = self.data[['LC']].copy()
+            score_df = self.data[['LC', 'PI', 'Seal']].copy()
             score_df['LC%'] = tr2_score(
                 self.data['LC%'], 
                 'min-max', 'gt',self.constraint['w(LC%)'] , f)
