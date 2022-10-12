@@ -1389,8 +1389,13 @@ class OptictalsScore():
     @property
     def plot(self):
         if self.__plot is None:
-            plot_df = self.score.set_index('LC').stack().reset_index()
-            plot_df.columns = ['LC', 'Item', 'Score']
+            self.score['Config'] = (
+                self.score['LC'] + '-' +
+                self.score['PI'] + '-' +
+                self.score['Seal']
+            )
+            plot_df = self.score.set_index('Config').stack().reset_index()
+            plot_df.columns = ['Config', 'Item', 'Score']
             fig = px.bar(
                 plot_df, x='Item', y='Score', color='LC', barmode='group')
             self.__plot = plot(fig, output_type='div')
