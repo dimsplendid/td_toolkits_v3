@@ -1331,7 +1331,7 @@ class OptictalsScore():
         profile: pandas.DataFrame
             The setting of limits. Only using first row
         """
-        self.data = data[['LC', 'Cell Gap', 'LC%', 'ΔEab*', 'RT', 'CR', 'Remark']]
+        self.data = data[['LC', 'PI', 'Seal', 'Cell Gap', 'LC%', 'ΔEab*', 'RT', 'CR', 'Remark']]
         header = {
             'name': 'LC',
             'designed_cell_gap': 'Designed Cell Gap'
@@ -1390,14 +1390,21 @@ class OptictalsScore():
     def plot(self):
         if self.__plot is None:
             self.score['Config'] = (
-                self.score['LC'] + '-' +
-                self.score['PI'] + '-' +
+                self.score['LC'] + ', ' +
+                self.score['PI'] + ', ' +
                 self.score['Seal']
             )
-            plot_df = self.score.set_index('Config').stack().reset_index()
+            plot_df = (
+                self.score.iloc[:, 3:]
+                .set_index('Config')
+                .stack()
+                .reset_index()
+            )
             plot_df.columns = ['Config', 'Item', 'Score']
             fig = px.bar(
-                plot_df, x='Item', y='Score', color='LC', barmode='group')
+                plot_df, 
+                x='Item', y='Score', color='Config', barmode='group'
+            )
             self.__plot = plot(fig, output_type='div')
         
         return self.__plot
@@ -1646,36 +1653,6 @@ class OptTableGenerator():
             class Match(Enum):
                 LC = 1
                 LCPI = 2
-                
-            # Check is there match LC and PI
-            # if (
-            #     self.rt_models.filter(
-            #         lc__name=self.reference.lc.name,
-            #         cell_gap_lower__lte=self.reference.cell_gap,
-            #         cell_gap_upper__gte=self.reference.cell_gap,
-            #     ).count() == 1
-            #     ):
-            #     rt_model = self.rt_models.get(
-            #         lc__name=self.reference.lc.name,
-            #         cell_gap_lower__lte=self.reference.cell_gap,
-            #         cell_gap_upper__gte=self.reference.cell_gap,
-            #     )
-            #     ref_match = Match.LC
-            # elif self.reference.pi is not None:
-            #     try:
-            #         rt_model = self.rt_models.get(
-            #             lc__name=self.reference.lc.name,
-            #             pi__name=self.reference.pi.name,
-            #         )
-            #         ref_match = Match.LCPI
-            #     except:
-            #         rt_model = self.rt_models.filter(
-            #             lc__name=self.reference.lc.name,
-            #         )[0]
-            #         ref_match = Match.LC
-            # else:
-            #     rt_model = None
-            #     ref_match = None
             
             for model in RTFittingModel.objects.filter(
                 lc=self.reference.lc,
@@ -1695,8 +1672,6 @@ class OptTableGenerator():
                     cell_gap_lower__lte=self.reference.cell_gap,
                     cell_gap_upper__gte=self.reference.cell_gap,
                 ):
-                    print(model.r2['f(Vop, Cell Gap) |-> Tr'])
-                    print(model.pi)
                     if model.r2['f(Vop, Cell Gap) |-> Tr'] > 0.8:
                         rt_model = model
                         ref_match = Match.LC
