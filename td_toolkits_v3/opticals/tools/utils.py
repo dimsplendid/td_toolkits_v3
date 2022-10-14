@@ -1417,7 +1417,8 @@ class OptTableGenerator():
         target_cell_gap: float | None = None,
         reference: OpticalReference | None = None,
         lc_list: list[str] | None = None,
-        mode: Literal['exp', 'search'] = 'exp'
+        pi_list: list[str] | None = None,
+        mode: Literal['exp', 'search'] = 'exp',
     ):
         """Optical Table Generator Initialization
 
