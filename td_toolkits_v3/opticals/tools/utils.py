@@ -1471,10 +1471,12 @@ class OptTableGenerator():
                 raise ValueError('LC list is required for search mode')
             
             self.opt_models = OptFittingModel.objects.filter(
-                lc__name__in=lc_list
+                lc__name__in=lc_list,
+                pi__name__in=pi_list,
             )
             self.rt_models = RTFittingModel.objects.filter(
-                lc__name__in=lc_list
+                lc__name__in=lc_list,
+                pi__name__in=pi_list,
             )
             
     def opt_generator(
