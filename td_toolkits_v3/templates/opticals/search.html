@@ -4,7 +4,9 @@ Optical Search
 {% endblock title %}
 {% block content %}
 <h2>Optical Search</h2>
-<h3>Select <a href="{% url 'materials:lc_list' %}">LCs</a></h3>
+<h3>Select <a href="{% url 'materials:lc_list' %}">LCs</a> and
+    <a href="{% url 'materials:pi_list' %}">PIs</a>
+</h3>
 <div>
 <form action='' method='GET'>
     <div class="form-group">
@@ -12,6 +14,14 @@ Optical Search
         {% comment %} <select class='form-select' multiple name='q'> {% endcomment %}
             {% for lc in lc_list %}
             <option> {{ lc }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <select class='js-example-basic-multiple' style="width: 50%" multiple name='pi_list'>
+        {% comment %} <select class='form-select' multiple name='q'> {% endcomment %}
+            {% for pi in pi_list %}
+            <option> {{ pi }}</option>
             {% endfor %}
         </select>
     </div>

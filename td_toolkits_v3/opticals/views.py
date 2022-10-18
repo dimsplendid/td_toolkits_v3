@@ -429,6 +429,14 @@ class OpticalSearchView(TemplateView):
             # .order_by('modified') 
             .distinct()
         ]
+        context['pi_list'] = [
+            i[0] for i in 
+            OptFittingModel.objects.all()
+            .values_list('pi__name')
+            # Seems distinct is not compatible to order_by
+            # .order_by('modified') 
+            .distinct()
+        ]
         context['profile_list'] = OpticalSearchProfile.objects.all()
             
         context['profile'] = get_object_or_404(
@@ -467,6 +475,7 @@ class OpticalSearchView(TemplateView):
             escape=False,
         )
         lc_list = self.request.GET.getlist('q')
+        pi_list = self.request.GET.getlist('pi_list')
         context['q'] = lc_list
         context['q_lc_list'] = None
         if lc_list:
@@ -480,6 +489,7 @@ class OpticalSearchView(TemplateView):
             # concat all results into one table
             opt_result_generator = OptTableGenerator(
                 lc_list=lc_list,
+                pi_list=pi_list,
                 reference=ref, 
                 mode='search',
             )
