@@ -34,6 +34,33 @@ class Project(TimeStampedModel):
 
     def __str__(self):
         return self.name
+    
+class KanbanBase(TimeStampedModel):
+    title = models.CharField(max_length=255)
+    slug = AutoSlugField(
+        unique=True, always_update=False, populate_from="title"
+    )
+    
+    def __str__(self):
+        return self.title
+    
+    class Meta:
+        abstract = True
+    
+class Board(KanbanBase):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    
+    def make_default(self):
+        ...
+
+class Card(KanbanBase):
+    board = models.ForeignKey(Board, on_delete=models.CASCADE)
+    
+class Item(KanbanBase):
+    desc = models.TextField(blank=True)
+    internal_link = models.CharField(max_length=255, null=True, blank=True)
+    external_link = models.URLField(null=True, blank=True)
+    card = models.ForeignKey(Card, on_delete=models.CASCADE)
 
 
 class Factory(TimeStampedModel):
