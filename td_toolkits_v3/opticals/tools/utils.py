@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Literal
+from typing import NamedTuple, Literal, cast, Callable
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 import pandas as pd
+
 import plotly.express as px
 from plotly.offline import plot
 import re
@@ -124,7 +126,9 @@ class OptLoader():
         # check is there opt data
         if type(df) == str:
             return df
-
+        else:
+            df = cast(pd.DataFrame, df)
+        
         # no cell gap assignment, return raw directly
         if self.cell_gap is None:
             return df
@@ -133,11 +137,16 @@ class OptLoader():
             axo_df = self.axo
             if type(axo_df) == str:
                 return axo_df
+            else:
+                axo_df = cast(pd.DataFrame, axo_df)
             df = pd.merge(df, axo_df, on=['ID', 'Point'], how='inner')
         else:
             rdl_df = self.rdl
             if type(rdl_df) == str:
                 return rdl_df
+            else:
+                rdl_df = cast(pd.DataFrame, rdl_df)
+            
             df = pd.merge(df, rdl_df, on='ID', how='inner')
 
         if len(df) == 0:
@@ -176,6 +185,8 @@ class OptLoader():
         # check is there opt data
         if type(df) == str:
             return df
+        else:
+            df = cast(pd.DataFrame, df)
 
         # no cell gap assignment, return raw directly
         if self.cell_gap is None:
@@ -185,11 +196,15 @@ class OptLoader():
             axo_df = self.axo
             if type(axo_df) == str:
                 return axo_df
+            else:
+                axo_df = cast(pd.DataFrame, axo_df)
             df = pd.merge(df, axo_df, on=['ID', 'Point'], how='inner')
         else:
             rdl_df = self.rdl
             if type(rdl_df) == str:
                 return rdl_df
+            else:
+                rdl_df = cast(pd.DataFrame, rdl_df)
             df = pd.merge(df, rdl_df, on='ID', how='inner')
 
         if len(df) == 0:
@@ -490,19 +505,23 @@ class OPTFitting():
 
         # 1. should cut of T% after 100, make f(T%) is a funciton
         opt_df = self.opt_df.copy()
-        opt_cut_off_df = []
+        opt_cut_off_list: list[pd.DataFrame] = []
         for id in opt_df['ID'].unique():
+            id = cast(str, id)
             tmp_df_1 = opt_df[opt_df['ID']==id]
             for point in tmp_df_1['Point'].unique():
+                point = cast(int, point)
                 tmp_df_2 = tmp_df_1[tmp_df_1['Point']==point]
                 tmp_df_2 = tmp_df_2.iloc[:tmp_df_2['T%'].argmax(),:]
-                opt_cut_off_df.append(tmp_df_2)
-        opt_cut_off_df = pd.concat(opt_cut_off_df)
+                opt_cut_off_list.append(tmp_df_2)
+        opt_cut_off_df = pd.concat(opt_cut_off_list)
         # 2. And we usually inteterstin in the higer T% region
         #    Select 85% for now.
         opt_cut_off_df = opt_cut_off_df[opt_cut_off_df['T%']>85]
 
         train, test = train_test_split(opt_cut_off_df, test_size=0.1)
+        train = cast(pd.DataFrame, train)
+        test = cast(pd.DataFrame, test)
         x_train = train[["T%", "Cell Gap"]].to_numpy()
         y_train = train['Vop'].to_numpy()
         x_test = test[['T%', 'Cell Gap']].to_numpy()
@@ -1079,6 +1098,8 @@ class OptFitting():
         opt_cut_off_df = opt_cut_off_df[opt_cut_off_df['T%']>85]
 
         train, test = train_test_split(opt_cut_off_df, test_size=0.1)
+        train = cast(pd.DataFrame, train)
+        test = cast(pd.DataFrame, test)
         x_train = train[["T%", "Cell Gap"]].to_numpy()
         y_train = train['Vop'].to_numpy()
         x_test = test[['T%', 'Cell Gap']].to_numpy()
@@ -1115,8 +1136,17 @@ class OptResultGenerator():
         self.models = OpticalsFittingModel.objects.filter(
             lc__name=lc
         ).latest('created')
-        self.range = (self.models.cell_gap_lower, self.models.cell_gap_upper)
-        self.ref_data = RefOptLoader(ref).ref.to_dict('records')[0]
+        self.range = (
+            self.models.cell_gap_lower, self.models.cell_gap_upper
+        )
+        
+        ref_data = RefOptLoader(ref).ref
+        if type(ref_data) != pd.DataFrame:
+            raise(BaseException(ref))
+        else:
+            ref_data = cast(pd.DataFrame, ref_data)
+        
+        self.ref_data = ref_data.to_dict('records')[0]
         self.__ref = None
 
     @property
@@ -1200,8 +1230,8 @@ class OptResultGenerator():
         f_x = self.f(table['WX'], 'Xn')
         f_y = self.f(table['WY'], 'Yn')
         f_z = self.f(table['WZ'], 'Zn')
-        table['a*'] = 500 * (f_x-f_y)
-        table['b*'] = 200 * (f_y-f_z)
+        table['a*'] = 500 * (f_x-f_y) # type: ignore
+        table['b*'] = 200 * (f_y-f_z) # type: ignore
         table['L*'] = 116 * f_y - 16
         table["u'"] = 4 * table['Wx'] / (-2*table['Wx'] + 12*table['Wy'] + 3)
         table["v'"] = 9 * table['Wy'] / (-2*table['Wx'] + 12*table['Wy'] + 3)
@@ -1253,7 +1283,7 @@ class OptResultGenerator():
         return df
 
     @staticmethod
-    def f(x, opt):
+    def f(x: NDArray[np.float64], opt: str):
         """
         Aux fuction for calculating Eab
         """
@@ -1269,7 +1299,12 @@ class OptResultGenerator():
             (x/blu[opt]) ** (1/3)
         )
 
-def tr2_score(column, method='mean', cmp='gt', scale=1., formatter=None):
+def tr2_score(
+    column: NDArray[np.float64],
+    method='mean', 
+    cmp='gt', scale=1., 
+    formatter: Callable[[NDArray[np.float64]], NDArray[np.float64]] |None = None
+):
     """
     Calculate the score base on the data.
     Parameters
@@ -1292,8 +1327,8 @@ def tr2_score(column, method='mean', cmp='gt', scale=1., formatter=None):
     """
     if method == 'mean':
         # Mean Normalization
-        stdev = column.std()
-        mean = column.mean()
+        stdev: float = column.std()
+        mean: float = column.mean()
         if stdev == 0:
             score = np.zeros(len(column))
         else:
@@ -1303,8 +1338,8 @@ def tr2_score(column, method='mean', cmp='gt', scale=1., formatter=None):
 
     if method == 'min-max':
         # Min-Max Normalization
-        min = column.min()
-        max = column.max()
+        min: float = column.min()
+        max: float = column.max()
         if min == max:
             score = np.array([0.5] * len(column))
         else:
@@ -1312,6 +1347,8 @@ def tr2_score(column, method='mean', cmp='gt', scale=1., formatter=None):
                 score = (column - min) / (max - min)
             else:
                 score = (max - column) / (max - min)
+
+    score = cast(NDArray[np.float64], score) # type: ignore
 
     if formatter:
         score = formatter(score)
@@ -1322,7 +1359,7 @@ def tr2_score(column, method='mean', cmp='gt', scale=1., formatter=None):
 
 class OptictalsScore():
 
-    def __init__(self, data, profile):
+    def __init__(self, data: pd.DataFrame, profile):
         """
         Parameters
         ----------
@@ -1346,7 +1383,7 @@ class OptictalsScore():
         self.data = pd.merge(self.data, designed_cell_gap, on='LC', how='left')
         # print(self.data)
         self.constraint = profile.to_dict(orient='records')[0]
-        mask = (
+        mask: pd.Series = (
             (self.data['LC%']    >  self.constraint['LC%'])
             & (self.data['ΔEab*']  <  self.constraint['ΔEab*'])
             & (self.data['RT']     <  self.constraint['RT'])
@@ -1367,16 +1404,16 @@ class OptictalsScore():
                 return np.round(9 * x) + 1
             score_df = self.data[['LC', 'PI', 'Seal']].copy()
             score_df['LC%'] = tr2_score(
-                self.data['LC%'], 
+                self.data['LC%'], # type: ignore
                 'min-max', 'gt',self.constraint['w(LC%)'] , f)
             score_df['ΔEab*'] = tr2_score(
-                self.data['ΔEab*'], 
+                self.data['ΔEab*'], # type: ignore
                 'min-max', 'lt', self.constraint['w(ΔEab*)'], f)
             score_df['RT'] = tr2_score(
-                self.data['RT'], 
+                self.data['RT'], # type: ignore
                 'min-max', 'lt', self.constraint['w(RT)'], f)
             score_df['CR'] = tr2_score(
-                self.data['CR'], 
+                self.data['CR'], # type: ignore
                 'min-max', 'gt', self.constraint['w(CR)'], f)
             score_df['Sum'] = score_df.iloc[:,1:].sum(axis=1)
             # score_df['Remark'] = self.data['Remark']
@@ -1400,7 +1437,7 @@ class OptictalsScore():
                 .stack()
                 .reset_index()
             )
-            plot_df.columns = ['Config', 'Item', 'Score']
+            plot_df.columns = pd.Index(['Config', 'Item', 'Score'])
             fig = px.bar(
                 plot_df, 
                 x='Item', y='Score', color='Config', barmode='group'
@@ -1438,7 +1475,7 @@ class OptTableGenerator():
                 self.target_cell_gap - 0.6,
                 self.target_cell_gap + 0.5,
             )
-            self.cell_gaps = np.linspace(
+            self.cell_gaps: NDArray[np.float64] | None = np.linspace(
                 self.cell_gap_range.min,
                 self.cell_gap_range.max,
                 12,
@@ -1455,12 +1492,12 @@ class OptTableGenerator():
             self.experiment = experiment
             
             if OptFittingModel.objects.filter(experiment=self.experiment).exists():
-                self.opt_models: list[OptFittingModel] = OptFittingModel.objects.filter(
+                self.opt_models = OptFittingModel.objects.filter(
                     experiment=self.experiment
                 )
             
             if RTFittingModel.objects.filter(experiment=self.experiment).exists():
-                self.rt_models: list[RTFittingModel] = RTFittingModel.objects.filter(
+                self.rt_models = RTFittingModel.objects.filter(
                     experiment=self.experiment
                 )
             else:
@@ -1482,8 +1519,8 @@ class OptTableGenerator():
     def opt_generator(
         self,
         model: OptFittingModel,
-        voltages: np.array,
-        cell_gaps: np.array,
+        voltages: NDArray[np.float64],
+        cell_gaps: NDArray[np.float64],
     ) -> pd.DataFrame:
         # add a dummy cell gap for calculate the difference.
         predict_region = np.array([voltages, cell_gaps]).T
@@ -1531,8 +1568,8 @@ class OptTableGenerator():
         f_y = f(record['Wy'], 'Yn')
         f_z = f(record['WZ'], 'Zn')
         
-        record['a*'] = 500 * (f_x - f_y)
-        record['b*'] = 200 * (f_y - f_z)
+        record['a*'] = 500 * (f_x - f_y) # type: ignore
+        record['b*'] = 200 * (f_y - f_z) # type: ignore
         record['L*'] = 116 * f_y - 16
         record["u'"] = 4 * record['Wx'] / (-2*record['Wx'] + 12*record['Wy'] + 3)
         record["v'"] = 9 * record['Wy'] / (-2*record['Wx'] + 12*record['Wy'] + 3)
@@ -1567,8 +1604,8 @@ class OptTableGenerator():
     def rt_generator(
         self,
         model: RTFittingModel,
-        voltages: np.array,
-        cell_gaps: np.array,
+        voltages: NDArray[np.float64],
+        cell_gaps: NDArray[np.float64],
     ):
         predict_region = np.array([voltages, cell_gaps]).T
         record = {}
@@ -1602,14 +1639,14 @@ class OptTableGenerator():
                     cell_gap - 0.6,
                     cell_gap + 0.5,
                 )
-                cell_gaps = np.linspace(
+                cell_gaps: NDArray[np.float64] = np.linspace(
                     cell_gap_range.min,
                     cell_gap_range.max,
                     12,
                 )
                 
             else:
-                cell_gaps = self.cell_gaps
+                cell_gaps = cast(NDArray[np.float64], self.cell_gaps)
             voltages = np.array([v_estimate]*len(
                 cell_gaps
             ))
@@ -1628,6 +1665,7 @@ class OptTableGenerator():
                         pi__name=opt_model.pi.name,
                     )
                 # If not, check if the LC is the same
+                # TODO: Add order 
                 elif (self.rt_models.filter(
                     lc__name=opt_model.lc.name,
                     pi__name=opt_model.pi.name,
@@ -1653,7 +1691,9 @@ class OptTableGenerator():
         )
             
         if self.reference is not None:
+            
             class Match(Enum):
+                EMPTY = 0
                 LC = 1
                 LCPI = 2
             
@@ -1663,8 +1703,8 @@ class OptTableGenerator():
                 cell_gap_lower__lte=self.reference.cell_gap,
                 cell_gap_upper__gte=self.reference.cell_gap,
             ):
-                print(model.r2['f(Vop, Cell Gap) |-> Tr'])
-                print(model.pi)
+                # print(model.r2['f(Vop, Cell Gap) |-> Tr'])
+                # print(model.pi)
                 if model.r2['f(Vop, Cell Gap) |-> Tr'] > 0.8:
                     rt_model = model
                     ref_match = Match.LCPI
@@ -1682,16 +1722,16 @@ class OptTableGenerator():
                 else:
                     print('no model within intrapolate range')
                     rt_model = None
-                    ref_match = None
+                    ref_match = Match.EMPTY
             
             if rt_model is not None:
-                ref_voltage = rt_model.voltage.predict(
+                ref_voltage: float = rt_model.voltage.predict(
                     [[self.reference.time_rise, self.reference.cell_gap]]
                 )[0]
                 opt_table_list = []
                 for opt_model in self.opt_models:
                     if self.target_cell_gap is None:
-                        cell_gap = opt_model.lc.designed_cell_gap
+                        cell_gap: float = opt_model.lc.designed_cell_gap
                         cell_gap_range = CellGapRange(
                             cell_gap - 0.6,
                             cell_gap + 0.5,
@@ -1703,7 +1743,7 @@ class OptTableGenerator():
                         )
                         
                     else:
-                        cell_gaps = self.cell_gaps
+                        cell_gaps = cast(NDArray[np.float64], self.cell_gaps)
                         
                     voltages = np.array([ref_voltage]*len(cell_gaps))
                     opt_table_list.append(self.opt_generator(
