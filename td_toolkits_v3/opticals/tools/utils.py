@@ -1494,7 +1494,7 @@ class OptTableGenerator():
             if OptFittingModel.objects.filter(experiment=self.experiment).exists():
                 self.opt_models = OptFittingModel.objects.filter(
                     experiment=self.experiment
-                ).order_by('-modified')
+                )
             
             if RTFittingModel.objects.filter(experiment=self.experiment).exists():
                 self.rt_models = RTFittingModel.objects.filter(
@@ -1510,7 +1510,7 @@ class OptTableGenerator():
             self.opt_models = OptFittingModel.objects.filter(
                 lc__name__in=lc_list,
                 pi__name__in=pi_list,
-            ).order_by('-modified')
+            )
             self.rt_models = RTFittingModel.objects.filter(
                 lc__name__in=lc_list,
                 pi__name__in=pi_list,
@@ -1632,7 +1632,12 @@ class OptTableGenerator():
         v_estimate = 5.0
         
         opt_table_list: list[pd.DataFrame] = []
-        for opt_model in self.opt_models:
+        for cfg in self.opt_models.values_list(
+            'lc', 'pi', named=True,
+        ).distinct():
+            opt_model = self.opt_models.filter(
+                lc=cfg.lc, pi=cfg.pi
+            ).order_by('-modified')[0]
             if self.target_cell_gap is None:
                 cell_gap = opt_model.lc.designed_cell_gap
                 cell_gap_range = CellGapRange(
@@ -1701,19 +1706,19 @@ class OptTableGenerator():
                 cell_gap_lower__lte=self.reference.cell_gap,
                 cell_gap_upper__gte=self.reference.cell_gap,
             ):
-                # print(model.r2['f(Vop, Cell Gap) |-> Tr'])
+                # print(model.r2['f(Tr, Cell Gap) |-> Vop'])
                 # print(model.pi)
-                if model.r2['f(Vop, Cell Gap) |-> Tr'] > 0.8:
+                if model.r2['f(Tr, Cell Gap) |-> Vop'] > 0.8:
                     rt_model = model
                     ref_match = Match.LCPI
                     break
             else:
-                for model in RTFittingModel.objects.filter(
+                for model in self.rt_models.filter(
                     lc=self.reference.lc,
                     cell_gap_lower__lte=self.reference.cell_gap,
                     cell_gap_upper__gte=self.reference.cell_gap,
-                ).order_by('-modified'):
-                    if model.r2['f(Vop, Cell Gap) |-> Tr'] > 0.8:
+                ):
+                    if model.r2['f(Tr, Cell Gap) |-> Vop'] > 0.8:
                         rt_model = model
                         ref_match = Match.LC
                         break
@@ -1727,7 +1732,12 @@ class OptTableGenerator():
                     [[self.reference.time_rise, self.reference.cell_gap]]
                 )[0]
                 opt_table_list: list[pd.DataFrame] = []
-                for opt_model in self.opt_models:
+                for cfg in self.opt_models.values_list(
+                    'lc', 'pi', named=True,
+                ).distinct():
+                    opt_model = self.opt_models.filter(
+                        lc=cfg.lc, pi=cfg.pi
+                    ).order_by('-modified')[0]
                     if self.target_cell_gap is None:
                         cell_gap: float = opt_model.lc.designed_cell_gap
                         cell_gap_range = CellGapRange(
@@ -1750,23 +1760,21 @@ class OptTableGenerator():
                     if self.rt_models.filter(
                         lc__name=opt_model.lc.name,
                         pi__name=opt_model.pi.name,
-                    ).count() == 1:
-                        rt_model = self.rt_models.get(
-                            lc__name=opt_model.lc.name,
-                            pi__name=opt_model.pi.name,
-                        )
-                    # If not, check if the LC is the same
-                    elif (self.rt_models.filter(
-                        lc__name=opt_model.lc.name,
-                        pi__name=opt_model.pi.name,
-                    ).count() == 0) & (self.rt_models.filter(
-                        lc__name=opt_model.lc.name,
-                    ).count() > 0):
+                    ).count() > 0:
                         rt_model = self.rt_models.filter(
                             lc__name=opt_model.lc.name,
-                        )[0]
+                            pi__name=opt_model.pi.name,
+                        ).order_by('-modified')[0]
+                    # If not, check if the LC is the same
+                    elif self.rt_models.filter(
+                        lc__name=opt_model.lc.name,
+                    ).count() > 0:
+                        rt_model = self.rt_models.filter(
+                            lc__name=opt_model.lc.name,
+                        ).order_by('-modified')[0]
                     # If not, skip this LC
                     else:
+                        print(f'skip LC: {opt_model.lc.name}')
                         continue
                     rt_table = self.rt_generator(
                         rt_model, voltages, cell_gaps
