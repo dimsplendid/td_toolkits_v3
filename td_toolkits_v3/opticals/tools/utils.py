@@ -1708,11 +1708,11 @@ class OptTableGenerator():
                     ref_match = Match.LCPI
                     break
             else:
-                for model in self.rt_models.filter(
+                for model in RTFittingModel.objects.filter(
                     lc=self.reference.lc,
                     cell_gap_lower__lte=self.reference.cell_gap,
                     cell_gap_upper__gte=self.reference.cell_gap,
-                ):
+                ).order_by('-modified'):
                     if model.r2['f(Vop, Cell Gap) |-> Tr'] > 0.8:
                         rt_model = model
                         ref_match = Match.LC
