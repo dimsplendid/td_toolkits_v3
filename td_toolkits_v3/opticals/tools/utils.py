@@ -1494,12 +1494,12 @@ class OptTableGenerator():
             if OptFittingModel.objects.filter(experiment=self.experiment).exists():
                 self.opt_models = OptFittingModel.objects.filter(
                     experiment=self.experiment
-                )
+                ).order_by('-modified')
             
             if RTFittingModel.objects.filter(experiment=self.experiment).exists():
                 self.rt_models = RTFittingModel.objects.filter(
                     experiment=self.experiment
-                )
+                ).order_by('-modified')
             else:
                 self.rt_models = None
             
@@ -1510,11 +1510,11 @@ class OptTableGenerator():
             self.opt_models = OptFittingModel.objects.filter(
                 lc__name__in=lc_list,
                 pi__name__in=pi_list,
-            )
+            ).order_by('-modified')
             self.rt_models = RTFittingModel.objects.filter(
                 lc__name__in=lc_list,
                 pi__name__in=pi_list,
-            )
+            ).order_by('-modified')
             
     def opt_generator(
         self,
@@ -1631,7 +1631,7 @@ class OptTableGenerator():
         self.tables = {}        
         v_estimate = 5.0
         
-        opt_table_list = []
+        opt_table_list: list[pd.DataFrame] = []
         for opt_model in self.opt_models:
             if self.target_cell_gap is None:
                 cell_gap = opt_model.lc.designed_cell_gap
@@ -1665,7 +1665,6 @@ class OptTableGenerator():
                         pi__name=opt_model.pi.name,
                     )
                 # If not, check if the LC is the same
-                # TODO: Add order 
                 elif (self.rt_models.filter(
                     lc__name=opt_model.lc.name,
                     pi__name=opt_model.pi.name,
@@ -1690,14 +1689,13 @@ class OptTableGenerator():
             opt_table_list, ignore_index=True
         )
             
-        if self.reference is not None:
-            
+        if (self.reference is not None) and (self.rt_models is not None):          
             class Match(Enum):
                 EMPTY = 0
                 LC = 1
                 LCPI = 2
             
-            for model in RTFittingModel.objects.filter(
+            for model in self.rt_models.filter(
                 lc=self.reference.lc,
                 pi=self.reference.pi,
                 cell_gap_lower__lte=self.reference.cell_gap,
@@ -1710,7 +1708,7 @@ class OptTableGenerator():
                     ref_match = Match.LCPI
                     break
             else:
-                for model in RTFittingModel.objects.filter(
+                for model in self.rt_models.filter(
                     lc=self.reference.lc,
                     cell_gap_lower__lte=self.reference.cell_gap,
                     cell_gap_upper__gte=self.reference.cell_gap,
@@ -1728,7 +1726,7 @@ class OptTableGenerator():
                 ref_voltage: float = rt_model.voltage.predict(
                     [[self.reference.time_rise, self.reference.cell_gap]]
                 )[0]
-                opt_table_list = []
+                opt_table_list: list[pd.DataFrame] = []
                 for opt_model in self.opt_models:
                     if self.target_cell_gap is None:
                         cell_gap: float = opt_model.lc.designed_cell_gap
