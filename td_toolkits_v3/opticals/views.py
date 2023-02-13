@@ -604,7 +604,7 @@ class OpticalDataDumpView(TemplateView):
             opt_df = data_loader.opt
             # if there is rt data, export either
             try:
-                rt_df: str | DataFrame | None = data_loader.rt
+                rt_df = data_loader.rt
             except:
                 rt_df = None
 
