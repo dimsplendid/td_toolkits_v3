@@ -43,16 +43,16 @@ class ReliabilityTestForm(forms.Form):
         product_id = '2422S0651202H'
         emergency = 'General'
         confidential = '一般'
-        experiment_purpose = '高穿高信賴液晶開發，接機低溫爐 LTS'
+        experiment_purpose = '高穿高信賴液晶開發，借機低溫爐 LTS'
         sample_location = 'TN'
         input_date = date(2022, 9, 15) or date.today()
         phase = 'TR2'
         exp_type = '借機'
         sample_type = 'Open Cell'
         # responsible_lab = '台南檢測中心' # 敏芳
-        responsible_lab = '南科RA實驗室(TN Lab)'
+        responsible_lab = '台南檢測中心'
         test_notice="""
-        高穿高信賴負型液晶開發，低溫爐冰存 bulk LC 測試 -40 度 LTS 規格，測試期間不回溫需有手套箱，委測者借機自行操作
+        高穿高信賴負型液晶開發，低溫爐冰存 bulk LC 測試 -30 °C LTS 規格，測試期間不回溫需有手套箱，委測者借機自行操作
         有 5 家供應商 + ref 共 6 支 LC，每支 LC 冰存 6 瓶，樣品共 36 瓶。
         """
 
@@ -72,11 +72,11 @@ class ReliabilityTestForm(forms.Form):
             ReliabilityTest(
                 "環境測試(Environment test)",
                 "LTS (Low Temp. Storage Test)",
-                "-40℃",
+                "-30℃",
                 to_fail=True,
                 time=timedelta(hours=500),
                 qty=36, # 1 支 LC 6 瓶，3 個一綑來看
-                remark="借機台南",
+                remark="借機",
             ),
         ]
 
