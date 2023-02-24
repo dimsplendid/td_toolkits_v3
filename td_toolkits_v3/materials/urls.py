@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-
+from .api import api
 
 app_name = "materials"
 urlpatterns = [
@@ -103,5 +103,6 @@ urlpatterns = [
         'lc/refraction-index/update/success/',
         views.RefractionIndexUploadSuccessView.as_view(),
         name='refraction_index_upload_success'
-    )
+    ),
+    path(route="api/", view=api.urls),
 ]
