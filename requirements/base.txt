@@ -33,3 +33,4 @@ md4mathjax==0.1.3
 markdown-full-yaml-metadata==2.1.0
 pydantic==1.9.1
 selenium==4.4.3
+webdriver-manager==3.8.5

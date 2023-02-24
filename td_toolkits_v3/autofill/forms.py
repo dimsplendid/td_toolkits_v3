@@ -3,7 +3,9 @@ from django import forms
 from datetime import date, timedelta
 from attrs import define
 
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select, WebDriverWait
@@ -91,10 +93,13 @@ class ReliabilityTestForm(forms.Form):
         options.add_argument("--window-size=1920,1080")
         options.add_argument(
             "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36"
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.5249.61 Safari/537.36"
         )
         # driver = webdriver.Edge(options=options)
-        driver = webdriver.Chrome(options=options)
+        service = ChromeService(
+            executable_path=ChromeDriverManager().install()
+        )
+        driver = webdriver.Chrome(options=options, service=service)
         driver.get("http://ras/welcome.do")
 
         venders = {

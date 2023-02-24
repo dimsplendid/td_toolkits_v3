@@ -56,11 +56,12 @@ class Factory(TimeStampedModel):
         blank=True,
     )
     desc = models.TextField("description", blank=True)
-    ra_name = models.CharField(
-        verbose_name='RAS Fab Name',
-        blank=True,
-        null=True,
-    )
+    # ra_name = models.CharField(
+    #     verbose_name='RAS Fab Name',
+    #     max_length=255,
+    #     blank=True,
+    #     null=True,
+    # )
 
     @classmethod
     def default(cls, name):
