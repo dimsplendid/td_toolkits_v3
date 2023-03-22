@@ -8,7 +8,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select, WebDriverWait
+from selenium.webdriver.support.select import Select
+from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 @define
@@ -39,13 +40,14 @@ class ReliabilityTestForm(forms.Form):
         account = self.cleaned_data['account']
         password = self.cleaned_data['password']
         fab = 'LCD1'
-        product_model = None or 'F065A12-6T1'
-        product_id = '2422S0651202H'
+        product_model = 'MP-TestCell(multi-layer)'
+        product_model_selector = product_model.replace('(', '\\(').replace(')', '\\)')
+        product_id = 'MP-TestCell(multi-layer)'
         emergency = 'General'
         confidential = '一般'
         experiment_purpose = '高穿高信賴液晶開發，借機低溫爐 LTS'
-        sample_location = 'TN'
-        input_date = date(2022, 9, 15) or date.today()
+        sample_location = 'JN'
+        input_date = date.today() + timedelta(days=15)
         phase = 'TR2'
         exp_type = '借機'
         sample_type = 'Open Cell'
@@ -53,17 +55,18 @@ class ReliabilityTestForm(forms.Form):
         responsible_lab = '台南檢測中心'
         test_notice="""
         高穿高信賴負型液晶開發，低溫爐冰存 bulk LC 測試 -30 °C LTS 規格，測試期間不回溫需有手套箱，委測者借機自行操作
-        有 5 家供應商 + ref 共 6 支 LC，每支 LC 冰存 6 瓶，樣品共 36 瓶。
+        有 6 家供應商 + ref 共 7 支 LC，每支 LC 冰存 6 瓶，樣品共 42 瓶。
         """
 
         materials = {
             'ref': Material('Merck', 'LC', 'LCT-15-1098'),
             'exp': [
-                Material('BAYI', 'LC', 'BY22-Q13F'),
-                Material('JNC', 'LC', 'JNC-V3'),
-                Material('誠志永華', 'LC', 'SLC22V72L00'),
-                Material('晶美晟', 'LC', 'VNJ81101'),
-                Material('HCCH', 'LC', 'AV420-225'),
+                Material('Merck', 'LC', 'Merck New LC'),
+                Material('BAYI', 'LC', 'BY New LC'),
+                Material('JNC', 'LC', 'JNC New LC'),
+                Material('誠志永華', 'LC', 'SLC New LC'),
+                Material('晶美晟', 'LC', 'VVI New LC'),
+                Material('HCCH', 'LC', 'HCCH New LC'),
             ]
         }
 
@@ -75,7 +78,7 @@ class ReliabilityTestForm(forms.Form):
                 "-30℃",
                 to_fail=True,
                 time=timedelta(hours=500),
-                qty=36, # 1 支 LC 6 瓶，3 個一綑來看
+                qty=42, # 1 支 LC 6 瓶，3 個一綑來看
                 remark="借機",
             ),
         ]
@@ -88,13 +91,14 @@ class ReliabilityTestForm(forms.Form):
         
         # options = webdriver.EdgeOptions()
         options = webdriver.ChromeOptions()
-        options.add_argument('--headless')
-        options.add_argument('--disable-gpu')
-        options.add_argument("--window-size=1920,1080")
-        options.add_argument(
-            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.5249.61 Safari/537.36"
-        )
+        # Headless mode can't work sometimes, show the winodws whatever...
+        # options.add_argument('--headless')
+        # options.add_argument('--disable-gpu')
+        # options.add_argument("--window-size=1920,1080")
+        # options.add_argument(
+        #     "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        #     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.5249.61 Safari/537.36"
+        # )
         # driver = webdriver.Edge(options=options)
         service = ChromeService(
             executable_path=ChromeDriverManager().install()
@@ -139,7 +143,7 @@ class ReliabilityTestForm(forms.Form):
         finally:
             WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, f"option[value={product_model}]")
+                    (By.CSS_SELECTOR, f"option[value={product_model_selector}]")
                 )
             )
             Select(
