@@ -8,13 +8,14 @@ from . import forms
 
 class Index(TemplateView):
     template_name: str = 'base.html'
-    
+
+
 class RealiabilitySystemTest(FormView):
     template_name: str = 'form_generic.html'
     success_url = reverse_lazy('autofill:ras-test')
     form_class = forms.ReliabilityTestForm
     
-    def form_valid(self, form):
+    def form_valid(self, form: forms.ReliabilityTestForm):
         form.save()
         return super().form_valid(form)
     
