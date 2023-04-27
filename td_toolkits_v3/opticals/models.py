@@ -5,12 +5,13 @@ from autoslug import AutoSlugField
 from model_utils.models import TimeStampedModel
 from picklefield.fields import PickledObjectField
 
+import td_toolkits_v3.materials.models as Material
 
 class Instrument(TimeStampedModel):
     name = models.CharField("Instrument Name", max_length=255)
     slug = AutoSlugField(
         "Instrument Address", unique=True, always_update=False, populate_from="name"
-    )
+    ) # type: ignore
     desc = models.TextField("description", blank=True)
     factory = models.ForeignKey(
         "products.Factory",
@@ -27,7 +28,7 @@ class Instrument(TimeStampedModel):
         )[0]
 
     def __str__(self):
-        return f"{self.name} (@{self.factory.name})"
+        return f"{self.name} (@{self.factory.name})" # type: ignore
 
 
 class AxometricsLog(TimeStampedModel):
@@ -90,10 +91,10 @@ class OpticalLog(TimeStampedModel):
     @property
     def t_percent(self):
         max_lc_percent = max(
-            self.objects.filter(
+            self.objects.filter( # type: ignore
                 chip=self.chip, measure_point=self.measure_point
             ).values_list("lc_percent")
-        )[0]
+        )[0] 
         return self.lc_percent / max_lc_percent * 100
 
     def __str__(self):
@@ -156,29 +157,29 @@ class OpticalReference(TimeStampedModel):
         #     'product_model_type__factory__name'
         # ]
         populate_from=slug_gen
-    )
+    ) # type: ignore
 
-    lc = models.ForeignKey(
+    lc: Material.LiquidCrystal = models.ForeignKey(
         "materials.LiquidCrystal",
         on_delete=models.CASCADE,
         null=True,
         blank=True,
         verbose_name="LC",
-    )
-    pi = models.ForeignKey(
+    ) # type: ignore
+    pi: Material.Polyimide = models.ForeignKey(
         "materials.Polyimide",
         on_delete=models.CASCADE,
         null=True,
         blank=True,
         verbose_name="PI",
-    )
-    seal = models.ForeignKey(
+    ) # type: ignore
+    seal: Material.Seal = models.ForeignKey(
         "materials.Seal",
         on_delete=models.CASCADE,
         null=True,
         blank=True,
         verbose_name="Seal",
-    )
+    ) # type: ignore
 
     cell_gap = models.FloatField("Cell Gap(um)")
     voltage = models.FloatField(default=5.0)
@@ -298,7 +299,7 @@ class OptFittingModel(TimeStampedModel):
     slug = AutoSlugField(
         unique=True, always_update=False,
         populate_from=slug_gen
-    )
+    ) # type: ignore
     
     # Origin data ranges
     cell_gap_upper = models.FloatField()
@@ -347,7 +348,7 @@ class RTFittingModel(TimeStampedModel):
     slug = AutoSlugField(
         unique=True, always_update=False,
         populate_from=slug_gen
-    )
+    ) # type: ignore
     
     # Origin data ranges
     cell_gap_upper = models.FloatField()
@@ -370,7 +371,7 @@ class OpticalSearchProfile(TimeStampedModel):
     slug = AutoSlugField(
         'Optical Search Profile Address', unique=True, always_update=False,
         populate_from='name'
-    )
+    ) # type: ignore
     ref_product = models.ForeignKey(
         OpticalReference, 
         verbose_name='Ref Product',
@@ -405,7 +406,7 @@ class BackLightUnit(TimeStampedModel):
     slug = AutoSlugField(
         'Back Light Unit Address', unique=True, always_update=False,
         populate_from='name'
-    )
+    ) # type: ignore
     
     def __str__(self):
         return self.name
