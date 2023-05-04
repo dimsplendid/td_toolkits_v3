@@ -75,7 +75,7 @@ class ReliabilityTestForm(forms.Form):
             ReliabilityTest(
                 "環境測試(Environment test)",
                 "LTS (Low Temp. Storage Test)",
-                "-30℃",
+                "[共用] -30℃",
                 to_fail=True,
                 time=timedelta(hours=500),
                 qty=42, # 1 支 LC 6 瓶，3 個一綑來看
