@@ -336,7 +336,7 @@ td_toolkits_v3/media/
 jupyter_notebook/
 .ipynb_checkpoints*
 *.ipynb
-jupyter_notebook/
+jupyter_notes/*
 
 # VSCode Counter
 .VSCodeCounter/
