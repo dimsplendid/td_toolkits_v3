@@ -259,10 +259,28 @@ class RDLCellGapUploadForm(forms.Form):
         )
         cache.set("save_log", save_log)
 
+class AlterRdlCellGapUploadForm(forms.Form):
+    exp_id = forms.ChoiceField(
+        choices=[("", "")], initial=None 
+    )
+    
+    rdl_cell_gap = forms.FileField(
+        widget=forms.FileInput(attrs={"accept": ".xlsx"})
+    )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['exp_id'].choice = list(
+            Experiment.objects.all().values_list('name', 'name')
+        )
+        last_exp = Experiment.objects.last()
+        if last_exp is not None:
+            last_exp_id = last_exp.name
+            self.fields['exp_id'].initial = (last_exp_id, last_exp_id)
 
 class OptUploadForm(forms.Form):
-    exp_id = forms.ChoiceField(choices=("", ""), initial=None)
-    factory = forms.ChoiceField(choices=("", ""), initial=None)
+    exp_id = forms.ChoiceField(choices=[("", "")], initial=None)
+    factory = forms.ChoiceField(choices=[("", "")], initial=None)
 
     opts = forms.FileField(
         widget=forms.FileInput(
