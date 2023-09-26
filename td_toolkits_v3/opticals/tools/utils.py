@@ -22,11 +22,13 @@ from sklearn.pipeline import Pipeline
 
 from td_toolkits_v3.materials.models import LiquidCrystal, Polyimide, Seal
 from td_toolkits_v3.products.models import Experiment
+
 from td_toolkits_v3.opticals.models import (
     AxometricsLog, 
     OpticalLog, 
     OpticalReference, 
     RDLCellGap,
+    AlterRdlCellGap,
     ResponseTimeLog,
     OpticalsFittingModel,
     OpticalSearchProfile,
@@ -96,6 +98,15 @@ class OptLoader():
         df = self.load_by_experiment(header, RDLCellGap)
         return df
 
+    @property
+    def rdl_alter(self):
+        header = {
+            "chip__name": "ID",
+            "measure_point": "Point",
+            "cell_gap": "Cell Gap"
+        }
+        df = self.load_by_experiment(header, AlterRdlCellGap)
+        return df
 
     # load all need opt data
     @property
@@ -105,7 +116,7 @@ class OptLoader():
         to worry about it later.
         """
         # check parameter
-        if self.cell_gap not in ['axo', 'rdl', None]:
+        if self.cell_gap not in ['axo', 'rdl', 'rdl_alter', None]:
             return f'The {self.cell_gap} method is not implement now.'
 
         # Setting the needed data, and the proper columns name for later use.
@@ -140,7 +151,7 @@ class OptLoader():
             else:
                 axo_df = cast(pd.DataFrame, axo_df)
             df = pd.merge(df, axo_df, on=['ID', 'Point'], how='inner')
-        else:
+        elif self.cell_gap == 'rdl':
             rdl_df = self.rdl
             if type(rdl_df) == str:
                 return rdl_df
@@ -148,6 +159,14 @@ class OptLoader():
                 rdl_df = cast(pd.DataFrame, rdl_df)
             
             df = pd.merge(df, rdl_df, on='ID', how='inner')
+        elif self.cell_gap == 'rdl_alter':
+            rdl_alter_df = self.rdl_alter
+            if type(rdl_alter_df) == str:
+                return rdl_alter_df
+            else:
+                rdl_alter_df = cast(pd.DataFrame, rdl_alter_df)
+            
+            df = pd.merge(df, rdl_alter_df, on=['ID', 'Point'], how='inner')
 
         if len(df) == 0:
             return 'There are no suitable cell gap in OPT log, '\
@@ -166,7 +185,7 @@ class OptLoader():
         worry about that later.
         """
         # check parameter
-        if self.cell_gap not in ['axo', 'rdl', None]:
+        if self.cell_gap not in ['axo', 'rdl', 'rdl_alter', None]:
             return f'The {self.cell_gap} method is not implement now.'
 
         # Setting the needed data, and the proper columns name for later use.
@@ -199,13 +218,21 @@ class OptLoader():
             else:
                 axo_df = cast(pd.DataFrame, axo_df)
             df = pd.merge(df, axo_df, on=['ID', 'Point'], how='inner')
-        else:
+        elif self.cell_gap == 'rdl':
             rdl_df = self.rdl
             if type(rdl_df) == str:
                 return rdl_df
             else:
                 rdl_df = cast(pd.DataFrame, rdl_df)
             df = pd.merge(df, rdl_df, on='ID', how='inner')
+        elif self.cell_gap == 'rdl_alter':
+            rdl_alter_df = self.rdl_alter
+            if type(rdl_alter_df) == str:
+                return rdl_alter_df
+            else:
+                rdl_alter_df = cast(pd.DataFrame, rdl_alter_df)
+            
+            df = pd.merge(df, rdl_alter_df, on=['ID', 'Point'], how='inner')
 
         if len(df) == 0:
             return 'There are no suitable cell gap in RT log, '\

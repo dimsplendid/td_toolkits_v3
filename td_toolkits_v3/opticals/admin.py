@@ -11,9 +11,12 @@ from .models import (
     OpticalSearchProfile,
 )
 
+from . import models
+
 admin.site.register(Instrument)
 admin.site.register(AxometricsLog)
 admin.site.register(RDLCellGap)
+admin.site.register(models.AlterRdlCellGap)
 admin.site.register(OpticalLog)
 admin.site.register(ResponseTimeLog)
 admin.site.register(OpticalReference)

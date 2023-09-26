@@ -24,6 +24,8 @@ from td_toolkits_v3.materials.models import (
     Seal,
 )
 
+from . import models
+
 from .models import (
     Instrument,
     AxometricsLog,
@@ -55,8 +57,8 @@ from td_toolkits_v3.materials.tools.utils import (
 
 class AxoUploadForm(forms.Form):
 
-    exp_id = forms.ChoiceField(choices=("", ""), initial=None)
-    factory = forms.ChoiceField(choices=("", ""), initial=None)
+    exp_id = forms.ChoiceField(choices=[("", "")], initial=None)
+    factory = forms.ChoiceField(choices=[("", "")], initial=None)
 
     axos = forms.FileField(
         widget=forms.FileInput(
@@ -184,7 +186,7 @@ class AxoUploadForm(forms.Form):
 
 
 class RDLCellGapUploadForm(forms.Form):
-    exp_id = forms.ChoiceField(choices=("", ""), initial=None)
+    exp_id = forms.ChoiceField(choices=[("", "")], initial=None)
 
     rdl_cell_gap = forms.FileField(
         widget=forms.FileInput(attrs={"accept": ".xlsx"})
@@ -270,13 +272,65 @@ class AlterRdlCellGapUploadForm(forms.Form):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['exp_id'].choice = list(
+        self.fields['exp_id'].choices = list(
             Experiment.objects.all().values_list('name', 'name')
         )
         last_exp = Experiment.objects.last()
         if last_exp is not None:
             last_exp_id = last_exp.name
             self.fields['exp_id'].initial = (last_exp_id, last_exp_id)
+    
+    def save(self):
+        rdl_cell_gap = pd.read_excel(
+            self.cleaned_data["rdl_cell_gap"],
+            sheet_name='upload',
+        )
+        
+        experiment = Experiment.objects.get(
+            name=str(self.cleaned_data["exp_id"])
+        )
+        
+        log = {
+            'file_name': [self.cleaned_data['rdl_cell_gap']],
+            'warning': [],
+        }
+        bulk_create_list = []
+        bulk_update_list = []
+        
+        for row in rdl_cell_gap.to_numpy():
+            # Check if there is chip data, otherwise skip.
+            try:
+                chip = Chip.objects.get(
+                    short_name=row[0], 
+                    sub__condition__experiment=experiment
+                )
+            except Chip.DoesNotExist:
+                log['warning'].append(
+                    f"Chip: {row[0]} is not in the database."
+                )
+                continue
+            try:
+                rdl_cell_gap = models.AlterRdlCellGap.objects.get(
+                    chip=chip,
+                    measure_point=row[1],
+                )
+                log['warning'].append(
+                    f"The chip {chip.name}({chip.short_name})[{rdl_cell_gap.measure_point}] is duplicate, overwrite the old one"
+                )
+                rdl_cell_gap.cell_gap = row[2]
+                bulk_update_list.append(rdl_cell_gap)
+                
+            except:
+                bulk_create_list.append(
+                    models.AlterRdlCellGap(
+                        chip=chip, 
+                        measure_point=row[1],
+                        cell_gap=row[2], 
+                    )
+                )
+        models.AlterRdlCellGap.objects.bulk_create(bulk_create_list)
+        models.AlterRdlCellGap.objects.bulk_update(bulk_update_list, ['cell_gap'])
+        cache.set('save_log', log)
 
 class OptUploadForm(forms.Form):
     exp_id = forms.ChoiceField(choices=[("", "")], initial=None)
@@ -429,8 +483,8 @@ class OptUploadForm(forms.Form):
         cache.set("save_log", save_log)
 
 class ResponseTimeUploadForm(forms.Form):
-    exp_id = forms.ChoiceField(choices=("", ""), initial=None)
-    factory = forms.ChoiceField(choices=("", ""), initial=None)
+    exp_id = forms.ChoiceField(choices=[("", "")], initial=None)
+    factory = forms.ChoiceField(choices=[("", "")], initial=None)
     data_type = forms.ChoiceField(choices=(
             ('txt', 'Raw(.txt)'),
             ('xlsx', 'Excel(.xlsx)'),
@@ -574,9 +628,10 @@ class ResponseTimeUploadForm(forms.Form):
 
         # 4. batch create for each chip
         for chip_name in rt_df.iloc[:, 2].unique():
-            chip_id = Chip.objects.get(
+            chip = Chip.objects.get(
                 name=chip_name, sub__condition__experiment=experiment
-            ).id
+            )
+            chip_id = chip.id
             tmp_df = rt_df[rt_df.iloc[:, 2] == chip_name]
             for row in tmp_df.to_numpy():
                 logs.append(
@@ -596,9 +651,9 @@ class ResponseTimeUploadForm(forms.Form):
 
 
 class CalculateOpticalForm(forms.Form):
-    exp_id = forms.ChoiceField(choices=("", ""), initial=None)
+    exp_id = forms.ChoiceField(choices=[("", "")], initial=None)
     cell_gap = forms.ChoiceField(
-        choices=[('axo', 'AXO'), ('rdl', 'RDL')],
+        choices=[('axo', 'AXO'), ('rdl', 'RDL - 1 Point'), ('rdl_alter', 'RDL - 6 Points')],
         initial=('axo', 'AXO'),
     )
 
@@ -682,7 +737,7 @@ class FittingBaseForm(forms.Form):
     
     exp_id = forms.ChoiceField(choices=("", ""), initial=None)
     cell_gap = forms.ChoiceField(
-        choices=[('axo', 'AXO'), ('rdl', 'RDL')],
+        choices=[('axo', 'AXO'), ('rdl', 'RDL - 1 Point'), ('rdl_alter', 'RDL - 6 Points')],
         initial=('axo', 'AXO'),
     )
 
