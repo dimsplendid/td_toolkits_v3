@@ -335,7 +335,11 @@ class AlterRdlCellGapUploadForm(forms.Form):
 class OptUploadForm(forms.Form):
     exp_id = forms.ChoiceField(choices=[("", "")], initial=None)
     factory = forms.ChoiceField(choices=[("", "")], initial=None)
-
+    log_id = forms.ChoiceField(
+        choices=[("panel_id", "Panel ID"), ("short_id", "Short ID")], 
+        initial=("panel_id", "Panel ID"),
+    )
+    
     opts = forms.FileField(
         widget=forms.FileInput(
             attrs={
@@ -345,6 +349,7 @@ class OptUploadForm(forms.Form):
             }
         )
     )
+    
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -368,7 +373,7 @@ class OptUploadForm(forms.Form):
             name=str(self.cleaned_data["exp_id"]))
         # print(files)
         factory = Factory.default(self.cleaned_data["factory"])
-        opt_df = pd.DataFrame()
+        opt_df_list = [pd.DataFrame()]
         
         save_log = {
             "file_name": [file.name for file in files],
@@ -376,10 +381,17 @@ class OptUploadForm(forms.Form):
         }
         
         for file in files:
+            if not file.name.endswith('csv'):
+                save_log["warning"].append(
+                    f"File {file.name} is not a csv file, skip it."
+                )
+                continue
             # Using pd read csv this time
             tmp_df = pd.read_csv(
                 file, encoding="utf-8", encoding_errors="ignore")
-            opt_df = pd.concat([opt_df, tmp_df])
+            opt_df_list.append(tmp_df)
+            
+        opt_df = pd.concat(opt_df_list)
 
         if len(opt_df) == 0:
             save_log["warning"].append("No data found in the file")
@@ -390,7 +402,7 @@ class OptUploadForm(forms.Form):
             subset=[
                 opt_df.columns[0],  # Date
                 opt_df.columns[1],  # Time
-                opt_df.columns[2],  # ID
+                opt_df.columns[2],  # ID or Short ID
                 opt_df.columns[3],  # measure point
                 opt_df.columns[6],  # voltage
             ]
@@ -421,16 +433,30 @@ class OptUploadForm(forms.Form):
         )
 
         # 5. drop chip that already logged
-        chip_could_log = [
-            i.name
-            for i in Chip.objects.filter(
-                sub__condition__experiment=experiment, opticallog__isnull=True
-            ).distinct()
-        ]
-
+        if self.cleaned_data["log_id"] == "panel_id":
+            chip_could_log = [
+                i.name
+                for i in Chip.objects.filter(
+                    sub__condition__experiment=experiment, opticallog__isnull=True
+                ).distinct()
+            ]
+        elif self.cleaned_data["log_id"] == "short_id":
+            chip_could_log = [
+                i.short_name
+                for i in Chip.objects.filter(
+                    sub__condition__experiment=experiment, opticallog__isnull=True
+                ).distinct()
+            ]
+        else:
+            raise ValueError("Wrong log id")
+        
+        origin_opt_df = opt_df
+        # cast the id to str
+        opt_df.iloc[:, 2] = opt_df.iloc[:, 2].astype("str")
         opt_df = opt_df[opt_df.iloc[:, 2].isin(chip_could_log)]
         
         if len(opt_df) == 0:
+            print(origin_opt_df.info())
             save_log["warning"].append("No logable data found in the file")
             cache.set("save_log", save_log)
             return
@@ -449,9 +475,16 @@ class OptUploadForm(forms.Form):
 
         for chip_name in opt_df.iloc[:, 2].unique():
             try:
-                chip = Chip.objects.get(
-                    name=chip_name, sub__condition__experiment=experiment
-                )
+                if self.cleaned_data["log_id"] == "panel_id":
+                    chip = Chip.objects.get(
+                        name=chip_name, sub__condition__experiment=experiment
+                    )
+                elif self.cleaned_data["log_id"] == "short_id":
+                    chip = Chip.objects.get(
+                        short_name=chip_name, sub__condition__experiment=experiment
+                    )
+                else:
+                    raise ValueError("Wrong log id")
             except Chip.DoesNotExist:
                 save_log["warning"].append(
                     f"The chip {chip_name} is not found in the experiment"
