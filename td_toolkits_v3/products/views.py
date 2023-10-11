@@ -54,7 +54,7 @@ class ChipBatchCreateSuccessView(TemplateView):
         except:
             context['table'] = None
         context['nexts'] = {
-            "RDL Upload": reverse_lazy('opticals:rdl_cell_gap_upload'),
+            "RDL Upload": reverse_lazy('opticals:rdl_cell_gap_alter_upload'),
             "AXO Upload": reverse_lazy('opticals:axo_upload'),
         }
         return context

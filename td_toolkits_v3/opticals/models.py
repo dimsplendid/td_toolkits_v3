@@ -73,6 +73,10 @@ class RDLCellGap(TimeStampedModel):
     def __str__(self):
         return self.chip.name
 
+class AlterRdlCellGap(TimeStampedModel):
+    chip = models.ForeignKey('products.Chip', on_delete=models.CASCADE)
+    measure_point = models.SmallIntegerField()
+    cell_gap = models.FloatField()
 
 class OpticalLog(TimeStampedModel):
     chip = models.ForeignKey("products.Chip", on_delete=models.CASCADE)
