@@ -148,6 +148,7 @@ class OpticalReference(TimeStampedModel):
         verbose_name="Product Name",
     )
 
+    @staticmethod
     def slug_gen(obj):
         product = obj.product_model_type.name
         factory = obj.product_model_type.factory.name
@@ -293,6 +294,7 @@ class OptFittingModel(TimeStampedModel):
         on_delete=models.CASCADE
     )
     
+    @staticmethod
     def slug_gen(obj):
         exp = obj.experiment.name
         lc = obj.lc.name.replace('-','')
@@ -342,6 +344,7 @@ class RTFittingModel(TimeStampedModel):
         on_delete=models.CASCADE
     )
     
+    @staticmethod
     def slug_gen(obj):
         exp = obj.experiment.name
         lc = obj.lc.name.replace('-','')
