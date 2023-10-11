@@ -925,11 +925,14 @@ class OpticalPhaseTwoForm(forms.Form):
         required=False,
     )
     
+    voltage = forms.FloatField(initial=5)
+    
     def calc(self, request: HttpRequest):
-        experiment = self.cleaned_data['experiment']
-        reference = self.cleaned_data['reference']
+        experiment: Experiment = self.cleaned_data['experiment']
+        reference: OpticalReference = self.cleaned_data['reference']
+        voltage: float = self.cleaned_data['voltage']
         # Calculate result
-        opt_tr2_result = OptTableGenerator(experiment, reference=reference)
+        opt_tr2_result = OptTableGenerator(experiment, voltage=voltage, reference=reference)
         opt_tr2_result.calc()
         # Save result to cookie
         result = {

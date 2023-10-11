@@ -656,7 +656,7 @@ class OpticalPhaseTwoView(LoginRequiredMixin, FormView):
     form_class = OpticalPhaseTwoForm
     success_url = reverse_lazy('opticals:tr2_success')
     
-    def form_valid(self, form):
+    def form_valid(self, form: OpticalPhaseTwoForm):
         form.calc(self.request)
         return super().form_valid(form)
     

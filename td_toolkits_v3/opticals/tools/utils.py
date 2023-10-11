@@ -1447,6 +1447,7 @@ class OptTableGenerator():
         experiment: Experiment | None = None,
         target_cell_gap: float | None = None,
         reference: OpticalReference | None = None,
+        voltage: float = 5,
         lc_list: list[str] | None = None,
         pi_list: list[str] | None = None,
         mode: Literal['exp', 'search'] = 'exp',
@@ -1509,6 +1510,8 @@ class OptTableGenerator():
                 lc__name__in=lc_list,
                 pi__name__in=pi_list,
             ).order_by('-modified')
+            
+        self.voltage = voltage
             
     def opt_generator(
         self,
@@ -1620,10 +1623,10 @@ class OptTableGenerator():
     def calc(self):
         
         # Calculate the optical(VT) part
-        # V estimate(5.0 V) and if there is ref setting and RT fitting model, 
+        # V estimate and if there is ref setting and RT fitting model, 
         # calculate the Vref from RT part
         self.tables = {}        
-        v_estimate = 5.0
+        v_estimate = self.voltage
         
         opt_table_list: list[pd.DataFrame] = []
         for cfg in self.opt_models.values_list(
