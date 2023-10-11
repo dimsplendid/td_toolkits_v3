@@ -10,7 +10,7 @@ class ProductModelType(TimeStampedModel):
     name = models.CharField("short name", max_length=255)
     slug = AutoSlugField(
         "Product Address", unique=True, always_update=False, populate_from="name"
-    )
+    ) # type: ignore
     model_name = models.CharField(max_length=255, null=True, blank=True)
     factory = models.ForeignKey(
         "Factory",
@@ -97,7 +97,7 @@ class Factory(TimeStampedModel):
     )
     slug = AutoSlugField(
         "Factory Address", unique=True, always_update=False, populate_from="name"
-    )
+    ) # type: ignore
     addr = models.CharField(
         "Factory Address(Physics)",
         max_length=255,
@@ -121,7 +121,7 @@ class Experiment(TimeStampedModel):
     )
     slug = AutoSlugField(
         "Experiment Address", unique=True, always_update=False, populate_from="name"
-    )
+    ) # type: ignore
     desc = models.TextField("description", blank=True)
     product_type = models.ForeignKey(
         "ProductModelType", on_delete=models.CASCADE, null=True, blank=True
@@ -139,7 +139,7 @@ class Condition(TimeStampedModel):
     )
     slug = AutoSlugField(
         "Condtions Address", unique=True, always_update=False, populate_from="name"
-    )
+    ) # type: ignore
     desc = models.TextField("description", blank=True)
     experiment = models.ForeignKey(Experiment, on_delete=models.CASCADE)
 
@@ -165,7 +165,7 @@ class Sub(TimeStampedModel):
     )
     slug = AutoSlugField(
         "Sub Address", unique=True, always_update=False, populate_from="name"
-    )
+    ) # type: ignore
 
     condition = models.ForeignKey(
         "Condition", on_delete=models.CASCADE, null=True, blank=True
@@ -184,7 +184,7 @@ class Chip(TimeStampedModel):
     )
     slug = AutoSlugField(
         "Sub Address", unique=True, always_update=False, populate_from="name"
-    )
+    ) # type: ignore
     short_name = models.CharField("short id", max_length=255, blank=True)
     sub = models.ForeignKey("Sub", on_delete=models.CASCADE, null=True, blank=True)
     condition = models.ForeignKey(

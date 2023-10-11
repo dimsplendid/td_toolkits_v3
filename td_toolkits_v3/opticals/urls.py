@@ -18,10 +18,15 @@ urlpatterns = [
         views.AxoUploadSuccessView.as_view(),
         name='axo_upload_success'
     ),
+    # path(
+    #     'rdl/cell-gap/upload/',
+    #     views.RDLCellGapUploadView.as_view(),
+    #     name='rdl_cell_gap_upload'
+    # ),
     path(
-        'rdl/cell-gap/upload/',
-        views.RDLCellGapUploadView.as_view(),
-        name='rdl_cell_gap_upload'
+        'rdl/cell-gap-alter/upload/success/',
+        views.AlternativeCellGapUploadView.as_view(),
+        name='rdl_cell_gap_alter_upload'
     ),
     path(
         'rdl/cell-gap/upload/success/',
