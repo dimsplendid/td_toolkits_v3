@@ -559,7 +559,7 @@ class OpticalSearchResultDownload(View):
                     writer, sheet_name='OPT Score Raw', index=False)
                 opt_score.to_excel(
                     writer, sheet_name='OPT Score', index=False)
-                writer.save()
+                writer.close()
                 file_name = 'OPT Result.xlsx'
                 response = HttpResponse(
                     b.getvalue(),
@@ -667,7 +667,7 @@ class OpticalPhaseTwoSuccessView(View):
                 writer = pd.ExcelWriter(b, engine='openpyxl')
                 for k, v in request.session['result'].items():
                     pd.read_json(v).to_excel(writer, sheet_name=k, index=False)
-                writer.save()
+                writer.close()
                 file_name = 'OPT Result.xlsx'
                 response = HttpResponse(
                     b.getvalue(),
