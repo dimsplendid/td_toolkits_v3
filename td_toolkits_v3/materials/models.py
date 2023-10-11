@@ -10,7 +10,8 @@ class Vender(TimeStampedModel):
         "Name of Vender", max_length=255, unique=True)
     slug = AutoSlugField(
         "Vender Address",
-        unique=True, always_update=False, populate_from="name")
+        unique=True, always_update=False, populate_from="name"
+    ) # type: ignore
 
     def __str__(self):
         return self.name
@@ -56,7 +57,8 @@ class LiquidCrystal(TimeStampedModel):
         max_length=255, unique=True)
     slug = AutoSlugField(
         "LC Address",
-        unique=True, always_update=False, populate_from="name")
+        unique=True, always_update=False, populate_from="name"
+    ) # type: ignore
     vender = models.ForeignKey(
         Vender,
         default=get_default_vender, on_delete=models.CASCADE)
@@ -115,6 +117,8 @@ class LiquidCrystal(TimeStampedModel):
         
         n_e = self.n_e
         n_o = self.n_o
+        if n_e is None or n_o is None:
+            return None
         k_11 = self.k_11
         k_22 = self.k_22 if self.k_22 is not None else (k_11/2)
         k_33 = self.k_33
@@ -154,7 +158,8 @@ class Polyimide(TimeStampedModel):
         max_length=255, unique=True)
     slug = AutoSlugField(
         "LC Address",
-        unique=True, always_update=False, populate_from="name")
+        unique=True, always_update=False, populate_from="name"
+    ) # type: ignore
     vender = models.ForeignKey(
         Vender,
         default=get_default_vender, on_delete=models.CASCADE)
@@ -181,7 +186,8 @@ class Seal(TimeStampedModel):
         max_length=255, unique=True)
     slug = AutoSlugField(   
         "LC Address",
-        unique=True, always_update=False, populate_from="name")
+        unique=True, always_update=False, populate_from="name"
+    ) # type: ignore
     vender = models.ForeignKey(
         Vender,
         default=get_default_vender, on_delete=models.CASCADE)
