@@ -167,8 +167,8 @@ class AxoUploadForm(forms.Form):
                         row_count += 1
         
             cache.set("df", 
-                pd.DataFrame(
-                        AxometricsLog.objects.filter(
+                pd.DataFrame.from_records(
+                    AxometricsLog.objects.filter(
                         chip__sub__condition__experiment=experiment
                     ).values(
                         'chip__name',
@@ -247,7 +247,7 @@ class RDLCellGapUploadForm(forms.Form):
                 )
         cache.set(
             "df",
-            pd.DataFrame(
+            pd.DataFrame.from_records(
                 RDLCellGap.objects.filter(
                     chip__sub__condition__experiment=experiment
                 ).values(
@@ -285,6 +285,9 @@ class AlterRdlCellGapUploadForm(forms.Form):
             self.cleaned_data["rdl_cell_gap"],
             sheet_name='upload',
         )
+        
+        # make sure the short id type is str.
+        rdl_cell_gap = rdl_cell_gap.astype({'short id': 'str'})
         
         experiment = Experiment.objects.get(
             name=str(self.cleaned_data["exp_id"])
@@ -524,6 +527,10 @@ class ResponseTimeUploadForm(forms.Form):
         ),
         initial='txt'
     )
+    log_id = forms.ChoiceField(
+        choices=[("panel_id", "Panel ID"), ("short_id", "Short ID")], 
+        initial=("panel_id", "Panel ID"),
+    )
 
     rts = forms.FileField(
         widget=forms.FileInput(
@@ -559,7 +566,7 @@ class ResponseTimeUploadForm(forms.Form):
         factory = Factory.default(self.cleaned_data["factory"])
         data_type = self.cleaned_data['data_type']
 
-        rt_df = []
+        rt_df_list = [pd.DataFrame()]
         
         save_log = {
             "file_name": [file.name for file in files],
@@ -573,17 +580,17 @@ class ResponseTimeUploadForm(forms.Form):
                     continue
                 tmp_df = pd.read_table(
                     file, encoding="utf-8", encoding_errors="ignore")
-                rt_df.append(tmp_df)
+                rt_df_list.append(tmp_df)
             elif data_type == 'xlsx':
                 if not file.name.endswith('xlsx'):
                     print(f'skip {file}')
                     continue
                 tmp_df = pd.read_excel(file)
-                rt_df.append(tmp_df)
+                rt_df_list.append(tmp_df)
             else:
-                # raise ValueError('wrong data type')
                 print('Something wrong, I should never touch this place.')
-        rt_df = pd.concat(rt_df)
+                raise ValueError('wrong data type')
+        rt_df = pd.concat(rt_df_list)
 
         # There are some row are the header, cause they just
         # merge the file directory.
@@ -591,15 +598,17 @@ class ResponseTimeUploadForm(forms.Form):
         unwanted_mask = rt_df.iloc[:, 7].astype("str").str.match("[ a-zA-Z]+")
         rt_df = rt_df[~unwanted_mask]
         if len(rt_df) == 0:
-            save_log["warning"].append("No logable data found in the files")
+            save_log["warning"].append("No logable data found in the files after unwanted mask")
             cache.set("save_log", save_log)
             return
 
         # modified types
         for col in [3, 7, 17, 19]:
             rt_df.iloc[:, col] = rt_df.iloc[:, col].astype("float")
-        # operator should store in str
+        # operator should be str
         rt_df.iloc[:, 5] = rt_df.iloc[:, 5].astype("str")
+        # id should be str
+        rt_df.iloc[:, 2] = rt_df.iloc[:, 2].astype("str")
 
         print(rt_df.head())
         # 0. drop na for chip, date, time
@@ -624,8 +633,8 @@ class ResponseTimeUploadForm(forms.Form):
         elif data_type == 'xlsx':
             rt_df["datetime"] = [
                 datetime.combine(
-                    rt_df.iloc[i, 0], 
-                    rt_df.iloc[i, 1], 
+                    rt_df.iloc[i, 0], # type: ignore
+                    rt_df.iloc[i, 1], # type: ignore 
                     tzinfo=timezone(timedelta(hours=8))
                 )
                 for i in range(len(rt_df))
@@ -643,13 +652,24 @@ class ResponseTimeUploadForm(forms.Form):
         )
 
         # 3. drop chip that already logged
-        chip_could_log = [
-            i.name
-            for i in Chip.objects.filter(
-                sub__condition__experiment=experiment, 
-                responsetimelog__isnull=True
-            ).distinct()
-        ]
+        if self.cleaned_data["log_id"] == "panel_id":
+            chip_could_log = [
+                i.name
+                for i in Chip.objects.filter(
+                    sub__condition__experiment=experiment, 
+                    responsetimelog__isnull=True
+                ).distinct()
+            ]
+        elif self.cleaned_data["log_id"] == "short_id":
+            chip_could_log = [
+                i.short_name
+                for i in Chip.objects.filter(
+                    sub__condition__experiment=experiment, 
+                    responsetimelog__isnull=True
+                ).distinct()
+            ]
+        else:
+            raise ValueError("Wrong log id")
 
         rt_df = rt_df[rt_df.iloc[:, 2].isin(chip_could_log)]
         if len(rt_df) == 0:
@@ -657,22 +677,29 @@ class ResponseTimeUploadForm(forms.Form):
             cache.set("save_log", save_log)
             return
         logs = []
-        instrument_id = Instrument.default(rt_df.iloc[0, 4], factory).id
+        instrument = Instrument.default(rt_df.iloc[0, 4], factory)
 
         # 4. batch create for each chip
         for chip_name in rt_df.iloc[:, 2].unique():
-            chip = Chip.objects.get(
-                name=chip_name, sub__condition__experiment=experiment
-            )
-            chip_id = chip.id
+            if self.cleaned_data["log_id"] == "panel_id":
+                chip = Chip.objects.get(
+                    name=chip_name, sub__condition__experiment=experiment
+                )
+            elif self.cleaned_data["log_id"] == "short_id":
+                chip = Chip.objects.get(
+                    short_name=chip_name, sub__condition__experiment=experiment
+                )
+            else:
+                raise ValueError("Wrong log id")
+            chip = chip
             tmp_df = rt_df[rt_df.iloc[:, 2] == chip_name]
             for row in tmp_df.to_numpy():
                 logs.append(
                     ResponseTimeLog(
-                        chip_id=chip_id,
+                        chip=chip,
                         measure_point=row[3],
                         measure_time=row[-1],
-                        instrument_id=instrument_id,
+                        instrument=instrument,
                         operator=row[5],
                         voltage=row[7],
                         time_rise=row[17],
@@ -719,6 +746,9 @@ class CalculateOpticalForm(forms.Form):
                 f"opt_df: {opt_df['LC'].unique()}"
                 f"rt_df: {rt_df['LC'].unique()}"
             )
+        
+        msg = ''
+            
         for lc in opt_df['LC'].unique():
             tmp_rt_df = rt_df[rt_df['LC'] == lc]
             tmp_opt_df = opt_df[opt_df['LC'] == lc]
@@ -768,7 +798,7 @@ OpticalReferenceFormset = forms.inlineformset_factory(
 
 class FittingBaseForm(forms.Form):
     
-    exp_id = forms.ChoiceField(choices=("", ""), initial=None)
+    exp_id = forms.ChoiceField(choices=[("", "")], initial=None)
     cell_gap = forms.ChoiceField(
         choices=[('axo', 'AXO'), ('rdl', 'RDL - 1 Point'), ('rdl_alter', 'RDL - 6 Points')],
         initial=('axo', 'AXO'),
@@ -786,7 +816,7 @@ class FittingBaseForm(forms.Form):
             self.fields["exp_id"].initial = (last_exp_id, last_exp_id)
             
     def calculate(self, request):
-        raise('Method Not Implement')
+        raise NotImplementedError
     
 class OptFittingForm(FittingBaseForm):
     
@@ -798,11 +828,24 @@ class OptFittingForm(FittingBaseForm):
         )
 
         opt_df = data_loader.opt
+        if type(opt_df) == str:
+            print(opt_df)
+            request.session["message"] = opt_df
+            return
+        elif type(opt_df) == pd.DataFrame:
+            # cast type of opt_df to dataframe
+            opt_df = opt_df
+        else:
+            raise ValueError('Wrong type of opt_df')
+            
         opt_df['cfg'] = opt_df['LC'] + ',' + opt_df['PI'] + ',' + opt_df['Seal']
 
         all_cfg = [
             MaterialConfiguration(*c.split(',')) for c in opt_df.cfg.unique()
         ]
+        
+        msg = ''
+        
         for cfg in all_cfg:
             tmp_opt_df = opt_df[
                   (opt_df['LC']==cfg.lc) 
@@ -830,11 +873,23 @@ class RTFittingForm(FittingBaseForm):
         )
 
         rt_df = data_loader.rt
+        if type(rt_df) == str:
+            print(rt_df)
+            request.session["message"] = rt_df
+            return
+        elif type(rt_df) == pd.DataFrame:
+            # cast type of opt_df to dataframe
+            rt_df = rt_df
+        else:
+            raise ValueError('Wrong type of rt_df')
         rt_df['cfg'] = rt_df['LC'] + ',' + rt_df['PI'] + ',' + rt_df['Seal']
 
         all_cfg = [
             MaterialConfiguration(*c.split(',')) for c in rt_df.cfg.unique()
         ]
+        
+        msg = ''
+        
         for cfg in all_cfg:
             tmp_rt_df = rt_df[
                   (rt_df['LC']==cfg.lc) 
@@ -989,12 +1044,12 @@ class BackLightUnitUploadForm(forms.Form):
             attrs={"accpet": ".xlsx"}
         )
     )
-    name: str = forms.CharField(max_length=255)
+    name = forms.CharField(max_length=255)
     
     def save(self):
         file = self.cleaned_data['file']
         
-        blu_intensity = []
+        blu_intensity: list[BackLightIntensity] = []
         blu = BackLightUnit.objects.create(
             name=self.cleaned_data['name'],
         )

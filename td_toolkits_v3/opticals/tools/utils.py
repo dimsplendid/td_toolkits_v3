@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple, Literal, cast, Callable
+from typing import NamedTuple, Literal, cast, Callable, Optional
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -47,7 +47,7 @@ class CellGapRange(NamedTuple):
 
 class OptLoader():
     
-    def __init__(self, experiment_name: str, cell_gap='axo'):
+    def __init__(self, experiment_name: str, cell_gap: Optional[str] ='axo'):
         """
         Simple Loader to load needed data from database.
         experiment_name: str
@@ -57,7 +57,7 @@ class OptLoader():
             Should setting ref before using ref loader.
         cell_gap: str, optional, default is 'axo'
             The cell gap method for the opt and rt data.
-            There are 'rdl' and 'axo' now.
+            There are 'rdl', 'rdl_alter' and 'axo' now.
             And if there are no cell gap data, using None.
         """
         self.experiment_name = experiment_name
@@ -172,7 +172,7 @@ class OptLoader():
         """
         # check parameter
         if self.cell_gap not in ['axo', 'rdl', 'rdl_alter', None]:
-            return f'The {self.cell_gap} method is not implement now.'
+            raise ValueError(f'The {self.cell_gap} method is not implemented now.')
 
         # Setting the needed data, and the proper columns name for later use.
         header = {
@@ -187,11 +187,6 @@ class OptLoader():
         }
         # Query from database, and transform to pd.dataframe
         df = self.load_by_experiment(header, ResponseTimeLog)
-        # check is there opt data
-        if type(df) == str:
-            return df
-        else:
-            df = cast(pd.DataFrame, df)
 
         # no cell gap assignment, return raw directly
         if self.cell_gap is None:
@@ -199,30 +194,16 @@ class OptLoader():
 
         if self.cell_gap == 'axo':
             axo_df = self.axo
-            if type(axo_df) == str:
-                return axo_df
-            else:
-                axo_df = cast(pd.DataFrame, axo_df)
             df = pd.merge(df, axo_df, on=['ID', 'Point'], how='inner')
         elif self.cell_gap == 'rdl':
             rdl_df = self.rdl
-            if type(rdl_df) == str:
-                return rdl_df
-            else:
-                rdl_df = cast(pd.DataFrame, rdl_df)
             df = pd.merge(df, rdl_df, on='ID', how='inner')
         elif self.cell_gap == 'rdl_alter':
             rdl_alter_df = self.rdl_alter
-            if type(rdl_alter_df) == str:
-                return rdl_alter_df
-            else:
-                rdl_alter_df = cast(pd.DataFrame, rdl_alter_df)
-            
             df = pd.merge(df, rdl_alter_df, on=['ID', 'Point'], how='inner')
 
         if len(df) == 0:
-            return 'There are no suitable cell gap in RT log, '\
-                    + 'check the gap data again'
+            raise ValueError('There are no suitable cell gap in RT log, check the gap data again')
         df['RT'] = df['Tr'] + df['Tf']
         return df
     
@@ -404,7 +385,7 @@ class OPTFitting():
     def opt_transformer(self):
         """
         custom opt transform function
-        [x0, x1] = [Vop, Cell Gpa]
+        [x0, x1] = [Vop, Cell Gap]
         [x0, x1] |-> [1, x0, x1, x0*x1, x0**2, x0**3, x0**4]
         """
         if self.__opt_transformer is not None:
