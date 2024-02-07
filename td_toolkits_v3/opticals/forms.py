@@ -632,10 +632,9 @@ class ResponseTimeUploadForm(forms.Form):
             ]
         elif data_type == 'xlsx':
             rt_df["datetime"] = [
-                datetime.combine(
-                    rt_df.iloc[i, 0], # type: ignore
-                    rt_df.iloc[i, 1], # type: ignore 
-                    tzinfo=timezone(timedelta(hours=8))
+                datetime.strptime(
+                    f"{rt_df.iloc[i, 0]} {rt_df.iloc[i, 1]} +0800", 
+                    r"%Y/%m/%d %H:%M:%S %z"
                 )
                 for i in range(len(rt_df))
             ]

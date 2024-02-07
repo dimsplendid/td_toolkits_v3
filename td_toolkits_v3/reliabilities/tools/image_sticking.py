@@ -4,13 +4,13 @@ import re
 from pathlib import Path
 from enum import Enum
 
-from typing import Dict, List,  Optional, Union
+from typing import Dict, List,  Optional
 from pydantic import BaseModel, Field
 from datetime import timedelta
-from openpyxl.cell.cell import Cell
+
 from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill, Alignment, Font, Color
+from openpyxl.styles import Font, PatternFill, Alignment, Font
 from openpyxl.utils import get_column_letter
 
 class ISType(Enum):
