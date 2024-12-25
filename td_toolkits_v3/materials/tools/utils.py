@@ -20,16 +20,17 @@ def get_registered_name(header: dict[str, Model] = {
     'LC': LiquidCrystal,
     'PI': Polyimide,
     'Seal': Seal,
-    'Vender': Vender,
+    # 'Vender': Vender,
 }) -> pd.DataFrame:
     df_list = []
     for item in header:
         df_list.append(pd.DataFrame.from_records(
-            header[item].objects.all().values('name')
+            header[item].objects.all().values('name', 'vender__name')
         ))
         df_list[-1]['item'] = item
     df = pd.concat(df_list)
-    df = df[['item', 'name']]
+    df = df[['item', 'name', 'vender__name']]
+    df.columns = ['item', 'name', 'vender']
     return df
 
 class Refraction(NamedTuple):
