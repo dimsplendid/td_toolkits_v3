@@ -332,3 +332,18 @@ WIKI_MARKDOWN_SANITIZE_HTML= False
 # https://django-import-export.readthedocs.io/en/stable/installation.html
 
 # INSTALLED_APPS += ['import_export']
+
+# Storage #TODO: don't kwow what's wrong, copy from chatGPT
+
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        'OPTIONS': {
+            'location': str(APPS_DIR / "media"),
+        },
+    },
+    'staticfiles': {
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    },
+}
+
