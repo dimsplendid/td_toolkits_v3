@@ -30,7 +30,9 @@ def get_registered_name(header: dict[str, Model] = {
         df_list[-1]['item'] = item
     df = pd.concat(df_list)
     df = df[['item', 'name', 'vender__name']]
-    df.columns = ['item', 'name', 'vender']
+    df = df.rename(columns={
+        'vender__name': 'vender',
+    })
     return df
 
 class Refraction(NamedTuple):
