@@ -356,6 +356,7 @@ class UShape:
                 'Point':[],
                 'Cond': [],
                 'L255(Vpp)': [],
+                'L32(Vpp)':[],
                 'L64(Vpp)': [],
                 'L128(Vpp)': [],
             }
@@ -364,6 +365,7 @@ class UShape:
                 result['ID'] += [name[0]]
                 result['Point'] += [name[1]]
                 result['L255(Vpp)'] += [f(self.transmittance_from(255))]
+                result['L32(Vpp)'] += [f(self.transmittance_from(32))]
                 result['L64(Vpp)'] += [f(self.transmittance_from(64))]
                 result['L128(Vpp)'] += [f(self.transmittance_from(128))]
                 result['Cond'] += [group['LC'].iloc[0]]
